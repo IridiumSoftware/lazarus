@@ -1,0 +1,16 @@
+# Compiled binary
+face_compare
+
+# Python
+__pycache__/
+*.pyc
+
+# Logs
+logs/
+
+# macOS
+.DS_Store
+
+# IDE
+.vscode/
+.idea/
