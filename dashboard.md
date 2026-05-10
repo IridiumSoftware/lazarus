@@ -11,8 +11,10 @@ Last updated: 2026-05-10 (post-v0.1.1 CI on macos-latest).
   - `test/test_network_monitor_classify.py` (LZ-009)
   - `test/test_oversight_action.sh` (LZ-011)
 - CI: `.github/workflows/test.yml` runs both tests on
-  `macos-latest`. First run pending — verify green on first
-  push.
+  `macos-latest`. First run green at 26s on commit `0bd92bf`
+  (face_compare build + 2 tests + checkout/teardown).
+  Outstanding: `actions/checkout@v4` Node.js 20 deprecation
+  (deadline Sept 2026; bump when a v5 ships).
 - Public release shape: face sentinel + network monitor +
   honeypot + OverSight Tier 1 logger + `/lazarus` companion.
 
