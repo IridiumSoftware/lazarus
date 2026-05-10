@@ -346,6 +346,23 @@ The security model is inspired by [Possibilistic Security](https://github.com/Ir
 
 MIT. Use it, fork it, make it yours.
 
+## For contributors
+
+The repo carries a formal spec and a registry of evidence:
+
+- [`LAZARUS_SPEC.md`](LAZARUS_SPEC.md) — every named claim about the tool gets an `LZ-NNN` ID, a logic tier, an evidence type, and a status. New claims must land here first.
+- [`artifact_registry.md`](artifact_registry.md) — every spec entry → its evidence file. No registry row, no traceable evidence.
+- [`dashboard.md`](dashboard.md) — current status + priority stack.
+- [`CLAUDE.md`](CLAUDE.md) — project-local conventions for working on this repo (hierarchy, evidence types, audit protocol, workflow rules).
+- [`docs/`](docs/) — companion docs, one per substantive session.
+
+Tests live in [`test/`](test/) and run with no extra deps:
+
+```bash
+bash test/test_oversight_action.sh
+python3 test/test_network_monitor_classify.py
+```
+
 ## Contributing
 
 PRs welcome. Especially:
