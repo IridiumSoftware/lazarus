@@ -11,6 +11,9 @@ logs/
 # macOS
 .DS_Store
 
+# Auto-generated paper-index cache (per-directory, not project content)
+.paper-index.json
+
 # IDE
 .vscode/
 .idea/

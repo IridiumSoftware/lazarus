@@ -102,6 +102,7 @@ This is experimental code running with full shell access. Back up your machine b
 - **Face sentinel** — periodic camera captures compared against enrolled reference images using Apple Vision. Wrong face → Shakespeare mode (Claude only speaks in Bard quotes until the real owner re-authenticates with their face)
 - **Network monitoring** — tracks outbound connections from AI tools, flags unknowns
 - **Network honeypot** — listens on commonly-scanned ports, logs and responds to anything that connects
+- **OverSight handler** — Tier 1 forensic logging of camera/mic activations (which process turned them on, when)
 - **VPN/route/MAC checks** — verifies your traffic is going where you think it is
 - **Remote peek** — Tailscale in from your phone and check if someone's at your desk
 
@@ -131,6 +132,7 @@ face_sentinel.py   Camera-based identity verification      Python 3.10+
 face_compare.swift Apple Vision face comparison            Compiled Swift
 network_monitor.py Outbound connection watcher             Python 3.10+
 network_honeypot.py Port listener + logger                 Python 3.10+
+oversight_action.sh OverSight camera/mic event logger      Bash + python3
 
 STORAGE            WHERE                                  SIZE
 ─────────────────────────────────────────────────────────────────────
@@ -139,6 +141,7 @@ Watch captures     ~/.face_sentinel/captures/              auto-pruned
 Sentinel state     ~/.face_sentinel/state.json             <1KB
 Sentinel log       ~/.face_sentinel/sentinel.log           append-only JSONL
 Network logs       ./logs/                                 daily JSONL rotation
+OverSight events   ~/.face_sentinel/oversight_events.jsonl append-only JSONL
 
 THREAT MODEL
 ─────────────────────────────────────────────────────────────────────
