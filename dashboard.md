@@ -1,16 +1,17 @@
 # Dashboard — Lazarus
 
-Last updated: 2026-05-10 (post-v0.1.2 anti-spoof liveness probe).
+Last updated: 2026-05-10 (post-v0.1.3 leave-one-out pool quality scoring).
 
 ## Status summary
 
-- Spec: 13 LZ-NNN entries in `LAZARUS_SPEC.md`.
-- Counts: **13 / 0 / 3 / 0 / 0 / 7 / 3** (total / proved /
+- Spec: 14 LZ-NNN entries in `LAZARUS_SPEC.md`.
+- Counts: **14 / 0 / 4 / 0 / 0 / 7 / 3** (total / proved /
   tested / verified / benchmarked / argued / open).
-- Tests: 3/3 passing locally and on `macos-latest` via CI.
+- Tests: 4/4 passing locally and on `macos-latest` via CI.
   - `test/test_network_monitor_classify.py` (LZ-009)
   - `test/test_oversight_action.sh` (LZ-011)
   - `test/test_liveness_check.py` (LZ-013)
+  - `test/test_prune_logic.py` (LZ-014)
 - CI: `.github/workflows/test.yml` runs both tests on
   `macos-latest`. First run green at 26s on commit `0bd92bf`
   (face_compare build + 2 tests + checkout/teardown).
@@ -66,6 +67,12 @@ Last updated: 2026-05-10 (post-v0.1.2 anti-spoof liveness probe).
 
 ## Recently completed
 
+- 2026-05-10 — v0.1.3: leave-one-out pool quality scoring
+  (LZ-014). The previous `--prune` was effectively a no-op
+  (every ref scored 0 because it matched against itself);
+  the new implementation builds a per-ref leave-one-out
+  symlink pool and scores against that. Real-pool sweep:
+  50 refs, average leave-one-out distance 0.35, no outliers.
 - 2026-05-10 — v0.1.2: anti-spoof liveness probe (LZ-013) ports
   from `~/Projects/Possibilistic_Security/face_sentinel.py`.
   Two-capture byte-diff at 64×48 BMP catches static-photo

@@ -321,11 +321,65 @@ iPad/phone-screen has ~0.0. One new spec entry.
 
 ---
 
-## Counts (post-v0.1.2)
+## v0.1.3 (2026-05-10) — leave-one-out pool quality scoring
 
-- Total: 13
+The v0.1.0 `--prune` was effectively a no-op: it scored each
+ref by matching against the full pool (including itself), so
+every score was 0 (self-match) and no outlier ever got
+flagged. v0.1.3 fixes the algorithm to leave-one-out
+nearest-neighbor: each ref is scored against a temporary pool
+that excludes the ref itself. One new spec entry.
+
+### LZ-014 — reference-pool-leave-one-out-pruning
+- Key: --prune scores each ref's nearest non-self neighbor distance
+- Logic tier: Operational
+- Description: `face_sentinel.py --prune` scores every
+  reference by computing its leave-one-out nearest-neighbor
+  distance — its similarity to the closest *other* reference
+  in the pool. The implementation builds a temporary
+  directory containing every ref's `(.json, .fpdata, .jpg)`
+  triple as a symlink EXCEPT the target ref, runs
+  `face_compare match <target.jpg> <tempdir>`, and records
+  the resulting best-distance. After scoring all refs, the
+  tool reports the pool's average leave-one-out distance and
+  flags outliers — refs whose nearest non-self neighbor is
+  more than `PRUNE_OUTLIER_MULTIPLIER` (default 2.0) times
+  the average. Outliers are likely off-distribution captures
+  (different person, occluded face, bad lighting) that hurt
+  match quality. The tool reports only — it does not
+  auto-delete; the human decides what to retire because the
+  algorithm cannot distinguish a genuine off-distribution
+  ref from a legitimate rare-condition ref that improves
+  coverage.
+- Evidence type: example-tested
+- Status: :tested
+- Source: `face_sentinel.py` `_outliers_from_scores()`,
+  `_prune_score_one()`, `prune_cmd()`, and the
+  `PRUNE_OUTLIER_MULTIPLIER` (2.0) constant.
+- Test/Proof: `test/test_prune_logic.py` exercises the pure
+  outlier-detection helper across empty, no-outlier,
+  single-outlier, multiple-outlier, boundary (strict `>`),
+  custom-multiplier, and single-element pool cases (10
+  assertions). The IO-bound `_prune_score_one` (subprocess
+  to `face_compare`, tempdir + symlink construction) is
+  covered by manual runs against the real pool, recorded in
+  `docs/lazarus_prune_v0_1_3_companion.md`.
+- Notes: The previous (v0.1.0) implementation matched each
+  ref against the full pool *including itself*, so the best
+  distance was always 0 (the ref matching itself), every
+  ref's score was 0, and no outlier was ever flagged. The
+  new implementation uses Python-only logic — no Swift
+  binary changes — by constructing a leave-one-out symlink
+  pool per ref. Symlinks are O(1) and never modify the
+  originals. Cleanup is deferred to a `finally` block.
+
+---
+
+## Counts (post-v0.1.3)
+
+- Total: 14
 - `:proved`: 0
-- `:tested`: 3 (LZ-009, LZ-011, LZ-013)
+- `:tested`: 4 (LZ-009, LZ-011, LZ-013, LZ-014)
 - `:verified`: 0
 - `:benchmarked`: 0
 - `:argued`: 7 (LZ-001, LZ-002, LZ-003, LZ-004, LZ-005, LZ-010, LZ-012)

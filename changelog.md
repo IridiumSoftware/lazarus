@@ -1,5 +1,79 @@
 # Changelog — Lazarus
 
+## v0.1.3 — 2026-05-10 — leave-one-out pool quality scoring
+
+Fixes a v0.1.0 bug in `face_sentinel.py --prune`: the previous
+implementation matched each reference against the full pool
+*including itself*, so every ref's best distance was 0
+(self-match), the average was 0, and no outlier was ever
+flagged. The tool was effectively a no-op that always
+reported "All references consistent."
+
+The fix uses Python-only logic — no Swift binary changes — by
+constructing a per-ref leave-one-out pool of symlinks and
+scoring against that.
+
+### Added
+
+- `face_sentinel.py`:
+  - `PRUNE_OUTLIER_MULTIPLIER = 2.0` constant.
+  - `_outliers_from_scores(scores, multiplier)` — pure
+    helper, returns the subset of scores exceeding
+    `multiplier × mean`.
+  - `_prune_score_one(target, all_metas)` — leave-one-out
+    nearest-neighbor score for a single ref. Builds a
+    tempdir of symlinks to all OTHER refs, runs
+    `face_compare match`, returns the best distance. Cleanup
+    in `finally`.
+- `test/test_prune_logic.py` — exercises the pure
+  outlier-detection helper across empty / no-outlier /
+  single-outlier / multiple-outlier / boundary (strict `>`)
+  / custom-multiplier / single-element cases.
+- `LAZARUS_SPEC.md` — new LZ-014 entry under v0.1.3 section.
+- `artifact_registry.md` — LZ-014 row + counts bumped + A1–A6
+  refresh.
+- `.github/workflows/test.yml` — CI runs the prune-logic
+  test.
+- `docs/lazarus_prune_v0_1_3_companion.md` — companion doc
+  per standard, including real-pool sweep results.
+
+### Changed
+
+- `face_sentinel.py prune_cmd()` rewritten to call
+  `_prune_score_one` per ref and `_outliers_from_scores` on
+  the result. Output now shows the leave-one-out average and
+  surfaces flagged outliers with a guidance footnote that
+  the algorithm cannot distinguish off-distribution refs
+  from legitimate rare-condition refs — the human decides
+  what to retire. Reports only; never auto-deletes.
+
+### Status changes
+
+- LZ-014 enters the spec at `:tested`.
+- Counts: 13 / 0 / 3 / 0 / 0 / 7 / 3 → **14 / 0 / 4 / 0 / 0 /
+  7 / 3**.
+
+### Real-pool sweep result
+
+Run on the live `~/.face_sentinel/reference/` pool (50 refs,
+post the v0.1.3 enrollment session that added 12 fresh
+kitchen-background captures): **average leave-one-out
+nearest-neighbor distance 0.35, no outliers** (no ref's
+nearest non-self neighbor exceeds 0.70). Pool is internally
+coherent; no refs warrant retirement.
+
+### Notes
+
+- The default 2.0 multiplier is conservative — it only flags
+  refs whose nearest non-self neighbor is at least *twice*
+  the average. A pool with high overall coherence (like the
+  current one at 0.35 average) gives the multiplier little
+  to bite on. Drop to 1.5 for a stricter pass after pose /
+  background variation expands.
+- Symlinks are O(1); the per-ref tempdir construction adds
+  negligible overhead vs the `face_compare` subprocess. Full
+  50-ref sweep ran in ~30 s on the development rig.
+
 ## v0.1.2 — 2026-05-10 — anti-spoof liveness probe
 
 Defends against static-photo presentation attacks (printed

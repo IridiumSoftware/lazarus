@@ -612,36 +612,110 @@ def status():
 
 # ── Prune refs command ─────────────────────────────────────────────
 
+PRUNE_OUTLIER_MULTIPLIER = 2.0  # A ref is an outlier if its leave-one-out
+                                # nearest-neighbor distance is more than this
+                                # multiple of the pool's average. Conservative
+                                # default — any value > 1.0 will only flag
+                                # refs that are *worse* than the average.
+
+
+def _outliers_from_scores(scores: dict, multiplier: float = PRUNE_OUTLIER_MULTIPLIER) -> dict:
+    """Pure helper: given a name -> distance map, return the subset whose
+    distance exceeds `multiplier` × the mean. Exposed for unit tests."""
+    if not scores:
+        return {}
+    avg = sum(scores.values()) / len(scores)
+    return {k: v for k, v in scores.items() if v > avg * multiplier}
+
+
+def _prune_score_one(target_meta: Path, all_metas: list) -> float:
+    """Score one ref's leave-one-out nearest-neighbor distance.
+
+    Builds a temporary directory containing every reference triple
+    EXCEPT the target ref, runs `face_compare match` against the
+    target's cached jpg over that pool, and returns the resulting
+    best-distance. This is the ref's similarity to its closest
+    *non-self* neighbor — the right question for outlier detection.
+
+    Returns 999.0 on infrastructure error so the ref is treated as
+    an outlier and surfaced for human review rather than silently
+    skipped.
+    """
+    import tempfile
+
+    target_stem = target_meta.stem
+    target_jpg = REF_DIR / f"{target_stem}.jpg"
+    if not target_jpg.exists():
+        return 999.0
+
+    tmpdir = tempfile.mkdtemp(prefix="face_sentinel_prune_")
+    try:
+        # Symlink every other ref's three files into the tempdir.
+        # Symlinks are cheap; we never modify the originals.
+        for meta in all_metas:
+            if meta.stem == target_stem:
+                continue
+            for suffix in (".json", ".fpdata", ".jpg"):
+                src = REF_DIR / f"{meta.stem}{suffix}"
+                if src.exists():
+                    os.symlink(str(src), os.path.join(tmpdir, f"{meta.stem}{suffix}"))
+
+        result = run_face_compare("match", str(target_jpg), tmpdir)
+        if "error" in result:
+            return 999.0
+        return float(result.get("distance", 999))
+    finally:
+        # Clean up symlinks + tempdir.
+        for entry in os.listdir(tmpdir):
+            try:
+                os.unlink(os.path.join(tmpdir, entry))
+            except OSError:
+                pass
+        try:
+            os.rmdir(tmpdir)
+        except OSError:
+            pass
+
+
 def prune_cmd():
+    """Score the reference pool via leave-one-out nearest-neighbor and
+    flag outliers (refs whose closest non-self neighbor is unusually
+    far). Outliers are likely off-distribution captures (different
+    person, occluded face, bad lighting) that hurt match quality.
+    Reports only — does not auto-delete; the human decides what to
+    retire."""
     ensure_dirs()
     metas = sorted(REF_DIR.glob("*.json"), key=lambda p: p.stat().st_mtime)
     if not metas:
         print("No references to prune.")
         return
+    if len(metas) < 2:
+        print("Need at least 2 references to compute leave-one-out scores.")
+        return
 
-    print(f"{len(metas)} references. Testing quality...")
+    print(f"{len(metas)} references. Testing quality (leave-one-out)...")
     scores = {}
-    for meta_path in metas:
-        stem = meta_path.stem
-        jpg = REF_DIR / f"{stem}.jpg"
-        if not jpg.exists():
-            continue
-        result = run_face_compare("match", str(jpg), str(REF_DIR))
-        if "error" not in result:
-            scores[meta_path.name] = result.get("distance", 999)
+    for i, meta_path in enumerate(metas, 1):
+        if i % 10 == 0 or i == len(metas):
+            print(f"  scored {i}/{len(metas)}")
+        scores[meta_path.name] = _prune_score_one(meta_path, metas)
 
     if not scores:
         print("Could not score references.")
         return
 
     avg = sum(scores.values()) / len(scores)
-    print(f"Average self-distance: {avg:.1f}")
+    print(f"Average leave-one-out nearest-neighbor distance: {avg:.2f}")
 
-    outliers = {k: v for k, v in scores.items() if v > avg * 2}
+    outliers = _outliers_from_scores(scores)
     if outliers:
-        print(f"\n{len(outliers)} outlier(s):")
+        print(f"\n{len(outliers)} outlier(s) (distance > {PRUNE_OUTLIER_MULTIPLIER}× avg):")
         for name, dist in sorted(outliers.items(), key=lambda x: x[1], reverse=True):
-            print(f"  {name}  distance={dist:.1f}")
+            print(f"  {name}  distance={dist:.2f}")
+        print("\nReview these manually before deleting. Genuine off-")
+        print("distribution refs (different person, bad lighting, occluded)")
+        print("hurt match quality; legitimate outliers (rare-condition refs)")
+        print("improve coverage. The algorithm cannot tell them apart.")
     else:
         print("All references consistent.")
 

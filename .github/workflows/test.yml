@@ -1,11 +1,12 @@
 # Lazarus CI — runs the test suite on macos-latest. Apple Vision
 # is the face-comparison backend; Linux / Windows are out of
-# scope per README §Limitations. As of v0.1.2, three LZ-NNN
+# scope per README §Limitations. As of v0.1.3, four LZ-NNN
 # entries are :tested and exercised here:
 #
-#   LZ-009 (network-monitor classification)   → test_network_monitor_classify.py
-#   LZ-011 (oversight Tier 1 forensic logger) → test_oversight_action.sh
-#   LZ-013 (anti-spoof liveness probe)        → test_liveness_check.py
+#   LZ-009 (network-monitor classification)     → test_network_monitor_classify.py
+#   LZ-011 (oversight Tier 1 forensic logger)   → test_oversight_action.sh
+#   LZ-013 (anti-spoof liveness probe)          → test_liveness_check.py
+#   LZ-014 (leave-one-out pool quality scoring) → test_prune_logic.py
 #
 # The face_compare Swift binary is built as a sanity check; the
 # tests don't yet depend on it (LZ-006/007/008 promotions will,
@@ -47,3 +48,6 @@ jobs:
 
       - name: LZ-013 — test_liveness_check.py
         run: python3 test/test_liveness_check.py
+
+      - name: LZ-014 — test_prune_logic.py
+        run: python3 test/test_prune_logic.py
