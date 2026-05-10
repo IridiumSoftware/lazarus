@@ -1,6 +1,6 @@
 # Dashboard — Lazarus
 
-Last updated: 2026-05-10 (post-v0.1.0 rigor scaffold).
+Last updated: 2026-05-10 (post-v0.1.1 CI on macos-latest).
 
 ## Status summary
 
@@ -10,18 +10,15 @@ Last updated: 2026-05-10 (post-v0.1.0 rigor scaffold).
 - Tests: 2/2 passing locally.
   - `test/test_network_monitor_classify.py` (LZ-009)
   - `test/test_oversight_action.sh` (LZ-011)
-- CI: not yet wired. `.github/workflows/test.yml` is the next
-  cheap promotion.
+- CI: `.github/workflows/test.yml` runs both tests on
+  `macos-latest`. First run pending — verify green on first
+  push.
 - Public release shape: face sentinel + network monitor +
   honeypot + OverSight Tier 1 logger + `/lazarus` companion.
 
 ## Priority stack (highest leverage first)
 
-1. **Wire CI** — `.github/workflows/test.yml` running both
-   tests on `macos-latest`. Lazarus is mac-only by design
-   (Apple Vision), so no Linux runner. ~15 minutes.
-
-2. **LZ-006 / LZ-007 / LZ-008 promotion** — three `:open`
+1. **LZ-006 / LZ-007 / LZ-008 promotion** — three `:open`
    entries that all become `:tested` once `face_compare` is
    stub-able. Suggested approach: introduce a
    `FACE_COMPARE_STUB=<json>` env var that
@@ -29,24 +26,24 @@ Last updated: 2026-05-10 (post-v0.1.0 rigor scaffold).
    parsed JSON instead of invoking the binary. One small
    patch unlocks all three tests.
 
-3. **LZ-005 grep-lint** — CI step that grep-fails on
+2. **LZ-005 grep-lint** — CI step that grep-fails on
    networking imports (`URLSession`, `Network`, `urllib`,
    `requests`, `socket`) in `face_compare.swift` /
    `face_sentinel.py`. Promotes LZ-005 to `:tested`. ~10
-   minutes.
+   minutes; folds into `.github/workflows/test.yml`.
 
-4. **LZ-002 fixture set** — small set of (image, expected
+3. **LZ-002 fixture set** — small set of (image, expected
    band) JPEGs for the distance-band claim. Requires care to
    not commit identifiable face data; consider synthetic /
    public-domain reference images. Promotes LZ-002 to
    `:tested`.
 
-5. **OverSight Tier 2** — auto-lockdown on non-allowlisted
+4. **OverSight Tier 2** — auto-lockdown on non-allowlisted
    camera/mic activation. Documented inline in
    `oversight_action.sh`. New spec entry LZ-013 + companion
    doc + test.
 
-6. **LZ-010 honeypot loop-connect test** — fragile in CI;
+5. **LZ-010 honeypot loop-connect test** — fragile in CI;
    defer until the rest of the stack is green.
 
 ## Open questions
@@ -66,6 +63,9 @@ Last updated: 2026-05-10 (post-v0.1.0 rigor scaffold).
 
 ## Recently completed
 
+- 2026-05-10 — v0.1.1: `.github/workflows/test.yml` lands.
+  Runs both v0.1.0 tests on `macos-latest` plus a
+  `face_compare` build sanity check. First run pending.
 - 2026-05-10 — v0.1.0 rigor scaffold landed:
   `LAZARUS_SPEC.md`, `artifact_registry.md`, `dashboard.md`,
   `changelog.md`, `CLAUDE.md`, two passing tests, companion

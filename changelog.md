@@ -1,5 +1,33 @@
 # Changelog — Lazarus
 
+## v0.1.1 — 2026-05-10 — CI on macos-latest
+
+### Added
+
+- `.github/workflows/test.yml` — runs the v0.1.0 test suite on
+  `macos-latest` on every push to master and on every pull
+  request. Two test steps:
+  - LZ-011 — `bash test/test_oversight_action.sh`
+  - LZ-009 — `python3 test/test_network_monitor_classify.py`
+  Plus a `face_compare` Swift build sanity check (verifies the
+  swiftc invocation in the README install steps still works
+  on a clean macOS runner). Timeout: 5 minutes.
+
+### Status changes
+
+- None at the spec level. CI integration was the next-cheapest
+  promotion in the priority stack but doesn't itself raise any
+  LZ-NNN status — it makes the existing `:tested` entries
+  load-bearing on every push, which is the operational value.
+
+### Notes
+
+- macOS-only by design (Apple Vision). No Linux/Windows runner.
+- First CI run will land when this commit pushes to master;
+  the workflow has not yet been observed to pass on a GitHub
+  runner. If it fails, the fix is in the workflow file or in
+  the test scripts — no spec changes required.
+
 ## v0.1.0 — 2026-05-10 — first formal spec of the public release
 
 The public release is now backed by the standard Triad-Deployment

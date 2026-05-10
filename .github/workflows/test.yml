@@ -1,0 +1,45 @@
+# Lazarus CI — runs the test suite on macos-latest. Apple Vision
+# is the face-comparison backend; Linux / Windows are out of
+# scope per README §Limitations. As of v0.1.0, two LZ-NNN
+# entries are :tested and exercised here:
+#
+#   LZ-009 (network-monitor classification)  → test_network_monitor_classify.py
+#   LZ-011 (oversight Tier 1 forensic logger) → test_oversight_action.sh
+#
+# The face_compare Swift binary is built as a sanity check; the
+# v0.1.0 tests don't depend on it (LZ-006/007/008 promotions
+# will, once a stub shim lands — see dashboard.md priority #2).
+
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  tests-macos:
+    name: Tests (macOS)
+    runs-on: macos-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build face_compare (sanity check)
+        run: |
+          swiftc -O \
+            -framework Vision \
+            -framework AppKit \
+            face_compare.swift \
+            -o face_compare
+          file face_compare
+          file face_compare | grep -q "Mach-O"
+
+      - name: LZ-011 — test_oversight_action.sh
+        run: bash test/test_oversight_action.sh
+
+      - name: LZ-009 — test_network_monitor_classify.py
+        run: python3 test/test_network_monitor_classify.py
