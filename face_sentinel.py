@@ -50,6 +50,15 @@ MATCH_THRESHOLD = 18.0       # Vision distance: below = match
 UNCERTAIN_THRESHOLD = 25.0   # Between match and this = uncertain
 LOCK_THRESHOLD = 35.0        # Above this = lock screen
 BG_CHANGE_THRESHOLD = 0.15   # Pixel diff ratio for "background changed"
+LIVENESS_DELTA_MIN = 0.008   # Min byte-diff between two captures ~1s apart;
+                             # below = suspect static photo. Calibration data:
+                             # a real face sitting still measures ~0.015
+                             # (subtle skin micro-motion: head sway, blinks,
+                             # breath); the threshold sits well below that.
+                             # Catches printed photos and iPad-screen attacks;
+                             # misses video playback, 3D-printed masks, and
+                             # deepfake streams (those are v2 territory).
+LIVENESS_GAP_SECONDS = 1.0   # Wait between first and second capture
 
 
 def ensure_dirs():
@@ -144,6 +153,80 @@ def backgrounds_similar(img_a: str, img_b: str) -> bool:
     diffs = sum(1 for a, b in zip(bytes_a, bytes_b) if a != b)
     ratio = diffs / len(bytes_a)
     return ratio < BG_CHANGE_THRESHOLD
+
+
+# ── Liveness (anti-static-photo) ───────────────────────────────────
+#
+# Static-photo defense. A real face is never perfectly still — there's
+# skin micro-motion (head sway, blinks, breath). A static photo —
+# printed or held up on an iPad — produces near-identical consecutive
+# captures. We grab a second frame ~1s after the first, downsize both
+# to a small BMP, and count differing bytes. Below the threshold =
+# suspect static.
+#
+# Catches: printed photos, iPad/phone screens held up showing a still.
+# Misses:  video playback, 3D-printed mask, deepfake stream. Closing
+#          those is v2 territory (active illumination flash / blink
+#          challenge / depth sensor).
+
+def _liveness_delta(bytes_a: bytes, bytes_b: bytes):
+    """Pure byte-diff ratio between two equal-length byte sequences.
+    Returns None on length mismatch or empty input. Exposed for unit
+    tests; production code should use liveness_check()."""
+    if not bytes_a or len(bytes_a) != len(bytes_b):
+        return None
+    diffs = sum(1 for a, b in zip(bytes_a, bytes_b) if a != b)
+    return diffs / len(bytes_a)
+
+
+def liveness_check(first_capture: str) -> dict:
+    """Capture a second frame and check whether it varies from the first.
+
+    Returns: {"live": bool, "delta": float, "reason": str}
+    Fails open on infrastructure errors (camera retry failure, sips
+    failure) so a flaky camera doesn't lock the owner out of their
+    own machine.
+    """
+    import tempfile
+
+    time.sleep(LIVENESS_GAP_SECONDS)
+    second_full = tempfile.mktemp(suffix=".jpg")
+    if not capture_full(second_full):
+        return {"live": True, "delta": 0.0, "reason": "second_capture_failed_fail_open"}
+
+    def to_tiny(src: str) -> str:
+        dst = tempfile.mktemp(suffix=".bmp")
+        subprocess.run(
+            ["sips", "--resampleWidth", "64", "--resampleHeight", "48",
+             "-s", "format", "bmp", src, "--out", dst],
+            capture_output=True, timeout=10
+        )
+        return dst
+
+    tiny_a = to_tiny(first_capture)
+    tiny_b = to_tiny(second_full)
+    os.remove(second_full)
+
+    try:
+        if not (os.path.exists(tiny_a) and os.path.exists(tiny_b)):
+            return {"live": True, "delta": 0.0, "reason": "tiny_failed_fail_open"}
+
+        bytes_a = open(tiny_a, "rb").read()
+        bytes_b = open(tiny_b, "rb").read()
+
+        delta = _liveness_delta(bytes_a, bytes_b)
+        if delta is None:
+            return {"live": True, "delta": 0.0, "reason": "size_mismatch_fail_open"}
+
+        return {
+            "live": delta >= LIVENESS_DELTA_MIN,
+            "delta": delta,
+            "reason": "static_likely" if delta < LIVENESS_DELTA_MIN else "ok",
+        }
+    finally:
+        for p in (tiny_a, tiny_b):
+            if os.path.exists(p):
+                os.remove(p)
 
 
 # ── Auth (session opener) ─────────────────────────────────────────
@@ -303,67 +386,103 @@ def check_once():
         log_event({"event": "capture_fail"})
         return
 
-    result = run_face_compare("match", tmp_full, str(REF_DIR))
+    # tmp_full is kept alive through the match branch so the liveness
+    # probe sees the same source format as its own second capture
+    # (asymmetric inputs produce JPEG-artifact byte deltas that can
+    # masquerade as motion). Cleanup is deferred to the finally block.
+    try:
+        result = run_face_compare("match", tmp_full, str(REF_DIR))
+        shrink(tmp_full, cap_lowres)
 
-    shrink(tmp_full, cap_lowres)
-    os.remove(tmp_full)
+        if "error" in result:
+            log_event({"event": "match_error", "error": result["error"]})
+            return
 
-    if "error" in result:
-        log_event({"event": "match_error", "error": result["error"]})
-        return
+        state = load_state()
+        faces = result.get("faces", 0)
 
-    state = load_state()
-    faces = result.get("faces", 0)
+        if faces == 0:
+            if state.get("last_seen_owner"):
+                log_event({"event": "no_face", "note": "owner_walked_away"})
 
-    if faces == 0:
-        if state.get("last_seen_owner"):
-            log_event({"event": "no_face", "note": "owner_walked_away"})
+                if BG_SNAPSHOT.exists() and os.path.exists(cap_lowres):
+                    if not backgrounds_similar(str(BG_SNAPSHOT), cap_lowres):
+                        print(f"[BG_SHIFT] Background looks different. Laptop may have moved.")
+                        log_event({"event": "bg_shift", "capture": os.path.basename(cap_lowres)})
+                        return
 
-            if BG_SNAPSHOT.exists() and os.path.exists(cap_lowres):
-                if not backgrounds_similar(str(BG_SNAPSHOT), cap_lowres):
-                    print(f"[BG_SHIFT] Background looks different. Laptop may have moved.")
-                    log_event({"event": "bg_shift", "capture": os.path.basename(cap_lowres)})
-                    return
+                if os.path.exists(cap_lowres):
+                    os.remove(cap_lowres)
+            else:
+                log_event({"event": "no_face", "note": "owner_never_seen"})
+            return
 
+        distance = result.get("distance", 999)
+        is_match = result.get("match", False)
+        uncertain = result.get("uncertain", False)
+
+        if is_match:
+            # Liveness probe: catch static-photo presentation attacks.
+            # tmp_full is the full-res first capture; liveness_check
+            # captures a fresh full-res second frame and compares them
+            # at 64x48 BMP. Symmetric source format on both frames.
+            liveness = liveness_check(tmp_full)
+
+            if not liveness["live"]:
+                print(f"[LIVENESS_FAIL] delta={liveness['delta']:.4f} "
+                      f"({liveness['reason']}) — possible static photo")
+                log_event({"event": "liveness_fail",
+                           "delta": liveness["delta"],
+                           "reason": liveness["reason"],
+                           "distance": distance,
+                           "capture": os.path.basename(cap_lowres)})
+
+                # Treat as mismatch — enter Shakespeare mode.
+                state["mode"] = "shakespeare"
+                state["lockout_time"] = datetime.now().isoformat()
+                state["lockout_distance"] = distance
+                state["lockout_reason"] = "liveness_fail"
+                state["liveness_delta"] = liveness["delta"]
+                state["authenticated"] = False
+                save_state(state)
+                log_event({"event": "shakespeare_mode",
+                           "reason": "liveness_fail",
+                           "delta": liveness["delta"]})
+                return
+
+            state["last_seen_owner"] = datetime.now().isoformat()
+            save_state(state)
+            log_event({"event": "match_ok",
+                       "distance": distance,
+                       "liveness_delta": liveness["delta"]})
             if os.path.exists(cap_lowres):
                 os.remove(cap_lowres)
+
+        elif uncertain:
+            print(f"[UNCERTAIN] distance={distance:.1f} — keeping capture")
+            log_event({"event": "uncertain", "distance": distance,
+                       "capture": os.path.basename(cap_lowres)})
+
         else:
-            log_event({"event": "no_face", "note": "owner_never_seen"})
-        return
+            # Wrong face — enter Shakespeare mode
+            print(f"[MISMATCH] distance={distance:.1f} — WRONG FACE AT DESK")
+            log_event({"event": "MISMATCH", "distance": distance,
+                       "capture": os.path.basename(cap_lowres)})
 
-    distance = result.get("distance", 999)
-    is_match = result.get("match", False)
-    uncertain = result.get("uncertain", False)
+            state["mode"] = "shakespeare"
+            state["lockout_time"] = datetime.now().isoformat()
+            state["lockout_distance"] = distance
+            state["authenticated"] = False
+            save_state(state)
+            log_event({"event": "shakespeare_mode", "distance": distance})
 
-    if is_match:
-        state["last_seen_owner"] = datetime.now().isoformat()
-        save_state(state)
-        log_event({"event": "match_ok", "distance": distance})
-        if os.path.exists(cap_lowres):
-            os.remove(cap_lowres)
-
-    elif uncertain:
-        print(f"[UNCERTAIN] distance={distance:.1f} — keeping capture")
-        log_event({"event": "uncertain", "distance": distance,
-                   "capture": os.path.basename(cap_lowres)})
-
-    else:
-        # Wrong face — enter Shakespeare mode
-        print(f"[MISMATCH] distance={distance:.1f} — WRONG FACE AT DESK")
-        log_event({"event": "MISMATCH", "distance": distance,
-                   "capture": os.path.basename(cap_lowres)})
-
-        state["mode"] = "shakespeare"
-        state["lockout_time"] = datetime.now().isoformat()
-        state["lockout_distance"] = distance
-        state["authenticated"] = False
-        save_state(state)
-        log_event({"event": "shakespeare_mode", "distance": distance})
-
-        if distance > LOCK_THRESHOLD:
-            print("[LOCK] Locking screen.")
-            log_event({"event": "LOCK", "distance": distance})
-            lock_screen()
+            if distance > LOCK_THRESHOLD:
+                print("[LOCK] Locking screen.")
+                log_event({"event": "LOCK", "distance": distance})
+                lock_screen()
+    finally:
+        if os.path.exists(tmp_full):
+            os.remove(tmp_full)
 
 
 def lock_screen():

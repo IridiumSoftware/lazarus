@@ -1,5 +1,73 @@
 # Changelog — Lazarus
 
+## v0.1.2 — 2026-05-10 — anti-spoof liveness probe
+
+Defends against static-photo presentation attacks (printed
+photos, iPad/phone screens held up showing a still image).
+Ports the byte-diff liveness check from the working version at
+`~/Projects/Possibilistic_Security/face_sentinel.py` and
+introduces it as a tracked spec entry.
+
+### Added
+
+- `face_sentinel.py`:
+  - `LIVENESS_DELTA_MIN = 0.008` and
+    `LIVENESS_GAP_SECONDS = 1.0` constants with calibration
+    notes inline.
+  - `_liveness_delta(bytes_a, bytes_b)` — pure byte-diff ratio
+    helper (returns `None` on length mismatch / empty input).
+  - `liveness_check(first_capture)` — full IO-bound wrapper:
+    waits 1s, captures a second full-resolution frame,
+    downsizes both to 64×48 BMP via `sips`, returns
+    `{"live": bool, "delta": float, "reason": str}`. Fails
+    open on infrastructure errors (camera retry, sips, size
+    mismatch).
+  - `check_once()` is_match branch now runs the liveness probe
+    before accepting the match. On `static_likely`, treats as
+    a mismatch with `lockout_reason="liveness_fail"` and
+    `liveness_delta=<measured>` written to `state.json`.
+  - `check_once()` wrapped in try/finally so `tmp_full` lives
+    across the match branch (symmetric source format on both
+    liveness frames; deferred deletion in finally).
+- `test/test_liveness_check.py` — exercises the pure byte-diff
+  helper (12 assertions), the threshold constant, the
+  inequality direction (`>=` boundary), and a fixed set of
+  representative deltas (static photo, calibrated real face,
+  just-below / at-threshold / just-above).
+- `LAZARUS_SPEC.md` — new LZ-013 entry under v0.1.2 section.
+- `artifact_registry.md` — LZ-013 row + counts bumped.
+- `.github/workflows/test.yml` — CI now runs the liveness test.
+- `docs/lazarus_liveness_v0_1_2_companion.md` — companion doc
+  per the standard.
+
+### Status changes
+
+- LZ-013 enters the spec at `:tested` (pure byte-diff math is
+  test-backed; IO-bound wrapper covered by manual evidence in
+  the companion doc).
+- Counts: 12 / 0 / 2 / 0 / 0 / 7 / 3 → **13 / 0 / 3 / 0 / 0 /
+  7 / 3**.
+
+### Why now
+
+User flagged that the v0.1.0 sentinel could be defeated by
+holding up a printed photo. The liveness check was already
+present in the personal working copy at `~/Projects/
+Possibilistic_Security/face_sentinel.py` but had never been
+ported to the public lazarus repo. This commit closes that gap.
+
+### Notes
+
+- Catches: printed photos, iPad/phone-screen replays of a still
+  image.
+- Misses: video playback, 3D-printed mask, deepfake stream
+  (v2 territory — active illumination flash / blink challenge
+  / depth sensor).
+- The threshold (0.008) is calibrated against a single
+  developer's real-face data (~0.015 sitting still). A fixture
+  set of attack-vector captures with measured deltas would
+  promote this from `:tested` to a stronger evidence tier.
+
 ## v0.1.1 — 2026-05-10 — CI on macos-latest
 
 ### Added

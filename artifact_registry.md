@@ -1,9 +1,11 @@
 # artifact_registry.md — Lazarus
 
-Version: 0.1.0 (first formal spec of the public release shipped
-on 2026-05-10. Twelve LZ-NNN spec entries cover the visual
-sentinel, network monitor + honeypot, and OverSight Tier 1
-forensic logger. Counts: 12 / 0 / 2 / 0 / 0 / 7 / 3.)
+Version: 0.1.2 (anti-spoof liveness probe added 2026-05-10;
+v0.1.0 first formal spec of the public release also 2026-05-10.
+Thirteen LZ-NNN spec entries cover the visual sentinel
+(including the new liveness probe), network monitor + honeypot,
+and OverSight Tier 1 forensic logger.
+Counts: 13 / 0 / 3 / 0 / 0 / 7 / 3.)
 
 ## Coverage rule
 
@@ -43,21 +45,22 @@ contain every Test/Proof and Source path listed.
 | LZ-010 | network-honeypot port listeners | Operational | manual | LAZARUS_SPEC.md LZ-010 + README.md §What it does | network_honeypot.py | :argued |
 | LZ-011 | oversight Tier 1 forensic logging | Operational | example-tested | test/test_oversight_action.sh | oversight_action.sh | :tested |
 | LZ-012 | companion read-only discipline | Boundary | manual | lazarus.md §What you do NOT do + LAZARUS_SPEC.md LZ-012 | lazarus.md | :argued |
+| LZ-013 | anti-spoof liveness probe | Operational | example-tested | test/test_liveness_check.py + docs/lazarus_liveness_v0_1_2_companion.md (manual evidence for the IO-bound wrapper) | face_sentinel.py _liveness_delta() + liveness_check() + check_once() is_match branch + LIVENESS_DELTA_MIN/LIVENESS_GAP_SECONDS constants | :tested |
 
 ## Counts
 
-- Total: 12
+- Total: 13
 - `:proved`: 0
-- `:tested`: 2 (LZ-009, LZ-011)
+- `:tested`: 3 (LZ-009, LZ-011, LZ-013)
 - `:verified`: 0
 - `:benchmarked`: 0
 - `:argued`: 7 (LZ-001, LZ-002, LZ-003, LZ-004, LZ-005, LZ-010, LZ-012)
 - `:open`: 3 (LZ-006, LZ-007, LZ-008)
 
-## Cross-audit A1–A6 self-check (post-v0.1.0)
+## Cross-audit A1–A6 self-check (post-v0.1.2)
 
 - **A1 — Coverage.** Every LZ-ID in `LAZARUS_SPEC.md` has a row
-  here. ✓ (12 of 12).
+  here. ✓ (13 of 13).
 - **A2 — Logic & Status parity.** Spec → registry Logic tier and
   Status fields match exactly. Key column compresses spec keys
   for table readability (e.g. spec
@@ -67,22 +70,27 @@ contain every Test/Proof and Source path listed.
 - **A3 — Evidence exists.** LZ-009 cites
   `test/test_network_monitor_classify.py` (exists; runs from
   repo root). LZ-011 cites `test/test_oversight_action.sh`
-  (exists; runs from repo root). The seven `:argued` entries
-  cite manual evidence in spec / companion / README. The three
-  `:open` entries cite "—" honestly.
-- **A4 — Status honesty.** Two `:tested` entries carry
+  (exists; runs from repo root). LZ-013 cites
+  `test/test_liveness_check.py` (exists; runs from repo root)
+  + `docs/lazarus_liveness_v0_1_2_companion.md` (manual
+  evidence for the IO-bound `liveness_check` wrapper).
+  The seven `:argued` entries cite manual evidence in spec /
+  companion / README. The three `:open` entries cite "—"
+  honestly.
+- **A4 — Status honesty.** Three `:tested` entries carry
   `example-tested`. Seven `:argued` entries carry `manual` or
   `example-tested` (LZ-004 has an in-session demonstration but
   no CI artifact yet). Three `:open` entries carry `none`. No
   entry has a status its evidence type cannot support.
-- **A5 — Stale counts.** Counts above (12 / 0 / 2 / 0 / 0 / 7 /
+- **A5 — Stale counts.** Counts above (13 / 0 / 3 / 0 / 0 / 7 /
   3) match `LAZARUS_SPEC.md` final-section counts and
   `dashboard.md` summary.
-- **A6 — Test sync.** LZ-009 and LZ-011 tests run from
-  `test/`. CI integration (`.github/workflows/test.yml`) is
-  forthcoming; the tests are runnable locally on macOS with
-  `bash test/test_oversight_action.sh` and
-  `python3 test/test_network_monitor_classify.py`.
+- **A6 — Test sync.** LZ-009, LZ-011, LZ-013 tests run from
+  `test/` and pass on `macos-latest` via
+  `.github/workflows/test.yml` on every push. Locally:
+  `bash test/test_oversight_action.sh`,
+  `python3 test/test_network_monitor_classify.py`,
+  `python3 test/test_liveness_check.py`.
 
 ## Dependencies on other Triad-Deployment spec entries
 

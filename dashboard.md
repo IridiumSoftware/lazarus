@@ -1,15 +1,16 @@
 # Dashboard — Lazarus
 
-Last updated: 2026-05-10 (post-v0.1.1 CI on macos-latest).
+Last updated: 2026-05-10 (post-v0.1.2 anti-spoof liveness probe).
 
 ## Status summary
 
-- Spec: 12 LZ-NNN entries in `LAZARUS_SPEC.md`.
-- Counts: **12 / 0 / 2 / 0 / 0 / 7 / 3** (total / proved /
+- Spec: 13 LZ-NNN entries in `LAZARUS_SPEC.md`.
+- Counts: **13 / 0 / 3 / 0 / 0 / 7 / 3** (total / proved /
   tested / verified / benchmarked / argued / open).
-- Tests: 2/2 passing locally.
+- Tests: 3/3 passing locally and on `macos-latest` via CI.
   - `test/test_network_monitor_classify.py` (LZ-009)
   - `test/test_oversight_action.sh` (LZ-011)
+  - `test/test_liveness_check.py` (LZ-013)
 - CI: `.github/workflows/test.yml` runs both tests on
   `macos-latest`. First run green at 26s on commit `0bd92bf`
   (face_compare build + 2 tests + checkout/teardown).
@@ -65,6 +66,11 @@ Last updated: 2026-05-10 (post-v0.1.1 CI on macos-latest).
 
 ## Recently completed
 
+- 2026-05-10 — v0.1.2: anti-spoof liveness probe (LZ-013) ports
+  from `~/Projects/Possibilistic_Security/face_sentinel.py`.
+  Two-capture byte-diff at 64×48 BMP catches static-photo
+  attacks; threshold 0.008. Real face calibration ~0.015. CI
+  now runs three tests.
 - 2026-05-10 — v0.1.1: `.github/workflows/test.yml` lands.
   Runs both v0.1.0 tests on `macos-latest` plus a
   `face_compare` build sanity check. First run pending.

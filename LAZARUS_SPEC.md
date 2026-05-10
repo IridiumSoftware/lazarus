@@ -153,7 +153,10 @@ Tier 1 forensic camera/mic event logger. Twelve LZ-NNN entries.
      background has shifted (then `bg_shift` event).
   2. `faces == 0` and no prior owner sighting: `no_face` event,
      no state change.
-  3. `is_match`: refresh `last_seen_owner`, log `match_ok`.
+  3. `is_match`: run the LZ-013 liveness probe; on
+     `static_likely`, fall through to the same Shakespeare-mode
+     state transition as branch 5; otherwise refresh
+     `last_seen_owner`, log `match_ok`.
   4. `uncertain`: log `uncertain` event, keep capture for
      review, no state change.
   5. mismatch: set `mode="shakespeare"`,
@@ -161,11 +164,12 @@ Tier 1 forensic camera/mic event logger. Twelve LZ-NNN entries.
      `LOCK_THRESHOLD`, also `lock_screen()`.
 - Evidence type: example-tested
 - Status: :open
-- Source: `face_sentinel.py` `check_once()` lines 296–367.
+- Source: `face_sentinel.py` `check_once()`.
 - Notes: Test/Proof file pending. The branches can be exercised
-  without a camera by stubbing `run_face_compare` and feeding
-  synthetic JSON (faces, distance, match, uncertain), then
-  asserting on the resulting state.json + log lines.
+  without a camera by stubbing `run_face_compare` and
+  `liveness_check` and feeding synthetic JSON (faces, distance,
+  match, uncertain, live), then asserting on the resulting
+  state.json + log lines.
 
 ### LZ-008 — peek-json-output-shape
 - Key: --peek emits a single line of JSON with desk/who/faces/distance
@@ -264,11 +268,64 @@ Tier 1 forensic camera/mic event logger. Twelve LZ-NNN entries.
 
 ---
 
-## Counts (post-v0.1.0)
+## v0.1.2 (2026-05-10) — anti-spoof liveness probe
 
-- Total: 12
+The watch loop now defends against static-photo presentation
+attacks: a real face has ~0.015 byte-diff between two captures
+~1s apart (subtle skin micro-motion); a printed photo or
+iPad/phone-screen has ~0.0. One new spec entry.
+
+### LZ-013 — anti-spoof-liveness-probe
+- Key: byte-diff between two captures ~1s apart catches static-photo attacks
+- Logic tier: Operational
+- Description: On a positive face match in `check_once`, the
+  watch loop runs a liveness probe before accepting the match.
+  The probe takes a second full-resolution capture
+  `LIVENESS_GAP_SECONDS` (1.0s) after the first, downsizes
+  both to a 64×48 BMP via `sips`, and counts byte-level
+  differences. The "live" decision is
+  `delta >= LIVENESS_DELTA_MIN` (0.008).
+  - Real face sitting still: ~0.015 delta (subtle skin
+    micro-motion: head sway, blinks, breath). Above
+    threshold → live.
+  - Printed photo / iPad-screen attack: ~0.0 delta. Below
+    threshold → `static_likely`, treated as a mismatch with
+    `lockout_reason="liveness_fail"`.
+  Infrastructure errors (camera retry failure, sips failure,
+  size mismatch) fail open so a flaky camera doesn't lock the
+  owner out. To preserve the liveness threshold against JPEG
+  re-encode artifacts, both frames must be sourced as fresh
+  full-resolution captures and downsized symmetrically; the
+  watch loop holds `tmp_full` alive across the match branch
+  in a `try/finally` block.
+- Evidence type: example-tested
+- Status: :tested
+- Source: `face_sentinel.py` `_liveness_delta()`,
+  `liveness_check()`, and `check_once()` is_match branch.
+  Constants `LIVENESS_DELTA_MIN` (0.008) and
+  `LIVENESS_GAP_SECONDS` (1.0) at module top.
+- Test/Proof: `test/test_liveness_check.py` exercises the pure
+  byte-diff math, the threshold constant, and the inequality
+  semantics (`>=` boundary). The IO-bound `liveness_check`
+  wrapper (subprocess to `sips`, `time.sleep`, fail-open
+  branches) is covered by manual runs against real cameras
+  and presentation-attack fixtures, recorded in
+  `docs/lazarus_liveness_v0_1_2_companion.md`.
+- Notes: Catches printed photos and iPad/phone-screen attacks.
+  Misses video playback, 3D-printed mask, deepfake stream —
+  those are v2 territory (active illumination flash / blink
+  challenge / depth sensor). Promotion path to a stronger
+  evidence tier would be a fixture set of attack-vector
+  captures (printed photo, screen, video loop) with measured
+  deltas; held at `:tested` for now.
+
+---
+
+## Counts (post-v0.1.2)
+
+- Total: 13
 - `:proved`: 0
-- `:tested`: 2 (LZ-009, LZ-011)
+- `:tested`: 3 (LZ-009, LZ-011, LZ-013)
 - `:verified`: 0
 - `:benchmarked`: 0
 - `:argued`: 7 (LZ-001, LZ-002, LZ-003, LZ-004, LZ-005, LZ-010, LZ-012)
