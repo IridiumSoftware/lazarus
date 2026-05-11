@@ -1279,15 +1279,16 @@ triadic-coordination-engine repo.
 
 ---
 
-## v0.1.19 (2026-05-11) — LZ-027 break-glass recovery
-
-Closes the operational fail-closed risk surfaced in Brian
-Crabtree's external Triad review (2026-05-11). Prior to
-v0.1.19 a persistent Shakespeare-mode lockout (camera
-failure, `face_compare` regression, LZ-013 threshold mis-
-calibration) had no documented break-glass path other than
+Break-glass surface (LZ-027) lands in the same v0.1.20 spec
+update. Closes the operational fail-closed risk surfaced in
+Brian Crabtree's external Triad review (2026-05-11): a
+persistent Shakespeare-mode lockout (camera failure,
+`face_compare` regression, LZ-013 threshold mis-calibration)
+previously had no documented recovery path other than
 manually editing `state.json` from a Terminal that hadn't
-loaded `/lazarus`.
+loaded `/lazarus`. The implementation + test file ship in the
+v0.1.21 follow-up commit; the spec entry below records the
+intended end-state.
 
 ### LZ-027 — break-glass-recovery
 - Key: --recover provides Touch ID or recovery-token paths to clear persistent lockout
@@ -1353,7 +1354,7 @@ loaded `/lazarus`.
 
 ---
 
-## Counts (post-v0.1.19)
+## Counts (post-v0.1.20)
 
 - Total: 27
 - `:proved`: 3 — LZ-016 (outlier-detection algorithm),
@@ -1374,15 +1375,21 @@ loaded `/lazarus`.
 - `:open`: 0
 
 Promotion queue (highest-leverage, ordered by ease):
-1. **LZ-006 / LZ-007 / LZ-008** — all three are exercisable
-   without real hardware by stubbing `run_face_compare`. One
-   test session each; would lift `:open` count to 0.
-2. **LZ-002** — fixture-driven (image, expected band) test set;
-   needs a small set of reference + probe JPEGs.
-3. **LZ-005** — CI lint that grep-fails on networking imports
-   in the face-comparison sources. Cheap; high-value.
-4. **LZ-010** — localhost loop-connect test. Fragile in CI;
-   defer until a stable shape is found.
-5. **LZ-001 / LZ-003 / LZ-012** — visual-skin / refusal /
-   read-only-discipline are prompt-layer claims; tooling for
-   transcript-level audit is the long-tail item.
+1. **LZ-022..LZ-026 joint integration tests** — each
+   joint-closure entry carries a documented promotion path
+   in its `Notes:` field. LZ-026 (the directional 3-cycle
+   over the Lean-proved trio) is the cleanest `:proved`
+   target since the modules already exist; needs a
+   `composed_correctness` theorem in `src/lean4/` linking
+   LZ-016, LZ-017, LZ-018.
+2. **Lean expansion** — formalise additional `:tested`
+   entries that admit it. Natural next candidates:
+   LZ-006 prune-bounded list invariant, LZ-007 watch-loop
+   state-machine, LZ-013 byte-diff inequalities.
+3. **LZ-002 calibration** — fixture-driven (image,
+   expected band) test set. Held until a clean fixture
+   source emerges (face-data identifiability problem).
+4. **Cross-deployment dependency** — LavaLamp heartbeat
+   could augment Lazarus auth (`re-auth requires LavaLamp
+   daemon liveness within N seconds`), same pattern PharOS
+   uses. New spec entry if pursued.

@@ -105,6 +105,9 @@ jobs:
       - name: LZ-021 — test_oversight_tier2.sh
         run: bash test/test_oversight_tier2.sh
 
+      - name: LZ-027 — test_recovery.py
+        run: python3 test/test_recovery.py
+
       - name: LZ-016 — Lean proof (Outliers.lean)
         working-directory: src/lean4
         run: |

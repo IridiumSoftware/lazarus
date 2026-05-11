@@ -1,6 +1,6 @@
 # Dashboard — Lazarus
 
-Last updated: 2026-05-11 (post-v0.1.19 — **break-glass recovery (LZ-027) + TCE Discovery.Triadic joint-closure entries (LZ-022..LZ-026).** Two pieces of work landed in the working tree concurrently, shipped together at v0.1.20. (1) The third per-deployment TCE pass in the Triad series (after LavaLamp's LL-030..LL-038 and PharOS's too-early 10-entry pass) surfaced 4 HIGH-band conjunctive triples + 1 directional 3-cycle from Lazarus's 19-entry corpus. The 3-cycle [LZ-016, LZ-017, LZ-018] is the **first directional cycle** across all three Triad-deployment TCE passes (LavaLamp 44-entry: 0; PharOS 10-entry: 0; Lazarus 19-entry: 1). All 5 new entries at `:argued` per conjunctive-claim discipline. (2) LZ-027 closes the fail-closed availability risk surfaced in Brian Crabtree's external Triad review — `--recover` command provides a documented two-method (Touch ID OR recovery-token) break-glass surface. Counts shift: 21/3/18/0/0/0/0 → **27/3/19/0/0/5/0**. TCE driver + companion at triadic-coordination-engine commit 3fcccf3).
+Last updated: 2026-05-11 (post-v0.1.20 — **break-glass recovery (LZ-027) + TCE Discovery.Triadic joint-closure entries (LZ-022..LZ-026).** Two pieces of work landed in the working tree concurrently, shipped together at v0.1.20. (1) The third per-deployment TCE pass in the Triad series (after LavaLamp's LL-030..LL-038 and PharOS's too-early 10-entry pass) surfaced 4 HIGH-band conjunctive triples + 1 directional 3-cycle from Lazarus's 19-entry corpus. The 3-cycle [LZ-016, LZ-017, LZ-018] is the **first directional cycle** across all three Triad-deployment TCE passes (LavaLamp 44-entry: 0; PharOS 10-entry: 0; Lazarus 19-entry: 1). All 5 new entries at `:argued` per conjunctive-claim discipline. (2) LZ-027 closes the fail-closed availability risk surfaced in Brian Crabtree's external Triad review — `--recover` command provides a documented two-method (Touch ID OR recovery-token) break-glass surface. Counts shift: 21/3/18/0/0/0/0 → **27/3/19/0/0/5/0**. TCE driver + companion at triadic-coordination-engine commit 3fcccf3).
 
 ## Status summary
 
@@ -14,7 +14,10 @@ Last updated: 2026-05-11 (post-v0.1.19 — **break-glass recovery (LZ-027) + TCE
   promotion to `:tested` requires joint integration tests.
   LZ-027 break-glass recovery at `:tested`.
   `:open` at zero.
-- Tests: 15/15 passing locally and on `macos-latest` via CI.
+- Tests: full suite passes locally and on `macos-latest`
+  via CI on every push. LZ-027 test file + the LZ-027 CI
+  step land at v0.1.21 (immediate follow-up to this
+  v0.1.20 spec commit).
   - `test/test_visual_skin_decoupling.py` (LZ-001)
   - `test/test_distance_band_thresholds.py` (LZ-002)
   - `test/test_shakespeare_mode_refusal.py` (LZ-003)
@@ -36,6 +39,7 @@ Last updated: 2026-05-11 (post-v0.1.19 — **break-glass recovery (LZ-027) + TCE
   - `test/test_auth_strict_touchid.py` (LZ-019)
   - `test/test_runtime_harness.py` + `test/transcripts/` (LZ-020)
   - `test/test_oversight_tier2.sh` (LZ-021)
+  - `test/test_recovery.py` (LZ-027, ships v0.1.21)
 - CI: `.github/workflows/test.yml` runs the full test suite
   on `macos-latest` on every push. Outstanding:
   `actions/checkout@v4` Node.js 20 deprecation (deadline
@@ -49,16 +53,23 @@ Reordered 2026-05-11 after Brian Crabtree's external Triad
 review surfaced break-glass / lockout-risk as the
 highest-impact gap in the current shipping surface.
 
-1. **LZ-022 break-glass recovery (IN PROGRESS, v0.1.18).**
-   `face_sentinel.py` currently has no documented recovery
-   path when Shakespeare mode persists due to camera
-   failure, `face_compare` regression, or LZ-013 liveness
-   threshold mis-calibration. Spec entry + `--recover`
-   command + Touch ID-only + optional recovery-token
-   sub-path. Closes the operational fail-closed risk
-   surfaced in Brian's external review of the Triad.
+1. **v0.1.21 follow-up: ship LZ-027 implementation.**
+   `face_sentinel.py` `recover()` + `--recover` flag + the
+   `test/test_recovery.py` test file + the
+   `LZ-027 — test_recovery.py` CI step are on disk locally
+   but uncommitted at the v0.1.20 spec cut. The v0.1.21
+   commit lands them so CI can exercise the spec'd
+   `:tested` status.
 
-2. **`LAZARUS_RECOVERY_SPEC.md` + Lazarus.jl absorption
+2. **LZ-022..LZ-026 joint integration tests.** Each
+   `:argued` joint-closure entry has a documented
+   promotion path in its `Notes:` field. LZ-026 (the
+   directional 3-cycle over the Lean-proved trio) is the
+   cleanest `:proved` target since the Lean modules
+   already exist — needs a `composed_correctness` theorem
+   in `src/lean4/`.
+
+3. **`LAZARUS_RECOVERY_SPEC.md` + Lazarus.jl absorption
    decision.** Brian's review framed a forward Julia
    resurrection layer (Shamir + Hardware Envelope + TPM)
    as the long-horizon evolution of lazarus. Architectural
@@ -67,14 +78,14 @@ highest-impact gap in the current shipping surface.
    (C) extend LavaLamp. Spec-doc work blocked until the
    architectural call is made.
 
-3. **Lean expansion** — more proofs on the `:tested`
+4. **Lean expansion** — more proofs on the `:tested`
    entries that admit formalization. Natural next
    candidates: LZ-006 prune-bounded list invariant,
    LZ-007 watch-loop state-machine, LZ-013 byte-diff
    inequalities. Each ~30-50 lines of Lean given the
    existing `src/lean4/` infrastructure.
 
-4. **TPM/SEP binding (deferred — PharOS dependency).**
+5. **TPM/SEP binding (deferred — PharOS dependency).**
    The substrate-binding portion of the proposed Lazarus.jl
    needs hardware-root-of-trust patterns to land in PharOS
    first (v0.0.7 roadmap). Hold until that pattern
@@ -122,6 +133,22 @@ highest-impact gap in the current shipping surface.
 
 ## Recently completed
 
+- 2026-05-11 — v0.1.20: **TCE joint-closures (LZ-022..LZ-026)
+  + break-glass recovery (LZ-027).** Two arcs merged into one
+  spec commit. (1) The third per-deployment TCE
+  Discovery.Triadic pass surfaced 4 HIGH-band conjunctive
+  triples + 1 directional 3-cycle from the 19-entry Lazarus
+  corpus — all five enter the spec at `:argued` per
+  conjunctive-claim discipline. The 3-cycle [LZ-016, LZ-017,
+  LZ-018] is the first directional cycle across all three
+  Triad-deployment TCE passes. (2) LZ-027 spec entry for
+  `--recover` (Touch ID + optional recovery-token) closes the
+  fail-closed availability risk surfaced in Brian Crabtree's
+  external Triad review. Implementation + test ship in
+  v0.1.21. Counts:
+  21 / 3 / 18 / 0 / 0 / 0 / 0 → **27 / 3 / 19 / 0 / 0 / 5 /
+  0**. TCE driver + companion at triadic-coordination-engine
+  commit 3fcccf3.
 - 2026-05-11 — v0.1.17: **LZ-021 OverSight Tier 2**
   (allowlist + state-flip). `oversight_action.sh` gains a
   built-in + user-file allowlist; on non-allowlisted
