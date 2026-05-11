@@ -286,8 +286,18 @@ def liveness_check(first_capture: str) -> dict:
 
 # ── Auth (session opener) ─────────────────────────────────────────
 
-def auth():
-    """Session authentication: Touch ID + face match + background snapshot."""
+def auth(strict_touchid: bool = False):
+    """Session authentication: Touch ID + face match + background snapshot.
+
+    When `strict_touchid` is True (set via the `--strict-touchid` CLI
+    flag), any non-"ok" outcome from `_touchid_check()` is treated as
+    a hard auth failure: the function prints a diagnostic, logs a
+    `touchid_strict_fail` event, and exits non-zero before reaching
+    the face-match step. Default behavior (False) is opportunistic
+    fail-open per LZ-015 — Touch ID strengthens auth when available
+    but never blocks a legitimate owner on hardware-less or
+    misbehaving setups.
+    """
     ensure_dirs()
 
     ref_count = len(list(REF_DIR.glob("*.json")))
@@ -295,11 +305,21 @@ def auth():
         print("No references enrolled. Run --enroll first to build your face set.")
         sys.exit(1)
 
-    # Step 1: Opportunistic Touch ID gate (fail-open if unavailable).
+    # Step 1: Touch ID gate. Default is opportunistic (fail-open per
+    # LZ-015); --strict-touchid promotes non-"ok" outcomes to hard
+    # auth failure (LZ-019).
     print("Touch ID verification...")
     touchid_result = _touchid_check()
     if touchid_result == "ok":
         log_event({"event": "touchid_ok"})
+    elif strict_touchid:
+        # Strict mode: any non-"ok" outcome is a hard auth failure.
+        # No fall-through to face check.
+        print(f"Touch ID strict-mode failure ({touchid_result}). "
+              f"Auth denied.")
+        log_event({"event": "touchid_strict_fail",
+                   "result": touchid_result})
+        sys.exit(1)
     elif touchid_result == "nonzero":
         print("Touch ID check returned non-zero. Proceeding with face check.")
         log_event({"event": "touchid_nonzero"})
@@ -807,6 +827,9 @@ if __name__ == "__main__":
     group.add_argument("--status", action="store_true", help="Show status")
     parser.add_argument("--interval", type=int, default=WATCH_INTERVAL,
                         help=f"Watch interval in seconds (default: {WATCH_INTERVAL})")
+    parser.add_argument("--strict-touchid", action="store_true",
+                        help="Treat Touch ID nonzero/unavailable as hard auth "
+                             "failure (default: opportunistic / fail-open)")
 
     args = parser.parse_args()
 
@@ -816,7 +839,7 @@ if __name__ == "__main__":
         sys.exit(1)
 
     if args.auth:
-        auth()
+        auth(strict_touchid=args.strict_touchid)
     elif args.enroll:
         enroll()
     elif args.watch:

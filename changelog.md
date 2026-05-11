@@ -1,5 +1,73 @@
 # Changelog — Lazarus
 
+## v0.1.15 — 2026-05-11 — `--strict-touchid` hard-gate (LZ-019)
+
+New operational feature, not a promotion. Adds the
+`--strict-touchid` CLI flag to `face_sentinel.py --auth`,
+promoting Touch ID from opportunistic / fail-open (LZ-015)
+to a hard auth gate when the user opts in. Default behavior
+unchanged — opportunistic mode remains the default and the
+fail-open story for hardware-less Macs is preserved.
+
+### Added
+
+- `face_sentinel.py`:
+  - `auth()` now takes a `strict_touchid: bool = False`
+    parameter. Default `False` preserves legacy
+    opportunistic behavior.
+  - Step 1 (Touch ID gate) branches on `strict_touchid`:
+    when `True` and `_touchid_check()` returns anything
+    other than `"ok"`, the function prints a diagnostic,
+    logs `touchid_strict_fail` with the offending result,
+    and `sys.exit(1)` before reaching the face-match step.
+  - argparse `--strict-touchid` flag wired into the CLI;
+    dispatched via `auth(strict_touchid=args.strict_touchid)`.
+- `test/test_auth_strict_touchid.py` — 5 branches plus a
+  default-parameter lock:
+  1. strict + ok → proceeds (face match completes, mode →
+     "normal", `touchid_ok` + `auth_ok` logged).
+  2. strict + nonzero → exit 1, `touchid_strict_fail` with
+     `result="nonzero"` logged, no downstream events.
+  3. strict + unavailable → exit 1, `touchid_strict_fail`
+     with `result="unavailable"`.
+  4. non-strict + nonzero → unchanged from LZ-015 (proceeds,
+     `touchid_nonzero` logged).
+  5. non-strict + unavailable → unchanged from LZ-015.
+  Plus `inspect.signature(auth)` assertion locks
+  `strict_touchid` default at `False`.
+- `.github/workflows/test.yml` — new CI step
+  `LZ-019 — test_auth_strict_touchid.py`.
+
+### Status changes
+
+- **LZ-019** enters the spec at `:tested` with evidence type
+  `example-tested`.
+- LZ-015's Notes field updated: the deferred-future-work
+  note now points at LZ-019 as the shipped strict
+  alternative (still opt-in; default remains
+  opportunistic).
+- Counts: 18 / 3 / 15 / 0 / 0 / 0 / 0 → **19 / 3 / 16 / 0 /
+  0 / 0 / 0**.
+
+### Honest framing
+
+Strict mode raises the bar in the common case (laptop
+snatched, owner not present, attacker dismisses or can't
+satisfy the Touch ID prompt → strict mode prevents the
+face check from running at all). It is NOT a structural
+guarantee — an attacker who can disable / occupy / spoof
+Touch ID hardware bypasses regardless. Honest framing
+matches LZ-015's: the defensive value is at the
+prompt/hardware-interaction layer, not at the substrate
+level.
+
+The `--no-touchid` escape hatch (proposed in the dashboard
+priority stack) is deliberately NOT shipped — opportunistic
+mode (the default) already accommodates Touch-ID-less
+hardware via the `"unavailable"` fail-open path. Adding a
+third mode would be a feature-creep without a concrete use
+case.
+
 ## v0.1.14 — 2026-05-11 — third `:proved` entry (LZ-018, classification dispatcher)
 
 Adds LZ-018: priority-ordered classification dispatcher

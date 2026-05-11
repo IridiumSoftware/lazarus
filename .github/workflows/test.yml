@@ -96,6 +96,9 @@ jobs:
       - name: LZ-012 — test_companion_readonly_discipline.py
         run: python3 test/test_companion_readonly_discipline.py
 
+      - name: LZ-019 — test_auth_strict_touchid.py
+        run: python3 test/test_auth_strict_touchid.py
+
       - name: LZ-016 — Lean proof (Outliers.lean)
         working-directory: src/lean4
         run: |

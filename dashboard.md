@@ -1,11 +1,11 @@
 # Dashboard — Lazarus
 
-Last updated: 2026-05-11 (post-v0.1.14 — third `:proved` entry; classification dispatcher priority proved in Lean).
+Last updated: 2026-05-11 (post-v0.1.15 — `--strict-touchid` hard-gate flag landed as LZ-019).
 
 ## Status summary
 
-- Spec: 18 LZ-NNN entries in `LAZARUS_SPEC.md`.
-- Counts: **18 / 3 / 15 / 0 / 0 / 0 / 0** (total / proved /
+- Spec: 19 LZ-NNN entries in `LAZARUS_SPEC.md`.
+- Counts: **19 / 3 / 16 / 0 / 0 / 0 / 0** (total / proved /
   tested / verified / benchmarked / argued / open).
   Three `:proved` entries (LZ-016 outliers, LZ-017 liveness
   metric, LZ-018 classification dispatcher) via hermetic
@@ -29,6 +29,7 @@ Last updated: 2026-05-11 (post-v0.1.14 — third `:proved` entry; classification
   - `src/lean4/Outliers.lean` (LZ-016, lean-proved, 5 theorems)
   - `src/lean4/Liveness.lean` (LZ-017, lean-proved, 4 theorems)
   - `src/lean4/Classify.lean` (LZ-018, lean-proved, 6 theorems)
+  - `test/test_auth_strict_touchid.py` (LZ-019)
 - CI: `.github/workflows/test.yml` runs the full test suite
   on `macos-latest` on every push. Outstanding:
   `actions/checkout@v4` Node.js 20 deprecation (deadline
@@ -47,11 +48,10 @@ new claims, not existing-claim promotions.
    `oversight_action.sh`. New spec entry **LZ-016** +
    companion doc + test.
 
-2. **`--strict-touchid` flag** — turn Touch ID into a hard
-   gate. New spec entry LZ-NNN with a clear story for
-   headless / no-hardware scenarios (escape hatch via
-   `--no-touchid`?). Held until/unless an actual use case
-   surfaces.
+2. ~~`--strict-touchid` flag~~ — shipped at v0.1.15 as
+   LZ-019. The `--no-touchid` escape hatch was considered
+   and deferred; opportunistic mode (default) covers the
+   hardware-less case.
 
 3. **Runtime LLM-behavior harness** — the LZ-001 / LZ-003 /
    LZ-004 / LZ-012 prompt-contract tests catch refactors
@@ -103,6 +103,15 @@ new claims, not existing-claim promotions.
 
 ## Recently completed
 
+- 2026-05-11 — v0.1.15: **`--strict-touchid` hard-gate
+  flag (LZ-019)**. New CLI flag on `face_sentinel.py --auth`;
+  when set, any non-"ok" Touch ID outcome exits non-zero
+  before the face-match step. Default behavior (LZ-015
+  opportunistic / fail-open) unchanged. New test exercises
+  five branches (strict×3 outcomes + non-strict×2 outcomes)
+  plus a default-parameter lock via `inspect.signature`.
+  Counts: 18 / 3 / 15 / 0 / 0 / 0 / 0 → **19 / 3 / 16 / 0 /
+  0 / 0 / 0**.
 - 2026-05-11 — v0.1.14: **third `:proved` entry. LZ-018**
   proves the priority-ordered classification dispatcher
   underlying LZ-009 (`network_monitor.classify`).

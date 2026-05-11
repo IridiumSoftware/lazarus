@@ -607,15 +607,16 @@ hardware (or with hardware that's misbehaving).
   silently swallowed.
 - Notes: Fail-open is the right default for a single-owner
   desktop tool — biometric hardware flakes shouldn't lock
-  legitimate owners out. A stricter `--strict-touchid` flag
-  that turns Touch ID into a hard gate is future work; it
-  would warrant a separate spec entry (LZ-NNN) and a clear
-  story for the headless / no-hardware scenarios. Honest
-  framing: in fail-open mode, an attacker who can disable or
-  occupy the Touch ID hardware bypasses this layer entirely
-  — the defensive value comes from raising the bar in the
-  common case (someone with the laptop but without the
-  owner's fingerprint), not from a structural guarantee.
+  legitimate owners out. The stricter alternative —
+  `--strict-touchid` flag that turns Touch ID into a hard
+  gate — shipped at v0.1.15 as **LZ-019**. The default for
+  this entry remains opportunistic; LZ-019 is opt-in.
+  Honest framing: in fail-open mode, an attacker who can
+  disable or occupy the Touch ID hardware bypasses this
+  layer entirely — the defensive value comes from raising
+  the bar in the common case (someone with the laptop but
+  without the owner's fingerprint), not from a structural
+  guarantee.
 
 ---
 
@@ -700,6 +701,60 @@ producer-side mode-flip semantics. Same pattern as LZ-001:
 the runtime claim (LLM-behavior) remains a prompt-layer
 guarantee enforced by review; the *contract* the LLM reads is
 what's CI-protected.
+
+---
+
+## v0.1.15 (2026-05-11) — LZ-019 strict Touch ID hard gate
+
+New feature, not a promotion. Adds the `--strict-touchid` CLI
+flag to `face_sentinel.py --auth`, promoting Touch ID from
+opportunistic / fail-open (LZ-015) to a hard auth gate when
+the user opts in. Default behavior unchanged.
+
+### LZ-019 — strict-touchid-hard-gate
+- Key: `--strict-touchid` treats Touch ID nonzero/unavailable as hard auth failure
+- Logic tier: Operational
+- Description: `face_sentinel.py --auth --strict-touchid` runs
+  the Touch ID gate (`_touchid_check()` per LZ-015) and exits
+  non-zero if the result is anything other than `"ok"`. The
+  function logs `touchid_strict_fail` with the offending
+  result (`"nonzero"` or `"unavailable"`) and never reaches
+  the face-match step. Defaults: the flag is `False` (the
+  argparse `action="store_true"` plus `auth()`'s
+  `strict_touchid: bool = False` parameter default), so the
+  legacy opportunistic / fail-open behavior is preserved
+  unless the caller explicitly opts in. Mutually compatible
+  with all other auth-time flags; the strict gate runs
+  before any face-match work.
+- Evidence type: example-tested
+- Status: :tested
+- Source: `face_sentinel.py` `auth()` Step 1 strict branch +
+  argparse `--strict-touchid` flag + CLI dispatch via
+  `auth(strict_touchid=args.strict_touchid)`.
+- Test/Proof: `test/test_auth_strict_touchid.py` exercises
+  five branches:
+  1. strict + ok → proceeds normally (face match completes,
+     state.mode = "normal", `touchid_ok` + `auth_ok` logged).
+  2. strict + nonzero → exit 1, `touchid_strict_fail` logged
+     with `result="nonzero"`, no downstream events.
+  3. strict + unavailable → exit 1, `touchid_strict_fail`
+     logged with `result="unavailable"`.
+  4. non-strict + nonzero → unchanged from LZ-015 (proceeds,
+     `touchid_nonzero` logged).
+  5. non-strict + unavailable → unchanged from LZ-015.
+  Plus a default-parameter lock: `inspect.signature(auth)`
+  asserts `strict_touchid` defaults to `False`.
+- Notes: Honest framing — this layer raises the bar in the
+  common case (laptop snatched, owner not present, attacker
+  dismisses or can't satisfy the Touch ID prompt → strict
+  mode prevents the face check from running at all). It is
+  NOT a structural guarantee — an attacker who can disable
+  / occupy / spoof Touch ID hardware still bypasses. The
+  defensive value is the same as LZ-015's, just less
+  forgiving: legitimate hardware-less owners can't use the
+  flag, but the workflow is "use opportunistic mode by
+  default; opt into strict mode when running on hardware
+  you trust to be present."
 
 ---
 
@@ -884,13 +939,13 @@ has runnable evidence.
 
 ## Counts (post-v0.1.11)
 
-- Total: 18
+- Total: 19
 - `:proved`: 3 — LZ-016 (outlier-detection algorithm),
   LZ-017 (liveness metric properties), LZ-018 (priority
   dispatcher correctness), all lean-proved hermetically in
   `src/lean4/`
-- `:tested`: 15 — LZ-001..LZ-015, every entry backed by a
-  runnable test
+- `:tested`: 16 — LZ-001..LZ-015 + LZ-019, every operational
+  entry backed by a runnable test
 - `:verified`: 0
 - `:benchmarked`: 0
 - `:argued`: 0
