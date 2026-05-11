@@ -703,6 +703,62 @@ what's CI-protected.
 
 ---
 
+## v0.1.14 (2026-05-11) — LZ-018 :proved (classification dispatcher priority)
+
+Third `:proved` entry. The priority-ordered classification
+dispatcher underlying LZ-009's `network_monitor.classify`
+Python function is proved abstractly: the cascade structure
+returns the leftmost-true class regardless of what the
+predicates actually check.
+
+### LZ-018 — classification-dispatcher-priority
+- Key: SYSTEM > KNOWN > AI_WATCH > OTHER priority is structurally correct
+- Logic tier: Operational
+- Description: `network_monitor.classify` (LZ-009, :tested)
+  uses an if-elif-elif-else cascade over three boolean
+  predicates (`is_system`, `is_known_good`, `is_ai_related`)
+  to emit one of four classes. This entry proves the
+  abstract dispatcher: given any three predicates and any
+  input, the result is the leftmost-true predicate's class,
+  falling through to `OTHER` only when all three return
+  false. The proof is abstracted over the predicates — it
+  doesn't depend on what the allowlists (`SYSTEM_PREFIXES`,
+  `KNOWN_GOOD`, `AI_PROCESSES`) actually contain, only on
+  the cascade structure. Six theorems proved hermetically:
+  - `classify_system_priority` — `isSystem c = true` →
+    result is SYSTEM, regardless of the other predicates.
+  - `classify_known_priority` — `¬isSystem ∧ isKnown` →
+    result is KNOWN.
+  - `classify_aiWatch_priority` — `¬isSystem ∧ ¬isKnown ∧
+    isAI` → result is AI_WATCH.
+  - `classify_other_default` — all three false → result is
+    OTHER.
+  - `classify_exhaustive` — for any input, result is one of
+    the four constructors (the dispatcher is total; no
+    stuck states).
+  - `classify_disjoint` — the four constructors are pairwise
+    distinct (a corollary of the inductive type's
+    constructor disjointness).
+- Evidence type: lean-proved
+- Status: :proved
+- Source: `src/lean4/Classify.lean` (~130 lines, 6 theorems
+  + `Class` inductive).
+- Test/Proof: `src/lean4/Classify.lean`. Build with
+  `cd src/lean4 && lake build`. Exits non-zero on any proof
+  failure.
+- Notes: The proof's value is making the priority order
+  structural rather than merely empirical. LZ-009's Python
+  test exercises specific connection records; LZ-018 proves
+  the dispatch correctness for ANY combination of predicate
+  values, including degenerate cases (all three true, all
+  three false, only AI true, etc.). The disjointness
+  property would catch any future bug where a refactor
+  accidentally collapsed two classes into one (e.g.
+  removing the `Class.known` constructor and re-routing
+  KNOWN to OTHER).
+
+---
+
 ## v0.1.13 (2026-05-11) — LZ-017 :proved (liveness metric properties)
 
 Second `:proved` entry. The byte-diff metric underlying
@@ -828,10 +884,11 @@ has runnable evidence.
 
 ## Counts (post-v0.1.11)
 
-- Total: 17
-- `:proved`: 2 — LZ-016 (outlier-detection algorithm) +
-  LZ-017 (liveness metric properties), both lean-proved
-  hermetically in `src/lean4/`
+- Total: 18
+- `:proved`: 3 — LZ-016 (outlier-detection algorithm),
+  LZ-017 (liveness metric properties), LZ-018 (priority
+  dispatcher correctness), all lean-proved hermetically in
+  `src/lean4/`
 - `:tested`: 15 — LZ-001..LZ-015, every entry backed by a
   runnable test
 - `:verified`: 0

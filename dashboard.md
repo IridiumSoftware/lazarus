@@ -1,15 +1,15 @@
 # Dashboard — Lazarus
 
-Last updated: 2026-05-11 (post-v0.1.13 — second `:proved` entry; liveness metric properties proved in Lean).
+Last updated: 2026-05-11 (post-v0.1.14 — third `:proved` entry; classification dispatcher priority proved in Lean).
 
 ## Status summary
 
-- Spec: 17 LZ-NNN entries in `LAZARUS_SPEC.md`.
-- Counts: **17 / 2 / 15 / 0 / 0 / 0 / 0** (total / proved /
+- Spec: 18 LZ-NNN entries in `LAZARUS_SPEC.md`.
+- Counts: **18 / 3 / 15 / 0 / 0 / 0 / 0** (total / proved /
   tested / verified / benchmarked / argued / open).
-  Two `:proved` entries (LZ-016 outlier-detection, LZ-017
-  liveness metric) via hermetic Lean4 proofs.
-  `:argued` and `:open` both at zero.
+  Three `:proved` entries (LZ-016 outliers, LZ-017 liveness
+  metric, LZ-018 classification dispatcher) via hermetic
+  Lean4 proofs. `:argued` and `:open` both at zero.
 - Tests: 15/15 passing locally and on `macos-latest` via CI.
   - `test/test_visual_skin_decoupling.py` (LZ-001)
   - `test/test_distance_band_thresholds.py` (LZ-002)
@@ -28,6 +28,7 @@ Last updated: 2026-05-11 (post-v0.1.13 — second `:proved` entry; liveness metr
   - `test/test_touchid_check.py` (LZ-015)
   - `src/lean4/Outliers.lean` (LZ-016, lean-proved, 5 theorems)
   - `src/lean4/Liveness.lean` (LZ-017, lean-proved, 4 theorems)
+  - `src/lean4/Classify.lean` (LZ-018, lean-proved, 6 theorems)
 - CI: `.github/workflows/test.yml` runs the full test suite
   on `macos-latest` on every push. Outstanding:
   `actions/checkout@v4` Node.js 20 deprecation (deadline
@@ -102,6 +103,16 @@ new claims, not existing-claim promotions.
 
 ## Recently completed
 
+- 2026-05-11 — v0.1.14: **third `:proved` entry. LZ-018**
+  proves the priority-ordered classification dispatcher
+  underlying LZ-009 (`network_monitor.classify`).
+  `src/lean4/Classify.lean` — 6 theorems: 4 priority cases
+  + exhaustive + disjoint. Proof is abstracted over the
+  three predicates (`is_system`, `is_known_good`,
+  `is_ai_related`), so the priority order is structural
+  rather than predicate-dependent. Counts:
+  17 / 2 / 15 / 0 / 0 / 0 / 0 → **18 / 3 / 15 / 0 / 0 / 0 /
+  0**.
 - 2026-05-11 — v0.1.13: **second `:proved` entry. LZ-017**
   proves the byte-diff metric properties underlying the
   LZ-013 liveness probe (4 theorems: self-zero, symmetry,

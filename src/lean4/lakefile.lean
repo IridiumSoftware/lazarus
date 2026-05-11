@@ -28,3 +28,7 @@ lean_lib «Outliers» where
 @[default_target]
 lean_lib «Liveness» where
   srcDir := "."
+
+@[default_target]
+lean_lib «Classify» where
+  srcDir := "."

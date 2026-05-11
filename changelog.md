@@ -1,5 +1,72 @@
 # Changelog — Lazarus
 
+## v0.1.14 — 2026-05-11 — third `:proved` entry (LZ-018, classification dispatcher)
+
+Adds LZ-018: priority-ordered classification dispatcher
+proved in Lean4 as the abstract content underlying LZ-009's
+`network_monitor.classify`. Same hermetic pattern as v0.1.12
+and v0.1.13.
+
+### Added
+
+- `src/lean4/Classify.lean` — `Class` inductive (4
+  constructors: `system`, `known`, `aiWatch`, `other`) + the
+  `classify` dispatcher function + 6 theorems:
+  - `classify_system_priority` — `isSystem c = true` →
+    result is SYSTEM regardless of the other predicates.
+  - `classify_known_priority` — `¬isSystem ∧ isKnown` →
+    KNOWN.
+  - `classify_aiWatch_priority` — `¬isSystem ∧ ¬isKnown ∧
+    isAI` → AI_WATCH.
+  - `classify_other_default` — all three false → OTHER.
+  - `classify_exhaustive` — for any input, result is one of
+    the four constructors.
+  - `classify_disjoint` — the four constructors are pairwise
+    distinct (corollary of inductive constructor
+    disjointness).
+- `src/lean4/lakefile.lean` — third `@[default_target]`
+  stanza adds `Classify` to the default build set so
+  `lake build` compiles all three proofs.
+
+### Status changes
+
+- **LZ-018** enters the spec at `:proved` with evidence type
+  `lean-proved`. Third lazarus entry at this tier
+  (alongside LZ-016 outliers and LZ-017 liveness metric).
+- Counts: 17 / 2 / 15 / 0 / 0 / 0 / 0 → **18 / 3 / 15 / 0 /
+  0 / 0 / 0**.
+
+### Honest framing
+
+The proof is abstracted over the three boolean predicates
+(`is_system`, `is_known_good`, `is_ai_related`) — it doesn't
+depend on what the allowlists (`SYSTEM_PREFIXES`, etc.)
+actually contain, only on the cascade structure. The value
+of this abstraction: the priority order is structural rather
+than empirical. LZ-009's Python test exercises specific
+connection records; LZ-018 proves the dispatch correctness
+for any combination of predicate values, including
+degenerate cases (all three true, all three false, only AI
+true, etc.).
+
+The `classify_disjoint` corollary would catch a refactor
+that accidentally collapsed two classes into one (e.g.
+removing the `Class.known` constructor and re-routing KNOWN
+to OTHER) — the explicit disjointness proof would fail to
+typecheck once the inductive structure changes.
+
+### Iteration note
+
+One v4.29.1 friction: the lakefile sets `autoImplicit :=
+false`, which means `α` in `∀ α (f : α → Bool), ...`
+positions doesn't get implicit-bound automatically. Fixed
+by adding explicit `{α : Type}` parameters to the
+dispatcher def and all six theorems. The fix is a clean
+six-line patch; the proofs themselves needed no other
+adjustments.
+
+Build time: ~180ms for Classify.lean.
+
 ## v0.1.13 — 2026-05-11 — second `:proved` entry (LZ-017, liveness metric)
 
 Adds LZ-017: byte-diff metric properties proved in Lean4 as

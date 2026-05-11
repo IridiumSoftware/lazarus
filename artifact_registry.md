@@ -1,9 +1,9 @@
 # artifact_registry.md — Lazarus
 
-Version: 0.1.13 (LZ-017 added as :proved via Lean on
-2026-05-11; second hermetic Lean4 proof — byte-diff metric
-properties for the liveness probe. Counts:
-17 / 2 / 15 / 0 / 0 / 0 / 0.)
+Version: 0.1.14 (LZ-018 added as :proved via Lean on
+2026-05-11; third hermetic Lean4 proof — priority dispatcher
+correctness for network classification. Counts:
+18 / 3 / 15 / 0 / 0 / 0 / 0.)
 
 ## Coverage rule
 
@@ -48,22 +48,24 @@ contain every Test/Proof and Source path listed.
 | LZ-015 | Touch ID opportunistic pre-face gate | Operational | example-tested | test/test_touchid_check.py + docs/lazarus_touchid_v0_1_4_companion.md (manual evidence for real bioutil invocation) | face_sentinel.py _touchid_check() + auth() Step 1 block | :tested |
 | LZ-016 | outlier-detection abstract algorithm | Operational | lean-proved | src/lean4/Outliers.lean (5 theorems: subset, empty, singleton, constant, monotone) — built hermetically via `cd src/lean4 && lake build` | src/lean4/Outliers.lean (abstract algorithm) layered on face_sentinel.py _outliers_from_scores (LZ-014, Python implementation) | :proved |
 | LZ-017 | liveness metric abstract properties | Operational | lean-proved | src/lean4/Liveness.lean (4 theorems: self-zero, symmetry, length-bounded, zero-iff-equal) — built hermetically via `lake build` | src/lean4/Liveness.lean (abstract Hamming-style metric) layered on face_sentinel.py _liveness_delta (LZ-013, Python implementation) | :proved |
+| LZ-018 | classification dispatcher priority | Operational | lean-proved | src/lean4/Classify.lean (6 theorems: 4 priority cases + exhaustive + disjoint) — built hermetically via `lake build` | src/lean4/Classify.lean (abstract priority dispatcher) layered on network_monitor.py classify (LZ-009, Python implementation) | :proved |
 
 ## Counts
 
-- Total: 17
-- `:proved`: 2 (LZ-016 outliers + LZ-017 liveness metric,
-  both lean-proved hermetically)
+- Total: 18
+- `:proved`: 3 (LZ-016 outliers + LZ-017 liveness metric +
+  LZ-018 classification dispatcher, all lean-proved
+  hermetically)
 - `:tested`: 15 — LZ-001 through LZ-015
 - `:verified`: 0
 - `:benchmarked`: 0
 - `:argued`: 0
 - `:open`: 0
 
-## Cross-audit A1–A6 self-check (post-v0.1.13)
+## Cross-audit A1–A6 self-check (post-v0.1.14)
 
 - **A1 — Coverage.** Every LZ-ID in `LAZARUS_SPEC.md` has a row
-  here. ✓ (17 of 17).
+  here. ✓ (18 of 18).
 - **A2 — Logic & Status parity.** Spec → registry Logic tier and
   Status fields match exactly. Key column compresses spec keys
   for table readability (e.g. spec
@@ -95,13 +97,15 @@ contain every Test/Proof and Source path listed.
     hermetically via `lake build`)
   - LZ-017 → `src/lean4/Liveness.lean` (4 theorems built
     hermetically via `lake build`)
+  - LZ-018 → `src/lean4/Classify.lean` (6 theorems built
+    hermetically via `lake build`)
   No `:argued` or `:open` entries remain.
 - **A4 — Status honesty.** All 15 `:tested` entries carry
-  `example-tested`; LZ-016 and LZ-017 carry `lean-proved`
-  matching their `:proved` status. No `:argued` or `:open`
-  entries remain. No entry has a status its evidence type
-  cannot support.
-- **A5 — Stale counts.** Counts above (17 / 2 / 15 / 0 / 0 /
+  `example-tested`; LZ-016, LZ-017, and LZ-018 carry
+  `lean-proved` matching their `:proved` status. No
+  `:argued` or `:open` entries remain. No entry has a
+  status its evidence type cannot support.
+- **A5 — Stale counts.** Counts above (18 / 3 / 15 / 0 / 0 /
   0 / 0) match `LAZARUS_SPEC.md` final-section counts and
   `dashboard.md` summary.
 - **A6 — Test sync.** All 15 `:tested` entries are exercised
