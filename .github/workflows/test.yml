@@ -95,3 +95,13 @@ jobs:
 
       - name: LZ-012 — test_companion_readonly_discipline.py
         run: python3 test/test_companion_readonly_discipline.py
+
+      - name: LZ-016 — Lean proof (Outliers.lean)
+        working-directory: src/lean4
+        run: |
+          # Install elan so the toolchain pin in lean-toolchain
+          # resolves to the matching Lean version.
+          curl -sSf https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh \
+              | sh -s -- -y --default-toolchain none
+          export PATH="$HOME/.elan/bin:$PATH"
+          lake build

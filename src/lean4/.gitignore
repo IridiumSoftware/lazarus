@@ -1,0 +1,6 @@
+# Lake build artifacts.
+.lake/
+build/
+
+# Lean cache.
+*.olean

@@ -703,6 +703,59 @@ what's CI-protected.
 
 ---
 
+## v0.1.12 (2026-05-11) — LZ-016 :proved via Lean (first proof)
+
+First `:proved` entry in lazarus. Adds a hermetic Lean4 track
+at `src/lean4/` mirroring the TCE pattern (no Mathlib on the
+default build path, project-local types, `lake build` in
+under a second). The proof covers the abstract algorithm
+underneath `face_sentinel._outliers_from_scores` (LZ-014's
+Python helper).
+
+### LZ-016 — outlier-detection-abstract-algorithm
+- Key: `_outliers_from_scores` math proved in Lean as a layered abstract claim
+- Logic tier: Operational
+- Description: The Python helper `_outliers_from_scores`
+  (LZ-014, :tested) implements an outlier-detection algorithm
+  on a finite map of scores: a value `v` is an outlier iff
+  `v > m × mean(scores)` for multiplier `m`. This entry is the
+  matching abstract algorithm, proved in Lean as a structural
+  skeleton (per the TCE convention of separating mathematical
+  content from imperative implementation). Five theorems
+  proved hermetically (Lean core only, no Mathlib):
+  - `outliers_subset` — output is a sublist of input.
+  - `outliers_empty` — empty input → empty output.
+  - `outliers_singleton` — single-element input with multiplier
+    ≥ 1 → empty output (a singleton can't outlier itself).
+  - `outliers_constant` — all-same scores with multiplier ≥ 1
+    → empty output (constant pool has no internal outliers).
+  - `outliers_monotone_threshold` — multipliers `m₁ ≤ m₂`
+    implies `outliers(s, m₂) ⊆ outliers(s, m₁)` (raising the
+    threshold can only shrink the outlier set).
+  Model: scores as `List Nat`, multiplier as `Nat`. The
+  division-free predicate `v * |s| > m * Σs` (multiplying
+  the Python predicate through by `|s|`) keeps the proof in
+  pure `Nat` arithmetic without rationals.
+- Evidence type: lean-proved
+- Status: :proved
+- Source: `src/lean4/Outliers.lean` (60-ish lines, 5
+  theorems + `sum_of_constant` lemma).
+- Test/Proof: `src/lean4/Outliers.lean`. Build with
+  `cd src/lean4 && lake build`. Exits non-zero on any
+  proof failure.
+- Notes: Honest framing per the TCE structural-skeleton
+  convention. The proof targets the **abstract algorithm**,
+  not the Python implementation. The Python code matches the
+  proved algorithm by inspection (single-line list
+  comprehension over the same predicate). LZ-014 covers the
+  Python implementation via `test_prune_logic.py`; LZ-016
+  layers on top with the mathematical proof. The `Nat`-only
+  model is shape-equivalent to the rational version for
+  positive scores (Apple Vision feature-print distances are
+  always non-negative), which is the load-bearing case.
+
+---
+
 ## v0.1.11 (2026-05-11) — LZ-004 + LZ-012 promotions → :argued count = 0
 
 No new LZ-NNN entries. The two remaining `:argued` claims
@@ -722,10 +775,11 @@ has runnable evidence.
 
 ## Counts (post-v0.1.11)
 
-- Total: 15
-- `:proved`: 0
-- `:tested`: 15 — every LZ-NNN entry (LZ-001..LZ-015) backed by
-  a runnable test
+- Total: 16
+- `:proved`: 1 — LZ-016 (outlier-detection abstract algorithm,
+  lean-proved hermetically)
+- `:tested`: 15 — LZ-001..LZ-015, every entry backed by a
+  runnable test
 - `:verified`: 0
 - `:benchmarked`: 0
 - `:argued`: 0

@@ -1,5 +1,82 @@
 # Changelog — Lazarus
 
+## v0.1.12 — 2026-05-11 — first `:proved` entry (LZ-016, lean-proved)
+
+Lazarus gains a hermetic Lean4 track at `src/lean4/` and ships
+its first machine-verified proof: LZ-016, the abstract
+outlier-detection algorithm that underlies LZ-014's Python
+helper. Counts: 15 / 0 / 15 / 0 / 0 / 0 / 0 → **16 / 1 / 15 /
+0 / 0 / 0 / 0**.
+
+### Added
+
+- `src/lean4/` — new directory mirroring the
+  Triadic-Coordination-Engine hermetic pattern.
+  - `lean-toolchain` — pins Lean v4.29.1 (matches the system
+    Lean on macOS arm64).
+  - `lakefile.lean` — single hermetic package, no external
+    dependencies (no Mathlib on the default build path).
+  - `.gitignore` — excludes `.lake/` and `*.olean` build
+    artifacts.
+  - `Outliers.lean` — the LZ-016 proof. Five theorems:
+    - `outliers_subset` — output ⊆ input.
+    - `outliers_empty` — empty input → empty output.
+    - `outliers_singleton` — single-element input with
+      multiplier ≥ 1 → empty (singleton can't outlier itself).
+    - `outliers_constant` — all-same scores with multiplier
+      ≥ 1 → empty (constant pool has no internal outliers).
+    - `outliers_monotone_threshold` — `m₁ ≤ m₂` implies
+      `outliers(s, m₂) ⊆ outliers(s, m₁)`.
+- `.github/workflows/test.yml` — new "LZ-016 — Lean proof"
+  CI step that installs `elan` (so the toolchain pin
+  resolves) and runs `lake build` on `src/lean4/`. The CI
+  step exits non-zero on any proof failure.
+
+### Status changes
+
+- **LZ-016** enters the spec at `:proved` with evidence
+  type `lean-proved`. First lazarus entry at this tier.
+- Counts: 15 / 0 / 15 / 0 / 0 / 0 / 0 → **16 / 1 / 15 / 0 /
+  0 / 0 / 0**.
+
+### Honest framing
+
+Per the TCE structural-skeleton convention, this proof
+targets the **abstract algorithm**, not the Python
+implementation. The Python code (`_outliers_from_scores`)
+matches the proved algorithm by inspection (single-line list
+comprehension over the same predicate). LZ-014 covers the
+Python implementation via `test/test_prune_logic.py`; LZ-016
+layers on top with the mathematical proof.
+
+Model: scores as `List Nat`, multiplier as `Nat`. The
+division-free predicate `v * |s| > m * Σs` (multiplying the
+Python predicate through by `|s|`) keeps the proof in pure
+Nat arithmetic without rationals or Mathlib. This `Nat`-only
+model is shape-equivalent to the rational version for
+non-negative scores, which is the load-bearing case (Apple
+Vision feature-print distances are always non-negative).
+
+### Build notes
+
+Local: `cd src/lean4 && lake build`. After elan resolves the
+toolchain (first build), incremental builds run in ~150ms.
+
+### Iteration note
+
+First proof attempt failed on three API mismatches with Lean
+v4.29.1:
+1. `List.mem_of_mem_filter` doesn't exist — replaced with
+   `(List.mem_filter.mp hv).1`.
+2. `List.mem_cons_self hd tl` is a term-level instance, not
+   an applied lemma — replaced with `List.mem_cons.mpr
+   (Or.inl rfl)`.
+3. `simp only [decide_eq_false_iff_not]` made no progress in
+   the constant-pool theorem — replaced with an explicit
+   `decide_eq_false` term derived from `omega`.
+
+The final proof builds clean in ~150ms.
+
 ## v0.1.11 — 2026-05-11 — LZ-004 + LZ-012 → :argued = 0
 
 Closes the last two `:argued` claims. Every LZ-NNN entry in

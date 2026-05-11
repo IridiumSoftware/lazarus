@@ -1,14 +1,14 @@
 # Dashboard — Lazarus
 
-Last updated: 2026-05-11 (post-v0.1.11 — `:argued` count reaches zero; every LZ-NNN entry now `:tested`).
+Last updated: 2026-05-11 (post-v0.1.12 — first `:proved` entry; lazarus gains a hermetic Lean4 track at `src/lean4/`).
 
 ## Status summary
 
-- Spec: 15 LZ-NNN entries in `LAZARUS_SPEC.md`.
-- Counts: **15 / 0 / 15 / 0 / 0 / 0 / 0** (total / proved /
+- Spec: 16 LZ-NNN entries in `LAZARUS_SPEC.md`.
+- Counts: **16 / 1 / 15 / 0 / 0 / 0 / 0** (total / proved /
   tested / verified / benchmarked / argued / open).
-  `:argued` and `:open` both at zero — every entry has
-  runnable evidence.
+  First `:proved` entry (LZ-016) lands via hermetic Lean4
+  proof. `:argued` and `:open` both at zero.
 - Tests: 15/15 passing locally and on `macos-latest` via CI.
   - `test/test_visual_skin_decoupling.py` (LZ-001)
   - `test/test_distance_band_thresholds.py` (LZ-002)
@@ -25,6 +25,7 @@ Last updated: 2026-05-11 (post-v0.1.11 — `:argued` count reaches zero; every L
   - `test/test_liveness_check.py` (LZ-013)
   - `test/test_prune_logic.py` (LZ-014)
   - `test/test_touchid_check.py` (LZ-015)
+  - `src/lean4/Outliers.lean` (LZ-016, lean-proved, 5 theorems)
 - CI: `.github/workflows/test.yml` runs the full test suite
   on `macos-latest` on every push. Outstanding:
   `actions/checkout@v4` Node.js 20 deprecation (deadline
@@ -99,6 +100,15 @@ new claims, not existing-claim promotions.
 
 ## Recently completed
 
+- 2026-05-11 — v0.1.12: **first `:proved` entry. LZ-016**
+  adds the abstract outlier-detection algorithm proved in
+  Lean4 hermetically (`src/lean4/Outliers.lean`, 5 theorems:
+  subset, empty, singleton, constant, monotone). Layered
+  companion to LZ-014's Python implementation. Counts:
+  15 / 0 / 15 / 0 / 0 / 0 / 0 → **16 / 1 / 15 / 0 / 0 / 0 /
+  0**. New `src/lean4/` directory mirrors TCE's hermetic
+  pattern (no Mathlib, project-local types, `lake build`
+  under 1s).
 - 2026-05-11 — v0.1.11: **LZ-004 + LZ-012 promoted to
   `:tested`**. Two new tests
   (`test_auth_clears_shakespeare.py` drives the full
