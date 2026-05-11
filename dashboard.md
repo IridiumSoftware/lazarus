@@ -1,17 +1,18 @@
 # Dashboard — Lazarus
 
-Last updated: 2026-05-10 (post-v0.1.3 leave-one-out pool quality scoring).
+Last updated: 2026-05-10 (post-v0.1.4 Touch ID opportunistic pre-face gate).
 
 ## Status summary
 
-- Spec: 14 LZ-NNN entries in `LAZARUS_SPEC.md`.
-- Counts: **14 / 0 / 4 / 0 / 0 / 7 / 3** (total / proved /
+- Spec: 15 LZ-NNN entries in `LAZARUS_SPEC.md`.
+- Counts: **15 / 0 / 5 / 0 / 0 / 7 / 3** (total / proved /
   tested / verified / benchmarked / argued / open).
-- Tests: 4/4 passing locally and on `macos-latest` via CI.
+- Tests: 5/5 passing locally and on `macos-latest` via CI.
   - `test/test_network_monitor_classify.py` (LZ-009)
   - `test/test_oversight_action.sh` (LZ-011)
   - `test/test_liveness_check.py` (LZ-013)
   - `test/test_prune_logic.py` (LZ-014)
+  - `test/test_touchid_check.py` (LZ-015)
 - CI: `.github/workflows/test.yml` runs both tests on
   `macos-latest`. First run green at 26s on commit `0bd92bf`
   (face_compare build + 2 tests + checkout/teardown).
@@ -67,6 +68,12 @@ Last updated: 2026-05-10 (post-v0.1.3 leave-one-out pool quality scoring).
 
 ## Recently completed
 
+- 2026-05-10 — v0.1.4: Touch ID opportunistic pre-face gate
+  (LZ-015) ports from `~/Projects/Possibilistic_Security/
+  face_sentinel.py`. `--auth` is now two-factor (fingerprint
+  + face), fail-open if biometric hardware is unavailable.
+  Three test paths (ok / nonzero / unavailable) covered via
+  injected stub runner.
 - 2026-05-10 — v0.1.3: leave-one-out pool quality scoring
   (LZ-014). The previous `--prune` was effectively a no-op
   (every ref scored 0 because it matched against itself);

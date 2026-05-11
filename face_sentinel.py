@@ -155,6 +155,50 @@ def backgrounds_similar(img_a: str, img_b: str) -> bool:
     return ratio < BG_CHANGE_THRESHOLD
 
 
+# ── Touch ID (opportunistic pre-face gate) ─────────────────────────
+#
+# Macs with Touch Bar / fingerprint hardware can be probed via the
+# system `bioutil` binary. `bioutil -r` reads enrolled biometric
+# records — an operation that requires biometric authentication,
+# triggering the system Touch ID prompt. If the user presses an
+# enrolled finger, the call returns 0. If they dismiss the prompt,
+# or if no fingerprints are enrolled, it returns non-zero. If
+# `bioutil` isn't installed or hangs past the timeout, we treat
+# the gate as unavailable.
+#
+# Semantics: fail-open. Touch ID strengthens auth when available but
+# never blocks a legitimate owner from authenticating on a machine
+# without biometric hardware (or with hardware that's misbehaving).
+# This is the right default for a single-owner desktop tool; a
+# stricter mode where Touch ID is mandatory could be added behind
+# a future `--strict-touchid` flag.
+
+def _touchid_check(timeout_seconds: int = 30, _runner=None) -> str:
+    """Run the system Touch ID gate. Returns one of:
+
+      - "ok"           — bioutil returned 0 (Touch ID prompt succeeded)
+      - "nonzero"      — bioutil returned non-zero (prompt dismissed,
+                         no fingerprints enrolled, or other failure)
+      - "unavailable"  — bioutil missing or timed out
+
+    The `_runner` parameter is for testability — production callers
+    leave it `None` to use `subprocess.run` directly; tests inject a
+    stub that returns canned `CompletedProcess`-like objects or
+    raises `TimeoutExpired` / `FileNotFoundError`.
+    """
+    runner = _runner if _runner is not None else subprocess.run
+    try:
+        result = runner(
+            ["bioutil", "-r"],
+            capture_output=True, text=True, timeout=timeout_seconds
+        )
+        return "ok" if result.returncode == 0 else "nonzero"
+    except subprocess.TimeoutExpired:
+        return "unavailable"
+    except FileNotFoundError:
+        return "unavailable"
+
+
 # ── Liveness (anti-static-photo) ───────────────────────────────────
 #
 # Static-photo defense. A real face is never perfectly still — there's
@@ -232,7 +276,7 @@ def liveness_check(first_capture: str) -> dict:
 # ── Auth (session opener) ─────────────────────────────────────────
 
 def auth():
-    """Session authentication: face match + background snapshot."""
+    """Session authentication: Touch ID + face match + background snapshot."""
     ensure_dirs()
 
     ref_count = len(list(REF_DIR.glob("*.json")))
@@ -240,7 +284,19 @@ def auth():
         print("No references enrolled. Run --enroll first to build your face set.")
         sys.exit(1)
 
-    # Face capture + match
+    # Step 1: Opportunistic Touch ID gate (fail-open if unavailable).
+    print("Touch ID verification...")
+    touchid_result = _touchid_check()
+    if touchid_result == "ok":
+        log_event({"event": "touchid_ok"})
+    elif touchid_result == "nonzero":
+        print("Touch ID check returned non-zero. Proceeding with face check.")
+        log_event({"event": "touchid_nonzero"})
+    else:  # "unavailable"
+        print("Touch ID unavailable. Proceeding with face check only.")
+        log_event({"event": "touchid_unavailable"})
+
+    # Step 2: Face capture + match
     print("Capturing face...")
     tmp_full = "/tmp/face_sentinel_auth.jpg"
     if not capture_full(tmp_full):

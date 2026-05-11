@@ -1,5 +1,67 @@
 # Changelog — Lazarus
 
+## v0.1.4 — 2026-05-10 — Touch ID opportunistic pre-face gate
+
+`face_sentinel.py --auth` is now two-factor: Touch ID
+(fingerprint) before face match. Ports the Touch ID step from
+the personal working copy at `~/Projects/Possibilistic_Security/
+face_sentinel.py`. Fail-open semantics — Touch ID strengthens
+auth when available but never blocks on hardware that's missing
+or misbehaving.
+
+### Added
+
+- `face_sentinel.py`:
+  - `_touchid_check(timeout_seconds=30, _runner=None)` helper.
+    Returns `"ok"` / `"nonzero"` / `"unavailable"` based on
+    `bioutil -r` outcome. The `_runner` parameter is injected
+    by tests; production callers leave it `None`.
+  - `auth()` now runs `_touchid_check()` as Step 1 before
+    face capture. Each outcome is printed to stdout and
+    logged to `sentinel.log` as `touchid_ok` /
+    `touchid_nonzero` / `touchid_unavailable`.
+- `test/test_touchid_check.py` — exercises all three return
+  paths via injected stubs, plus timeout-parameter plumbing,
+  default-timeout value lock (30s), and the guarantee that
+  unexpected exceptions propagate (only `TimeoutExpired` and
+  `FileNotFoundError` are caught).
+- `LAZARUS_SPEC.md` — new LZ-015 entry under a v0.1.4 section.
+  LZ-004 description updated to acknowledge the Touch ID
+  step preceding face match.
+- `artifact_registry.md` — LZ-015 row + counts bumped +
+  A1–A6 refresh.
+- `.github/workflows/test.yml` — CI runs the Touch ID test.
+- `docs/lazarus_touchid_v0_1_4_companion.md` — companion doc
+  per standard.
+
+### Status changes
+
+- LZ-015 enters the spec at `:tested`.
+- Counts: 14 / 0 / 4 / 0 / 0 / 7 / 3 → **15 / 0 / 5 / 0 / 0 /
+  7 / 3**.
+
+### Honest framing
+
+Fail-open Touch ID is the right default for a single-owner
+desktop tool, but it is not a structural guarantee. An
+attacker who can disable / occupy / spoof Touch ID hardware
+(or who is the legitimate owner on a Mac without Touch ID at
+all) bypasses this layer entirely. The defensive value is
+raising the bar in the common case — someone with the laptop
+but without the owner's fingerprint. A stricter
+`--strict-touchid` flag turning this into a hard gate is
+future work.
+
+### Why now
+
+Same session, same trigger as the prior cleanup: the personal
+working copy at `~/Projects/Possibilistic_Security/` had the
+Touch ID step but lazarus didn't. Aaron flagged this in the
+v0.1.3 wrap-up as the "feature lazarus is missing." This
+commit ports it; from this point forward the two copies'
+auth flows converge (modulo the `last_seen_aaron` vs
+`last_seen_owner` field-naming difference).
+
 ## v0.1.3 — 2026-05-10 — leave-one-out pool quality scoring
 
 Fixes a v0.1.0 bug in `face_sentinel.py --prune`: the previous

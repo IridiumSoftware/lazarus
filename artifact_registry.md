@@ -1,12 +1,12 @@
 # artifact_registry.md — Lazarus
 
-Version: 0.1.3 (leave-one-out pool quality scoring added
-2026-05-10; v0.1.2 anti-spoof liveness probe and v0.1.0 first
-formal spec all on the same day. Fourteen LZ-NNN spec entries
-cover the visual sentinel (including liveness + leave-one-out
-prune), network monitor + honeypot, and OverSight Tier 1
-forensic logger.
-Counts: 14 / 0 / 4 / 0 / 0 / 7 / 3.)
+Version: 0.1.4 (Touch ID opportunistic pre-face gate added
+2026-05-10; v0.1.3 leave-one-out prune, v0.1.2 anti-spoof
+liveness, and v0.1.0 first formal spec all on the same day.
+Fifteen LZ-NNN spec entries cover the visual sentinel
+(Touch ID + face + liveness + leave-one-out prune),
+network monitor + honeypot, and OverSight Tier 1 forensic
+logger. Counts: 15 / 0 / 5 / 0 / 0 / 7 / 3.)
 
 ## Coverage rule
 
@@ -48,21 +48,22 @@ contain every Test/Proof and Source path listed.
 | LZ-012 | companion read-only discipline | Boundary | manual | lazarus.md §What you do NOT do + LAZARUS_SPEC.md LZ-012 | lazarus.md | :argued |
 | LZ-013 | anti-spoof liveness probe | Operational | example-tested | test/test_liveness_check.py + docs/lazarus_liveness_v0_1_2_companion.md (manual evidence for the IO-bound wrapper) | face_sentinel.py _liveness_delta() + liveness_check() + check_once() is_match branch + LIVENESS_DELTA_MIN/LIVENESS_GAP_SECONDS constants | :tested |
 | LZ-014 | reference-pool leave-one-out pruning | Operational | example-tested | test/test_prune_logic.py + docs/lazarus_prune_v0_1_3_companion.md (manual evidence for the IO-bound _prune_score_one) | face_sentinel.py _outliers_from_scores() + _prune_score_one() + prune_cmd() + PRUNE_OUTLIER_MULTIPLIER constant | :tested |
+| LZ-015 | Touch ID opportunistic pre-face gate | Operational | example-tested | test/test_touchid_check.py + docs/lazarus_touchid_v0_1_4_companion.md (manual evidence for real bioutil invocation) | face_sentinel.py _touchid_check() + auth() Step 1 block | :tested |
 
 ## Counts
 
-- Total: 14
+- Total: 15
 - `:proved`: 0
-- `:tested`: 4 (LZ-009, LZ-011, LZ-013, LZ-014)
+- `:tested`: 5 (LZ-009, LZ-011, LZ-013, LZ-014, LZ-015)
 - `:verified`: 0
 - `:benchmarked`: 0
 - `:argued`: 7 (LZ-001, LZ-002, LZ-003, LZ-004, LZ-005, LZ-010, LZ-012)
 - `:open`: 3 (LZ-006, LZ-007, LZ-008)
 
-## Cross-audit A1–A6 self-check (post-v0.1.3)
+## Cross-audit A1–A6 self-check (post-v0.1.4)
 
 - **A1 — Coverage.** Every LZ-ID in `LAZARUS_SPEC.md` has a row
-  here. ✓ (14 of 14).
+  here. ✓ (15 of 15).
 - **A2 — Logic & Status parity.** Spec → registry Logic tier and
   Status fields match exactly. Key column compresses spec keys
   for table readability (e.g. spec
@@ -75,26 +76,30 @@ contain every Test/Proof and Source path listed.
   (exists). LZ-013 cites `test/test_liveness_check.py`
   (exists) + `docs/lazarus_liveness_v0_1_2_companion.md`.
   LZ-014 cites `test/test_prune_logic.py` (exists) +
-  `docs/lazarus_prune_v0_1_3_companion.md` (manual evidence
-  for the IO-bound `_prune_score_one`).
+  `docs/lazarus_prune_v0_1_3_companion.md`.
+  LZ-015 cites `test/test_touchid_check.py` (exists) +
+  `docs/lazarus_touchid_v0_1_4_companion.md` (manual
+  evidence for the real `bioutil` invocation, which the
+  unit test stubs out).
   The seven `:argued` entries cite manual evidence in spec /
   companion / README. The three `:open` entries cite "—"
   honestly.
-- **A4 — Status honesty.** Four `:tested` entries carry
+- **A4 — Status honesty.** Five `:tested` entries carry
   `example-tested`. Seven `:argued` entries carry `manual` or
   `example-tested` (LZ-004 has an in-session demonstration but
   no CI artifact yet). Three `:open` entries carry `none`. No
   entry has a status its evidence type cannot support.
-- **A5 — Stale counts.** Counts above (14 / 0 / 4 / 0 / 0 / 7 /
+- **A5 — Stale counts.** Counts above (15 / 0 / 5 / 0 / 0 / 7 /
   3) match `LAZARUS_SPEC.md` final-section counts and
   `dashboard.md` summary.
-- **A6 — Test sync.** LZ-009, LZ-011, LZ-013, LZ-014 tests run
-  from `test/` and pass on `macos-latest` via
+- **A6 — Test sync.** LZ-009, LZ-011, LZ-013, LZ-014, LZ-015
+  tests run from `test/` and pass on `macos-latest` via
   `.github/workflows/test.yml` on every push. Locally:
   `bash test/test_oversight_action.sh`,
   `python3 test/test_network_monitor_classify.py`,
   `python3 test/test_liveness_check.py`,
-  `python3 test/test_prune_logic.py`.
+  `python3 test/test_prune_logic.py`,
+  `python3 test/test_touchid_check.py`.
 
 ## Dependencies on other Triad-Deployment spec entries
 

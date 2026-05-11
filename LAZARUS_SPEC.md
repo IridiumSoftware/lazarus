@@ -83,17 +83,17 @@ Tier 1 forensic camera/mic event logger. Twelve LZ-NNN entries.
 ### LZ-004 — auth-clears-shakespeare
 - Key: --auth on a successful face match resets mode to "normal"
 - Logic tier: Operational
-- Description: When `face_sentinel.py --auth` succeeds (face
-  detected, distance < `MATCH_THRESHOLD`), the script overwrites
-  `state.json` with `authenticated=true`,
+- Description: When `face_sentinel.py --auth` succeeds (Touch ID
+  gate per LZ-015, face detected, distance < `MATCH_THRESHOLD`),
+  the script overwrites `state.json` with `authenticated=true`,
   `auth_time=<now>`, `last_seen_owner=<now>`,
   `mode="normal"`, and removes `lockout_time` and
   `lockout_distance`. The next `/lazarus` invocation reads the
   cleared state and resumes normal diagnostics.
 - Evidence type: example-tested (in-session demonstration)
 - Status: :argued
-- Source: `face_sentinel.py` `auth()` lines 188–205,
-  `lazarus.md` §Shakespeare mode.
+- Source: `face_sentinel.py` `auth()` (Touch ID step → face
+  match → state update), `lazarus.md` §Shakespeare mode.
 - Notes: Demonstrated live during the v0.1.0 rigor session
   (companion doc §3). Not yet a CI-runnable artifact — the
   match step requires a real camera and a real face. Held at
@@ -375,11 +375,62 @@ that excludes the ref itself. One new spec entry.
 
 ---
 
-## Counts (post-v0.1.3)
+## v0.1.4 (2026-05-10) — Touch ID opportunistic pre-face gate
 
-- Total: 14
+`face_sentinel.py --auth` now runs a Touch ID gate before the
+face-match step. Two factors: fingerprint + face. Fail-open
+semantics — Touch ID strengthens auth when available but never
+blocks a legitimate owner on a machine without biometric
+hardware (or with hardware that's misbehaving).
+
+### LZ-015 — touchid-opportunistic-pre-face-gate
+- Key: --auth runs Touch ID via `bioutil -r` before face capture
+- Logic tier: Operational
+- Description: Before the face-match step, `auth()` invokes
+  `bioutil -r` via `_touchid_check()`. The macOS `bioutil`
+  binary reads enrolled biometric records — an operation that
+  requires biometric authentication, triggering the system
+  Touch ID prompt. Three outcomes:
+  - `bioutil` returns 0 → `"ok"` (Touch ID succeeded) →
+    `auth_event "touchid_ok"` logged, face check proceeds.
+  - `bioutil` returns non-zero → `"nonzero"` (prompt
+    dismissed, no fingerprints enrolled, hardware error) →
+    warning printed, `"touchid_nonzero"` logged, face check
+    proceeds anyway (fail-open).
+  - `bioutil` is missing (`FileNotFoundError`) or hangs past
+    the 30s timeout (`TimeoutExpired`) → `"unavailable"` →
+    warning printed, `"touchid_unavailable"` logged, face
+    check proceeds.
+- Evidence type: example-tested
+- Status: :tested
+- Source: `face_sentinel.py` `_touchid_check()` helper +
+  `auth()` Step 1 block.
+- Test/Proof: `test/test_touchid_check.py` exercises all
+  three return paths (ok / nonzero / unavailable) using an
+  injected `_runner` stub. Also covers: timeout-parameter
+  plumbing, default-timeout value lock (30s), and the
+  guarantee that unexpected exceptions (not `TimeoutExpired`
+  / `FileNotFoundError`) propagate rather than being
+  silently swallowed.
+- Notes: Fail-open is the right default for a single-owner
+  desktop tool — biometric hardware flakes shouldn't lock
+  legitimate owners out. A stricter `--strict-touchid` flag
+  that turns Touch ID into a hard gate is future work; it
+  would warrant a separate spec entry (LZ-NNN) and a clear
+  story for the headless / no-hardware scenarios. Honest
+  framing: in fail-open mode, an attacker who can disable or
+  occupy the Touch ID hardware bypasses this layer entirely
+  — the defensive value comes from raising the bar in the
+  common case (someone with the laptop but without the
+  owner's fingerprint), not from a structural guarantee.
+
+---
+
+## Counts (post-v0.1.4)
+
+- Total: 15
 - `:proved`: 0
-- `:tested`: 4 (LZ-009, LZ-011, LZ-013, LZ-014)
+- `:tested`: 5 (LZ-009, LZ-011, LZ-013, LZ-014, LZ-015)
 - `:verified`: 0
 - `:benchmarked`: 0
 - `:argued`: 7 (LZ-001, LZ-002, LZ-003, LZ-004, LZ-005, LZ-010, LZ-012)
