@@ -342,6 +342,16 @@ Lazarus is named after what it is — a concept that came back from the dead. Th
 
 The security model is inspired by [Possibilistic Security](https://github.com/IridiumSoftware/possibilistic-security), which treats identity verification as organizational closure rather than probabilistic risk. You don't have to buy the theory to use the tool.
 
+## Portfolio: The Triad Deployments
+
+Lazarus is the runtime-integrity layer in *The Triad Deployments — Digital Identity Resilience*. All three deployments are now public:
+
+- **[LavaLamp](https://github.com/IridiumSoftware/lavalamp)** — substrate-bound identity primitive. Chaotic-SDE residue audit at the entropy layer. The "alive" identity. Whitepaper v1.3.
+- **[PharOS](https://github.com/IridiumSoftware/pharos)** — OS-layer authentication membrane. Linux PAM module + macOS Authorization Plug-in + Windows Credential Provider Filter. Consumes LavaLamp's verifier API. Whitepaper v1.0.
+- **Lazarus** — runtime-integrity sentinel (this repo). Face check, keystroke lockout, network anomaly detection. The inner sanctum that watches the work happen.
+
+The three deployments share a defensive-postured, resolution-bounded identity stance: detection over prevention, structurally inherited from the C-conjugate adversary construction in *Possibilistic Security*. They compose at the deployment-policy level — no shared runtime processes, no architectural coupling beyond Bool-only consumer APIs. Each is independently deployable.
+
 ## License
 
 MIT. Use it, fork it, make it yours.
