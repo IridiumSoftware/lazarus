@@ -1,5 +1,113 @@
 # Changelog — Lazarus
 
+## v0.1.21 — 2026-05-11 — first two TCE joint-closure promotions: LZ-023 (:tested) + LZ-026 (:proved)
+
+Two of the five TCE Discovery.Triadic joint-closure entries
+shipped at v0.1.20 (`:argued`) get promoted in this release. Both
+land via the per-entry promotion paths documented in the `Notes:`
+fields of the original LZ-022..LZ-026 spec entries.
+
+### LZ-023 prompt-contract-joint-closure → `:tested`
+
+New `test/test_prompt_contract_joint_closure.py` — 8 sections
+exercising the LZ-001 ∧ LZ-003 ∧ LZ-012 conjunction:
+- Component tests for LZ-001 + LZ-003 + LZ-012 all coexist
+  as fixtures.
+- Both prompt-contract sections (Shakespeare-mode refusal +
+  companion-read-only six-prohibitions) exist in lazarus.md.
+- Mode vocabulary is unified across the three sources.
+- No cross-section permissive-language bleed.
+- No producer-side write-directive leak into the consumer surface.
+- Spec cross-references between LZ-001/LZ-003/LZ-012 are
+  bidirectional in the spec body.
+
+First of the five TCE-surfaced joint-closure entries to land
+a joint integration test. Per the conjunctive-claim discipline,
+this is what promotes the joint claim — sub-claim evidence
+(each of LZ-001/LZ-003/LZ-012 being individually `:tested`)
+does NOT promote the joint claim alone.
+
+### LZ-026 categorical-triadic-closure-of-lean-proved-trio → `:proved`
+
+New `src/lean4/Composed.lean` formalises the cross-module
+composition at the Lean level — the directional 3-cycle
+(LZ-016 → LZ-018 → LZ-017 → LZ-016 in the spec mention
+graph) is now a compiling proof artifact rather than
+informal spec-body structure.
+
+Four hermetic Lean 4 theorems:
+- `zero_not_outlier` — bridge lemma: `Lazarus.Outliers.
+  isOutlier 0 m s = false` for any m, s (the LHS reduces
+  to `0 > m * s.sum` which is false).
+- `zero_notin_outliers` — corollary: 0 is never an
+  element of `Lazarus.Outliers.outliers m s`. Via
+  `List.mem_filter` + `zero_not_outlier`.
+- `self_match_yields_zero_distance` — `Lazarus.Liveness.
+  deltaCount_self` (LZ-017) lifted to `0 ∈ references.map
+  (deltaCount candidate)` when candidate ∈ references.
+- `composed_correctness` — the full composition. When the
+  candidate is byte-identical to at least one reference
+  AND `isSystem` fires on the classification key, the
+  pipeline (which uses all three modules — Liveness for
+  distance, Outliers for the outlier-filter escape hatch,
+  Classify for the final dispatch) returns `Class.system`.
+  Proof chains `self_match_yields_zero_distance` (Liveness),
+  `zero_notin_outliers` (Outliers), and `Lazarus.Classify.
+  classify_system_priority` (Classify) into one statement
+  that cannot be proved without invoking lemmas from each
+  of the three previously-separate Lean-proved modules.
+
+This is the **first `:proved`-status spec entry derived from
+a TCE Discovery.Triadic finding across the entire Triad**.
+LavaLamp's TCE-surfaced LL-030..LL-038 are all `:tested`;
+PharOS's pass produced no promotions; Lazarus's remaining
+LZ-022/024/025 are still `:argued`. The 3-cycle finding —
+the only directional cycle across all three per-deployment
+TCE passes — is now formally anchored.
+
+`lake build` returns 9 jobs with zero `sorry` warnings.
+
+### Registry catch-up
+
+Aaron's parallel session also folded in artifact_registry.md
+rows for LZ-022/024/025/026/027 (missing through the
+v0.1.18-v0.1.20 drift) + refreshed the A1–A6 self-check.
+
+### Files changed
+
+- `src/lean4/Composed.lean` (new) — 4 theorems, ~180 lines.
+- `src/lean4/lakefile.lean` — adds `Composed` as a fourth
+  `@[default_target]` lean_lib.
+- `test/test_prompt_contract_joint_closure.py` (new) —
+  8-section LZ-023 joint-conjunction test.
+- `LAZARUS_SPEC.md` — LZ-023 status :argued → :tested with
+  source field pointing at the new test; LZ-026 status
+  :argued → :proved with evidence type lean-proved + source
+  field pointing at Composed.lean; Counts table refreshed.
+- `dashboard.md` — last-updated stamp + counts.
+- `artifact_registry.md` — 5 new rows + A1–A6 refresh.
+- `changelog.md` — this entry.
+
+### Counts
+
+- After v0.1.20: 27 / 3 / 19 / 0 / 0 / 5 / 0
+- After v0.1.21: **27 / 4 / 20 / 0 / 0 / 3 / 0**
+  (:proved +1 LZ-026, :tested +1 LZ-023, :argued −2)
+
+### What's left in the TCE-surfaced :argued band
+
+- **LZ-022 network-exfiltration-joint-closure** — needs a
+  scripted scenario exercising LZ-005 ∧ LZ-010 ∧ LZ-019
+  conjunction.
+- **LZ-024 face-reference-lean-scaffold-joint-closure** —
+  needs reference-pool integration test asserting LZ-016
+  outlier properties on the operational pruning path.
+- **LZ-025 liveness-lean-scaffold-joint-closure** — needs
+  watch-loop integration test asserting LZ-017 metric
+  properties on the operational data path.
+
+---
+
 ## v0.1.20 — 2026-05-11 — TCE joint-closures (LZ-022..LZ-026) + break-glass recovery (LZ-027)
 
 The third per-deployment Discovery.Triadic engine pass in the

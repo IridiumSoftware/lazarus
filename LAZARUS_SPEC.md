@@ -1150,22 +1150,35 @@ triadic-coordination-engine repo.
   spec-level structural unit. Tier mix Boundary/Operational/
   Boundary; sd=1 (all `:tested`); score 10.00 reflects
   strong co-defense + mention density.
-- Evidence type: manual (TCE Discovery.Triadic pass at
-  v0.2.11; mention pattern + V co-defense; no integration
-  test for the conjunction yet)
-- Status: :argued
+- Evidence type: example-tested
+- Status: :tested
 - Source: `LAZARUS_SPEC.md` LZ-001 + LZ-003 + LZ-012
-  entries; TCE companion
-- Notes: Promotion to `:tested` requires a joint test
-  simultaneously asserting all three properties — e.g., a
-  prompt-injection scenario where (a) the visual layer's
-  failure mode is decoupled from the security primitive's
-  output, (b) Shakespeare-mode triggers, (c) the companion
-  rejects any attempt to write rather than only refusing
-  substantive work. The three existing tests (LZ-001
-  producer/consumer decoupling, LZ-003 prompt-contract
-  scan, LZ-012 six-prohibition lint) exist independently
-  but don't run as a conjunction.
+  entries; `face_sentinel.py` (producer) + `lazarus.md`
+  (consumer) — both contract surfaces; TCE companion
+- Test/Proof: `test/test_prompt_contract_joint_closure.py`
+  exercises the conjunction in 8 sections: (1) all three
+  component tests pass in sequence; (2) both contract
+  sections (`## Shakespeare mode` + `## What you do NOT do`)
+  coexist in `lazarus.md`; (3) section-local extraction;
+  (4) mode-vocabulary unified across producer + Shakespeare-
+  mode section + global; (5) no cross-section permissive
+  bleed (5 patterns: override/exception/may-still/bypass/
+  special-case ∧ commit/write/edit/change); (6) producer
+  free of write-directive language (5 patterns:
+  edit-this-file / ask-claude-to-write / auto-commit);
+  (7) LZ-012 spec body mentions both LZ-001 and LZ-003
+  (joint-closure anchor); (8) LZ-023 entry itself names
+  all three components.
+- Notes: Promoted from `:argued` to `:tested` at v0.1.21.
+  The joint test catches refactors that split the contract
+  along weak seams — mode-vocabulary divergence, cross-
+  section permissive bleed, or producer-side write-
+  directive leak — failure modes that the three component
+  tests (LZ-001/LZ-003/LZ-012) miss individually. Honest
+  framing: static joint test. Does NOT prove an LLM
+  consumer respects the conjunction at runtime — that
+  would require a model-in-the-loop multi-turn integration
+  harness parallel to LZ-020's transcript-audit approach.
 
 ### LZ-024 — face-reference-lean-scaffold-joint-closure
 - Key: LZ-006 ∧ LZ-014 ∧ LZ-016 form the face-reference
@@ -1258,24 +1271,47 @@ triadic-coordination-engine repo.
   refinement could weight cycle bonuses higher when the
   cycle is evidence-tier-homogeneous, since that signals a
   genuine compositional unit rather than coincidence.
-- Evidence type: manual
-- Status: :argued
-- Source: `LAZARUS_SPEC.md` LZ-016 + LZ-017 + LZ-018
-  entries; `src/lean4/` for the three existing Lean
-  theorems; TCE companion in triadic-coordination-engine
-  repo
-- Notes: This is the cleanest `:proved`-promotion target
-  among the five new entries since the Lean modules already
-  exist. Promotion to `:proved` requires a new Lean
-  theorem in `src/lean4/` that formalises the compositional
-  structure — concretely, a theorem `composed_correctness`
-  showing the three modules' guarantees compose under the
-  3-cycle directional dependency. The existing per-module
-  theorems do not (yet) formally reference each other at
-  the Lean level even though their spec entries do
-  textually. The directional cycle is currently spec-body
-  structural evidence; a Lean upgrade lifts it to formal
-  compositional evidence.
+- Evidence type: lean-proved
+- Status: :proved
+- Source: `src/lean4/Composed.lean` with 4 hermetic Lean 4
+  theorems — `zero_not_outlier`, `zero_notin_outliers`,
+  `self_match_yields_zero_distance`, `composed_correctness`
+  — chaining `Lazarus.Liveness.deltaCount_self` (LZ-017),
+  `Lazarus.Outliers.isOutlier` definition (LZ-016), and
+  `Lazarus.Classify.classify_system_priority` (LZ-018)
+  into a single end-to-end statement that the pipeline
+  returns `Class.system` under a self-match + system-
+  predicate-fires precondition. `lake build` returns 9 jobs
+  with zero `sorry` warnings. TCE companion in
+  triadic-coordination-engine repo (commit 3fcccf3).
+- Notes: **Promoted from `:argued` to `:proved` at v0.1.21
+  (2026-05-11).** The Lean composition formally encodes the
+  spec-body 3-cycle (LZ-016 references LZ-018 references
+  LZ-017 references LZ-016) as a compiling cross-module
+  proof. The `pipeline` definition uses all three modules
+  in one function body, and `composed_correctness` cannot
+  be proved without invoking lemmas from each — Liveness's
+  `deltaCount_self` (LZ-017), an inline outlier-zero
+  lemma derived from Outliers' `isOutlier` definition
+  (LZ-016), and Classify's `classify_system_priority`
+  (LZ-018). This is the FIRST `:proved`-status spec entry
+  derived from a TCE Discovery.Triadic finding across the
+  entire Triad — LavaLamp's TCE-surfaced LL-030..LL-038
+  are all `:tested`; PharOS's pass produced no promotions;
+  Lazarus's LZ-022..LZ-025 are all `:argued`. The 3-cycle
+  structural finding (the only one across all three
+  per-deployment TCE passes) is now formally anchored.
+
+  The proof is intentionally minimal — one composition
+  statement using the simplest forward path
+  (self-match → not-outlier → system-priority → Class.system).
+  Future Lean expansion could prove additional pipeline
+  properties (the aiWatch escape hatch on outlier-flagged
+  candidates, the known/aiWatch/other priority cascades,
+  etc.) but is not required for the `:proved` status of
+  LZ-026 itself — the load-bearing claim was "the three
+  modules compose into a coherent cross-module proof",
+  and that claim is now discharged.
 
 ---
 
@@ -1354,24 +1390,30 @@ intended end-state.
 
 ---
 
-## Counts (post-v0.1.20)
+## Counts (post-v0.1.21)
 
 - Total: 27
-- `:proved`: 3 — LZ-016 (outlier-detection algorithm),
+- `:proved`: 4 — LZ-016 (outlier-detection algorithm),
   LZ-017 (liveness metric properties), LZ-018 (priority
-  dispatcher correctness), all lean-proved hermetically in
-  `src/lean4/`
-- `:tested`: 19 — LZ-001..LZ-015 + LZ-019 + LZ-020 + LZ-021 +
-  LZ-027, every operational entry backed by a runnable test
+  dispatcher correctness), LZ-026 (composed_correctness
+  Lean theorem chaining the three Lean-proved modules
+  into a single end-to-end pipeline assertion; the FIRST
+  `:proved`-status spec entry derived from a TCE
+  Discovery.Triadic finding across the entire Triad).
+  All lean-proved hermetically in `src/lean4/`.
+- `:tested`: 20 — LZ-001..LZ-015 + LZ-019 + LZ-020 + LZ-021
+  + LZ-023 + LZ-027. LZ-023 promoted at v0.1.21 (first
+  joint-closure entry to land an integration test).
 - `:verified`: 0
 - `:benchmarked`: 0
-- `:argued`: 5 — LZ-022..LZ-026, TCE Discovery.Triadic
-  joint-closure entries (4 HIGH-band conjunctive triples +
-  1 directional 3-cycle). Per conjunctive-claim discipline,
-  sub-claim evidence (each component's individual `:tested`/
-  `:proved` status) does not promote the joint claim;
-  promotion to `:tested` requires a joint integration test
-  exercising the conjunction.
+- `:argued`: 3 — LZ-022, LZ-024, LZ-025 (the three remaining
+  TCE Discovery.Triadic joint-closure entries; LZ-026
+  promoted to `:proved` at v0.1.21 via Composed.lean).
+  Per conjunctive-claim discipline, sub-claim evidence
+  (each component's individual `:tested`/`:proved` status)
+  does not promote the joint claim; promotion to `:tested`
+  requires a joint integration test exercising the
+  conjunction.
 - `:open`: 0
 
 Promotion queue (highest-leverage, ordered by ease):

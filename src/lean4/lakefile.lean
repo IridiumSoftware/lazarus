@@ -32,3 +32,11 @@ lean_lib «Liveness» where
 @[default_target]
 lean_lib «Classify» where
   srcDir := "."
+
+-- LZ-026 composition theorem — promotes the directional 3-cycle
+-- (LZ-016 ∧ LZ-017 ∧ LZ-018) from :argued to :proved by
+-- formalising the cross-module composition at the Lean level.
+-- Depends on Outliers + Liveness + Classify.
+@[default_target]
+lean_lib «Composed» where
+  srcDir := "."

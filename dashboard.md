@@ -1,23 +1,23 @@
 # Dashboard — Lazarus
 
-Last updated: 2026-05-11 (post-v0.1.20 — **break-glass recovery (LZ-027) + TCE Discovery.Triadic joint-closure entries (LZ-022..LZ-026).** Two pieces of work landed in the working tree concurrently, shipped together at v0.1.20. (1) The third per-deployment TCE pass in the Triad series (after LavaLamp's LL-030..LL-038 and PharOS's too-early 10-entry pass) surfaced 4 HIGH-band conjunctive triples + 1 directional 3-cycle from Lazarus's 19-entry corpus. The 3-cycle [LZ-016, LZ-017, LZ-018] is the **first directional cycle** across all three Triad-deployment TCE passes (LavaLamp 44-entry: 0; PharOS 10-entry: 0; Lazarus 19-entry: 1). All 5 new entries at `:argued` per conjunctive-claim discipline. (2) LZ-027 closes the fail-closed availability risk surfaced in Brian Crabtree's external Triad review — `--recover` command provides a documented two-method (Touch ID OR recovery-token) break-glass surface. Counts shift: 21/3/18/0/0/0/0 → **27/3/19/0/0/5/0**. TCE driver + companion at triadic-coordination-engine commit 3fcccf3).
+Last updated: 2026-05-11 (post-v0.1.21 — **first two TCE joint-closure promotions: LZ-023 → `:tested` + LZ-026 → `:proved`.** (1) LZ-023 prompt-contract-joint-closure lands `test/test_prompt_contract_joint_closure.py` — 8 sections exercising the LZ-001 ∧ LZ-003 ∧ LZ-012 conjunction; first joint-closure entry to land an integration test. (2) LZ-026 categorical-triadic-closure-of-lean-proved-trio lands `src/lean4/Composed.lean` — 4 hermetic Lean 4 theorems including `composed_correctness` which chains `Lazarus.Liveness.deltaCount_self` (LZ-017) + an inline outlier-zero lemma from `Lazarus.Outliers.isOutlier` (LZ-016) + `Lazarus.Classify.classify_system_priority` (LZ-018) into a single end-to-end pipeline assertion. The FIRST `:proved`-status spec entry derived from a TCE Discovery.Triadic finding across the entire Triad (LavaLamp LL-030..LL-038 are all `:tested`; PharOS's TCE pass produced no promotions). The directional 3-cycle finding — the only one across all three per-deployment TCE passes — is now formally anchored. Also: registry catch-up + A1–A6 refresh. Counts shift: 27/3/19/0/0/5/0 → **27/4/20/0/0/3/0**.).
 
 ## Status summary
 
 - Spec: 27 LZ-NNN entries in `LAZARUS_SPEC.md`.
-- Counts: **27 / 3 / 19 / 0 / 0 / 5 / 0** (total / proved /
+- Counts: **27 / 4 / 20 / 0 / 0 / 3 / 0** (total / proved /
   tested / verified / benchmarked / argued / open).
-  Three `:proved` entries (LZ-016 outliers, LZ-017 liveness
-  metric, LZ-018 classification dispatcher) via hermetic
-  Lean4 proofs. Five `:argued` joint-closure entries (LZ-022
-  through LZ-026) from the TCE Discovery.Triadic pass —
+  Four `:proved` entries (LZ-016 outliers, LZ-017 liveness
+  metric, LZ-018 classification dispatcher, LZ-026
+  composed-correctness 3-cycle) via hermetic Lean4 proofs.
+  Three remaining `:argued` joint-closure entries (LZ-022,
+  LZ-024, LZ-025) from the TCE Discovery.Triadic pass —
   promotion to `:tested` requires joint integration tests.
-  LZ-027 break-glass recovery at `:tested`.
-  `:open` at zero.
+  LZ-023 prompt-contract joint closure promoted at v0.1.21
+  (first joint-closure entry to land its integration test).
+  LZ-027 break-glass recovery at `:tested`. `:open` at zero.
 - Tests: full suite passes locally and on `macos-latest`
-  via CI on every push. LZ-027 test file + the LZ-027 CI
-  step land at v0.1.21 (immediate follow-up to this
-  v0.1.20 spec commit).
+  via CI on every push.
   - `test/test_visual_skin_decoupling.py` (LZ-001)
   - `test/test_distance_band_thresholds.py` (LZ-002)
   - `test/test_shakespeare_mode_refusal.py` (LZ-003)
@@ -39,7 +39,8 @@ Last updated: 2026-05-11 (post-v0.1.20 — **break-glass recovery (LZ-027) + TCE
   - `test/test_auth_strict_touchid.py` (LZ-019)
   - `test/test_runtime_harness.py` + `test/transcripts/` (LZ-020)
   - `test/test_oversight_tier2.sh` (LZ-021)
-  - `test/test_recovery.py` (LZ-027, ships v0.1.21)
+  - `test/test_prompt_contract_joint_closure.py` (LZ-023)
+  - `test/test_recovery.py` (LZ-027)
 - CI: `.github/workflows/test.yml` runs the full test suite
   on `macos-latest` on every push. Outstanding:
   `actions/checkout@v4` Node.js 20 deprecation (deadline
