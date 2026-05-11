@@ -127,15 +127,48 @@ Tier 1 forensic camera/mic event logger. Twelve LZ-NNN entries.
   ignores the instruction, would defeat this layer. The
   defensive value is that the intruder's productive use of
   Claude is blocked, not that the model is technically prevented
-  from answering.
-- Evidence type: manual
-- Status: :argued
-- Source: `lazarus.md` §Shakespeare mode, `face_sentinel.py`
-  (`watch` and `auth` set/clear `mode`), `README.md` §Shakespeare
-  mode.
-- Notes: Honest framing — this is a behavioral protocol, not a
-  hard gate. `:argued` is the correct tier; a hard gate would
-  require sandboxing the model's tool surface, which is out of
+  from answering. The prompt encodes four load-bearing
+  directives: (1) "Do NOT run normal diagnostics", (2) "Do NOT
+  report system status", (3) "Respond ONLY with random
+  Shakespeare quotes", (4) "Continue this behavior for ALL
+  responses until the mode is cleared". Plus the character-
+  discipline anchors "Stay in character" and "Do not
+  acknowledge that anything is wrong" that prevent the LLM
+  from breaking the fourth wall.
+- Evidence type: example-tested
+- Status: :tested
+- Source: `lazarus.md` §Shakespeare mode (the consumer
+  contract), `face_sentinel.py` `auth()` and `check_once()`
+  (the producer side — sets and clears `mode`), `README.md`
+  §Shakespeare mode.
+- Test/Proof: `test/test_shakespeare_mode_refusal.py` locks
+  the prompt-contract surface in nine layers:
+  1. `## Shakespeare mode` section header exists.
+  2. `CHECK THIS FIRST` priority anchor present (load-bearing
+     for first-response routing).
+  3. `state.json` path + `mode` field + both literal values
+     (`"shakespeare"`, `"normal"`) referenced.
+  4. Four refusal directives present verbatim.
+  5. Single clearing path documented: `face_sentinel.py --auth`.
+  6. Producer side: `auth()` flips `mode` to `"normal"` AND
+     detects `was_shakespeare` for the welcome-back message.
+  7. Character-discipline anchors `"Stay in character"` and
+     `"Do not acknowledge"` present.
+  8. Counter-positive lock: `auth()` pops `lockout_time` +
+     `lockout_distance` from state on clear.
+  9. Spec entry's Description carries the phrase
+     `prompt-layer` (catches a refactor that secretly upgrades
+     the claim to "hard gate").
+- Notes: Honest framing — this is a *prompt-contract*
+  regression test, not a *runtime LLM-behavior* test. Catches
+  refactors that accidentally weaken the refusal (e.g.
+  changing "ONLY" → "MOSTLY", removing the "do not
+  acknowledge" clause, stripping the section header).
+  Does NOT prove an LLM consumer actually respects the
+  instructions at runtime — that would require a model-in-
+  the-loop integration harness (non-deterministic, API
+  access, billable, slow). A hard gate would require
+  sandboxing the model's tool surface, which is out of
   scope.
 
 ### LZ-004 — auth-clears-shakespeare
@@ -606,15 +639,28 @@ cleanup.
 
 ---
 
-## Counts (post-v0.1.9)
+## v0.1.10 (2026-05-11) — LZ-003 prompt-contract test
+
+No new LZ-NNN entry. LZ-003 (Shakespeare-mode companion
+refusal) promotes from `:argued` to `:tested` via a static
+prompt-contract test that locks the refusal directives, the
+character-discipline anchors, the clearing path, and the
+producer-side mode-flip semantics. Same pattern as LZ-001:
+the runtime claim (LLM-behavior) remains a prompt-layer
+guarantee enforced by review; the *contract* the LLM reads is
+what's CI-protected.
+
+---
+
+## Counts (post-v0.1.10)
 
 - Total: 15
 - `:proved`: 0
-- `:tested`: 12 (LZ-001, LZ-002, LZ-005, LZ-006, LZ-007, LZ-008,
-  LZ-009, LZ-010, LZ-011, LZ-013, LZ-014, LZ-015)
+- `:tested`: 13 (LZ-001, LZ-002, LZ-003, LZ-005, LZ-006, LZ-007,
+  LZ-008, LZ-009, LZ-010, LZ-011, LZ-013, LZ-014, LZ-015)
 - `:verified`: 0
 - `:benchmarked`: 0
-- `:argued`: 3 (LZ-003, LZ-004, LZ-012)
+- `:argued`: 2 (LZ-004, LZ-012)
 - `:open`: 0
 
 Promotion queue (highest-leverage, ordered by ease):

@@ -1,15 +1,16 @@
 # Dashboard — Lazarus
 
-Last updated: 2026-05-10 (post-v0.1.9 LZ-010 honeypot loop-connect test).
+Last updated: 2026-05-11 (post-v0.1.10 LZ-003 Shakespeare-mode prompt-contract test).
 
 ## Status summary
 
 - Spec: 15 LZ-NNN entries in `LAZARUS_SPEC.md`.
-- Counts: **15 / 0 / 12 / 0 / 0 / 3 / 0** (total / proved /
+- Counts: **15 / 0 / 13 / 0 / 0 / 2 / 0** (total / proved /
   tested / verified / benchmarked / argued / open).
-- Tests: 12/12 passing locally and on `macos-latest` via CI.
+- Tests: 13/13 passing locally and on `macos-latest` via CI.
   - `test/test_visual_skin_decoupling.py` (LZ-001)
   - `test/test_distance_band_thresholds.py` (LZ-002)
+  - `test/test_shakespeare_mode_refusal.py` (LZ-003)
   - `test/test_no_networking_imports.sh` (LZ-005)
   - `test/test_reference_bounds.py` (LZ-006)
   - `test/test_watch_state_transitions.py` (LZ-007)
@@ -40,13 +41,14 @@ Last updated: 2026-05-10 (post-v0.1.9 LZ-010 honeypot loop-connect test).
    `--no-touchid`?). Held until/unless an actual use case
    surfaces.
 
-3. **LZ-003 / LZ-004 / LZ-012 promotion** — prompt-layer
-   LLM-behavior claims (Shakespeare-mode companion refusal,
-   --auth state clearing, companion read-only discipline).
-   Held at `:argued` because enforcement is at the LLM-
-   prompt layer at runtime; promotion to `:tested` would
-   need a transcript-level audit harness or a model-in-the-
-   loop integration test. Long-tail.
+3. **LZ-004 / LZ-012 promotion** — prompt-layer LLM-behavior
+   claims (`--auth` state clearing, companion read-only
+   discipline). LZ-003 promoted via prompt-contract test at
+   v0.1.10; LZ-004 and LZ-012 are the remaining pair. The
+   same prompt-contract pattern applies: lock the producer
+   side of `--auth` (mode-flip semantics, already partially
+   covered by LZ-003's test) and the consumer-side
+   read-only directives in `lazarus.md` §What you do NOT do.
 
 ## Open questions
 
@@ -73,6 +75,14 @@ Last updated: 2026-05-10 (post-v0.1.9 LZ-010 honeypot loop-connect test).
 
 ## Recently completed
 
+- 2026-05-11 — v0.1.10: LZ-003 Shakespeare-mode prompt-contract
+  test (`test_shakespeare_mode_refusal.py`). Nine-layer static
+  lint on `lazarus.md` §Shakespeare mode + `face_sentinel.py`
+  auth-side mode-flip. Locks the four refusal directives,
+  character-discipline anchors, and the clearing path. Same
+  pattern as LZ-001 — *prompt-contract* test, not a *runtime
+  LLM-behavior* test. Counts: 15 / 0 / 12 / 0 / 0 / 3 / 0 →
+  **15 / 0 / 13 / 0 / 0 / 2 / 0**.
 - 2026-05-10 — v0.1.9: LZ-010 honeypot loop-connect test
   (`test_honeypot_listener.py`). Binds a TEST-HTTP listener
   on port 38080 in a daemon thread, polls for bind, opens a

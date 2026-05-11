@@ -1,12 +1,12 @@
 # artifact_registry.md — Lazarus
 
-Version: 0.1.9 (LZ-010 promoted from :argued to :tested via
-honeypot loop-connect test on 2026-05-10; same-day arc
-covers v0.1.0 first formal spec through v0.1.9. Fifteen
-LZ-NNN spec entries; twelve backed by runnable tests. The
-remaining three `:argued` are all prompt-layer LLM-behavior
-claims (LZ-003/004/012). Counts: 15 / 0 / 12 / 0 / 0 / 3 /
-0.)
+Version: 0.1.10 (LZ-003 promoted from :argued to :tested via
+prompt-contract test on 2026-05-11; arc covers v0.1.0 first
+formal spec through v0.1.10. Fifteen LZ-NNN spec entries;
+thirteen backed by runnable tests. The remaining two
+`:argued` are prompt-layer LLM-behavior claims (LZ-004, the
+auth-clears-shakespeare runtime flow; LZ-012, the companion
+read-only discipline). Counts: 15 / 0 / 13 / 0 / 0 / 2 / 0.)
 
 ## Coverage rule
 
@@ -36,7 +36,7 @@ contain every Test/Proof and Source path listed.
 |---|---|---|---|---|---|---|
 | LZ-001 | visual-skin/security decoupling | Boundary | example-tested | test/test_visual_skin_decoupling.py (producer/consumer architecture lint: mode-vocab vocabulary parity + forbidden presentation-content patterns + skin-in-consumer + README/spec doc anchors) | face_sentinel.py (producer) + lazarus.md (consumer) | :tested |
 | LZ-002 | face-match distance bands | Operational | example-tested | test/test_distance_band_thresholds.py (consistency surface: Python constants + band ordering + Swift literal parity + comment-block doc lock) | face_compare.swift (cmdMatch thresholds) + face_sentinel.py (MATCH/UNCERTAIN/LOCK_THRESHOLD constants) | :tested |
-| LZ-003 | shakespeare-mode companion refusal | Operational | manual | lazarus.md §Shakespeare mode + LAZARUS_SPEC.md LZ-003 | lazarus.md (companion prompt) + face_sentinel.py (mode field in state.json) | :argued |
+| LZ-003 | shakespeare-mode companion refusal | Operational | example-tested | test/test_shakespeare_mode_refusal.py (9-layer prompt-contract lint: section anchor + CHECK-THIS-FIRST + state-path + mode-vocab + 4 refusal directives + clearing path + producer mode-flip + character-discipline anchors + spec phrase lock) | lazarus.md §Shakespeare mode (consumer) + face_sentinel.py auth/check_once (producer mode set/clear) | :tested |
 | LZ-004 | --auth clears shakespeare | Operational | example-tested | docs/lazarus_v0_1_0_companion.md §3.1 (in-session demo) | face_sentinel.py auth() lines 188–205 | :argued |
 | LZ-005 | apple-vision local-only | Boundary | example-tested | test/test_no_networking_imports.sh (grep-lint on every CI push + non-trivial-size guard) | face_compare.swift + face_sentinel.py (no networking imports) | :tested |
 | LZ-006 | reference-storage bounded | Operational | example-tested | test/test_reference_bounds.py | face_sentinel.py prune_oldest() + enroll() + MAX_REFERENCES constant | :tested |
@@ -54,14 +54,14 @@ contain every Test/Proof and Source path listed.
 
 - Total: 15
 - `:proved`: 0
-- `:tested`: 12 (LZ-001, LZ-002, LZ-005, LZ-006, LZ-007, LZ-008,
-  LZ-009, LZ-010, LZ-011, LZ-013, LZ-014, LZ-015)
+- `:tested`: 13 (LZ-001, LZ-002, LZ-003, LZ-005, LZ-006, LZ-007,
+  LZ-008, LZ-009, LZ-010, LZ-011, LZ-013, LZ-014, LZ-015)
 - `:verified`: 0
 - `:benchmarked`: 0
-- `:argued`: 3 (LZ-003, LZ-004, LZ-012)
+- `:argued`: 2 (LZ-004, LZ-012)
 - `:open`: 0
 
-## Cross-audit A1–A6 self-check (post-v0.1.9)
+## Cross-audit A1–A6 self-check (post-v0.1.10)
 
 - **A1 — Coverage.** Every LZ-ID in `LAZARUS_SPEC.md` has a row
   here. ✓ (15 of 15).
@@ -71,10 +71,11 @@ contain every Test/Proof and Source path listed.
   "visual-skin/security-primitive decoupling" → registry
   "visual-skin/security decoupling"); LZ-ID is the canonical
   link. ✓.
-- **A3 — Evidence exists.** All 12 `:tested` entries cite
+- **A3 — Evidence exists.** All 13 `:tested` entries cite
   runnable artifacts under `test/`:
   - LZ-001 → `test/test_visual_skin_decoupling.py`
   - LZ-002 → `test/test_distance_band_thresholds.py`
+  - LZ-003 → `test/test_shakespeare_mode_refusal.py`
   - LZ-005 → `test/test_no_networking_imports.sh`
   - LZ-006 → `test/test_reference_bounds.py`
   - LZ-007 → `test/test_watch_state_transitions.py`
@@ -88,18 +89,17 @@ contain every Test/Proof and Source path listed.
     `docs/lazarus_prune_v0_1_3_companion.md`
   - LZ-015 → `test/test_touchid_check.py` +
     `docs/lazarus_touchid_v0_1_4_companion.md`
-  The three `:argued` entries cite manual evidence in spec /
+  The two `:argued` entries cite manual evidence in spec /
   companion / README. The `:open` count is zero.
-- **A4 — Status honesty.** Twelve `:tested` entries carry
-  `example-tested`. Three `:argued` entries carry `manual`
-  or `example-tested` (LZ-004 has an in-session
-  demonstration but no CI artifact yet). No `:open` entries
-  remain. No entry has a status its evidence type cannot
-  support.
-- **A5 — Stale counts.** Counts above (15 / 0 / 12 / 0 / 0 /
-  3 / 0) match `LAZARUS_SPEC.md` final-section counts and
+- **A4 — Status honesty.** Thirteen `:tested` entries carry
+  `example-tested`. Two `:argued` entries carry `manual` or
+  `example-tested` (LZ-004 has an in-session demonstration
+  but no CI artifact yet). No `:open` entries remain. No
+  entry has a status its evidence type cannot support.
+- **A5 — Stale counts.** Counts above (15 / 0 / 13 / 0 / 0 /
+  2 / 0) match `LAZARUS_SPEC.md` final-section counts and
   `dashboard.md` summary.
-- **A6 — Test sync.** All 12 `:tested` entries are exercised
+- **A6 — Test sync.** All 13 `:tested` entries are exercised
   by tests under `test/` that run on `macos-latest` via
   `.github/workflows/test.yml` on every push. Locally:
   `bash test/test_oversight_action.sh`,
@@ -113,7 +113,8 @@ contain every Test/Proof and Source path listed.
   `bash test/test_no_networking_imports.sh`,
   `python3 test/test_distance_band_thresholds.py`,
   `python3 test/test_visual_skin_decoupling.py`,
-  `python3 test/test_honeypot_listener.py`.
+  `python3 test/test_honeypot_listener.py`,
+  `python3 test/test_shakespeare_mode_refusal.py`.
 
 ## Dependencies on other Triad-Deployment spec entries
 

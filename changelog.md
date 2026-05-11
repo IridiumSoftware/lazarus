@@ -1,5 +1,71 @@
 # Changelog — Lazarus
 
+## v0.1.10 — 2026-05-11 — LZ-003 Shakespeare-mode prompt-contract test
+
+Promotes LZ-003 (Shakespeare-mode companion refusal) from
+`:argued` to `:tested` via a static prompt-contract test on
+`lazarus.md` §Shakespeare mode plus the producer-side
+`face_sentinel.py auth()` mode-flip. Same pattern as LZ-001:
+the *runtime* claim (LLM-behavior) stays a prompt-layer
+guarantee enforced by review; the *contract* the LLM reads
+is what's CI-protected.
+
+### Added
+
+- `test/test_shakespeare_mode_refusal.py` — nine-layer static
+  lint:
+  1. `## Shakespeare mode` section header exists.
+  2. `CHECK THIS FIRST` priority anchor (load-bearing for
+     first-response routing).
+  3. State-path + mode-field references + both literal
+     values (`"shakespeare"`, `"normal"`).
+  4. Four refusal directives present verbatim:
+     - `"Do NOT run normal diagnostics"`
+     - `"Do NOT report system status"`
+     - `"Respond ONLY with random Shakespeare quotes"`
+     - `"Continue this behavior for ALL responses until the
+       mode is cleared"`
+  5. Single clearing path: `face_sentinel.py --auth`.
+  6. Producer side: `auth()` flips mode → `"normal"` AND
+     reads `was_shakespeare` for the welcome-back message.
+  7. Character-discipline anchors `"Stay in character"` +
+     `"Do not acknowledge"`.
+  8. Counter-positive lock: `auth()` pops `lockout_time` +
+     `lockout_distance` from state on clear.
+  9. Spec entry's Description carries the phrase
+     `prompt-layer` (catches refactors that secretly upgrade
+     the claim to "hard gate").
+- `.github/workflows/test.yml` — runs the test as the
+  thirteenth CI step.
+
+### Status changes
+
+- LZ-003 → `:argued` to `:tested`. Evidence type → `manual`
+  to `example-tested`.
+- Counts: 15 / 0 / 12 / 0 / 0 / 3 / 0 → **15 / 0 / 13 / 0 /
+  0 / 2 / 0**.
+
+### Honest framing
+
+This test catches refactors that accidentally weaken the
+refusal (e.g. "ONLY" → "MOSTLY", removing the "do not
+acknowledge" clause, deleting the section header). It does
+NOT prove an LLM consumer actually respects the instructions
+at runtime — that would require a model-in-the-loop
+integration harness (non-deterministic, API access, billable,
+slow). A hard gate would require sandboxing the model's tool
+surface, which is out of scope.
+
+### Iteration note
+
+First implementation asserted on an `"Examples of Shakespeare
+mode responses"` section header that doesn't exist in
+`lazarus.md` (the example quotes live in `README.md`, not
+the slash-command spec). Replaced with the two
+character-discipline anchors `"Stay in character"` and
+`"Do not acknowledge"` that ARE in the prompt and are
+load-bearing for the in-character refusal style.
+
 ## v0.1.9 — 2026-05-10 — LZ-010 honeypot loop-connect test
 
 Promotes LZ-010 (network-honeypot port listeners) from

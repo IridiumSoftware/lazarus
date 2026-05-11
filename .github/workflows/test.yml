@@ -1,10 +1,11 @@
 # Lazarus CI — runs the test suite on macos-latest. Apple Vision
 # is the face-comparison backend; Linux / Windows are out of
-# scope per README §Limitations. As of v0.1.9, twelve LZ-NNN
+# scope per README §Limitations. As of v0.1.10, thirteen LZ-NNN
 # entries are :tested and exercised here:
 #
 #   LZ-001 (visual-skin/security decoupling)    → test_visual_skin_decoupling.py
 #   LZ-002 (face-match distance bands)          → test_distance_band_thresholds.py
+#   LZ-003 (shakespeare-mode companion refusal) → test_shakespeare_mode_refusal.py
 #   LZ-005 (apple-vision local-only)            → test_no_networking_imports.sh
 #   LZ-006 (reference-storage bounded)          → test_reference_bounds.py
 #   LZ-007 (watch-loop state transitions)       → test_watch_state_transitions.py
@@ -83,3 +84,6 @@ jobs:
 
       - name: LZ-010 — test_honeypot_listener.py
         run: python3 test/test_honeypot_listener.py
+
+      - name: LZ-003 — test_shakespeare_mode_refusal.py
+        run: python3 test/test_shakespeare_mode_refusal.py
