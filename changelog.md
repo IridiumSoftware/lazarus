@@ -1,5 +1,82 @@
 # Changelog — Lazarus
 
+## v0.1.5 — 2026-05-10 — `:open` count reaches zero
+
+Three test files promote the three remaining `:open` spec
+entries from v0.1.0 — LZ-006 (reference-storage-bounded),
+LZ-007 (watch-loop-state-transitions), LZ-008
+(peek-json-output-shape) — to `:tested`. Plus one drive-by
+bug fix in `prune_oldest` and one test affordance
+(`FACE_COMPARE_STUB` env var) that delivers what the v0.1.0
+dashboard promised as the top priority.
+
+### Added
+
+- `face_sentinel.py`:
+  - `FACE_COMPARE_STUB` env-var check at the top of
+    `run_face_compare()`. When set, the function short-
+    circuits the subprocess invocation and returns the
+    parsed JSON directly. Used for manual testing and
+    shell-driven verification; production callers leave
+    the env var unset.
+- `test/test_reference_bounds.py` — LZ-006. Tests
+  `prune_oldest` across under-cap (no-op), at-cap (no-op),
+  over-by-one (removes oldest by mtime), over-by-ten,
+  all-three-files-deleted-per-ref, mtime-vs-alphabetical
+  ordering, and the regression case for the negative-index
+  bug. Plus a value lock on `MAX_REFERENCES == 50`.
+- `test/test_watch_state_transitions.py` — LZ-007. Tests
+  `check_once` across 8 branches (no-face × 3, match × 2,
+  uncertain, mismatch × 2) plus 2 early-return paths
+  (capture-fail, match-error). Uses module-level
+  monkey-patching of `capture_full` / `run_face_compare` /
+  `liveness_check` / `backgrounds_similar` / `shrink` /
+  `lock_screen` plus tempdir overrides for state-file
+  paths. Plus a value lock on `LOCK_THRESHOLD == 35.0`.
+- `test/test_peek_output.py` — LZ-008. Tests `peek()` JSON
+  output across 5 branches (capture-fail, empty desk,
+  owner, uncertain, stranger). Uses `FACE_COMPARE_STUB`
+  env-var plus monkey-patched `capture_full`. Verifies
+  output is a single line of well-formed JSON with the
+  spec'd field shape and the `sys.exit(1)` path on capture
+  failure.
+- `docs/lazarus_open_promotion_v0_1_5_companion.md` —
+  companion doc per standard.
+
+### Fixed
+
+- `face_sentinel.py prune_oldest()`: added `if to_remove
+  <= 0: return` guard. Without it, calling the function
+  with N < MAX_REFERENCES would compute a negative slice
+  index and silently delete all-but-newest. The production
+  caller (`enroll()`) already guarded against this, but
+  exposing the function to direct test / CLI use made the
+  latent bug real. The regression test
+  (`test_under_cap_guard_not_negative_index_disaster`)
+  locks the fix in.
+
+### Status changes
+
+- LZ-006 → `:open` to `:tested`.
+- LZ-007 → `:open` to `:tested`.
+- LZ-008 → `:open` to `:tested`.
+- Counts: 15 / 0 / 5 / 0 / 0 / 7 / 3 → **15 / 0 / 8 / 0 / 0
+  / 7 / 0**. `:open` count reaches zero.
+
+### Notes
+
+- The v0.1.0 dashboard's #1 priority item — `FACE_COMPARE_
+  STUB` env-var to unlock LZ-006/007/008 — is now done.
+  Two of the three tests (LZ-006, LZ-007) used module-level
+  monkey-patching instead, which is cleaner Python practice
+  than env-var fishing; LZ-008 uses the env-var path so the
+  affordance has both an in-source consumer and a CI
+  exerciser.
+- Dashboard drive-by cleanups: line about "runs both tests"
+  (stale from v0.1.1) updated to "runs the full test
+  suite"; OverSight Tier 2 entry corrected from "LZ-013"
+  (taken by liveness) to "LZ-016" (next available ID).
+
 ## v0.1.4 — 2026-05-10 — Touch ID opportunistic pre-face gate
 
 `face_sentinel.py --auth` is now two-factor: Touch ID

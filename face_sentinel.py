@@ -105,6 +105,17 @@ def shrink(src: str, dst: str, width: int = 320):
 
 
 def run_face_compare(cmd: str, image_path: str, dir_path: str = None) -> dict:
+    # Test affordance: FACE_COMPARE_STUB env var, if set, short-circuits
+    # the subprocess invocation and returns the parsed JSON directly. Used
+    # for manual testing and shell-driven verification. Production callers
+    # leave the env var unset.
+    stub = os.environ.get("FACE_COMPARE_STUB")
+    if stub is not None:
+        try:
+            return json.loads(stub)
+        except json.JSONDecodeError as e:
+            return {"error": f"invalid FACE_COMPARE_STUB JSON: {e}"}
+
     args = [str(COMPARE_BIN), cmd, image_path]
     if dir_path:
         args.append(dir_path)
@@ -398,6 +409,13 @@ def enroll():
 def prune_oldest():
     metas = sorted(REF_DIR.glob("*.json"), key=lambda p: p.stat().st_mtime)
     to_remove = len(metas) - MAX_REFERENCES
+    # Guard: under-cap → no-op. Without this, `metas[:to_remove]` with a
+    # negative `to_remove` would silently delete all-but-newest. Callers
+    # in production code (`enroll()`) guard against this, but expose the
+    # function to tests / direct CLI use and the negative-index case
+    # becomes dangerous.
+    if to_remove <= 0:
+        return
     for meta_path in metas[:to_remove]:
         stem = meta_path.stem
         for f in REF_DIR.glob(f"{stem}.*"):

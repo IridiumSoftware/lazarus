@@ -1,12 +1,12 @@
 # artifact_registry.md — Lazarus
 
-Version: 0.1.4 (Touch ID opportunistic pre-face gate added
-2026-05-10; v0.1.3 leave-one-out prune, v0.1.2 anti-spoof
-liveness, and v0.1.0 first formal spec all on the same day.
-Fifteen LZ-NNN spec entries cover the visual sentinel
-(Touch ID + face + liveness + leave-one-out prune),
-network monitor + honeypot, and OverSight Tier 1 forensic
-logger. Counts: 15 / 0 / 5 / 0 / 0 / 7 / 3.)
+Version: 0.1.5 (LZ-006 / LZ-007 / LZ-008 promoted from :open
+to :tested on 2026-05-10; same-day arc covers v0.1.0 first
+formal spec through v0.1.5 :open-count-to-zero. Fifteen
+LZ-NNN spec entries; the eight backed by runnable tests are
+the security-critical surface (matching, watch loop, peek,
+network classification, oversight logging, liveness, prune,
+Touch ID). Counts: 15 / 0 / 8 / 0 / 0 / 7 / 0.)
 
 ## Coverage rule
 
@@ -39,9 +39,9 @@ contain every Test/Proof and Source path listed.
 | LZ-003 | shakespeare-mode companion refusal | Operational | manual | lazarus.md §Shakespeare mode + LAZARUS_SPEC.md LZ-003 | lazarus.md (companion prompt) + face_sentinel.py (mode field in state.json) | :argued |
 | LZ-004 | --auth clears shakespeare | Operational | example-tested | docs/lazarus_v0_1_0_companion.md §3.1 (in-session demo) | face_sentinel.py auth() lines 188–205 | :argued |
 | LZ-005 | apple-vision local-only | Boundary | manual | LAZARUS_SPEC.md LZ-005 (inspection notes) | face_compare.swift + face_sentinel.py (no networking imports) | :argued |
-| LZ-006 | reference-storage bounded | Operational | none | — (planned: test/test_reference_bounds.sh) | face_sentinel.py prune_oldest() + prune_cmd() | :open |
-| LZ-007 | watch-loop state transitions | Operational | none | — (planned: test/test_watch_state_transitions.py with stubbed face_compare) | face_sentinel.py check_once() lines 296–367 | :open |
-| LZ-008 | --peek JSON output shape | Boundary | none | — (planned: test/test_peek_output.py with stubbed face_compare) | face_sentinel.py peek() lines 383–415 | :open |
+| LZ-006 | reference-storage bounded | Operational | example-tested | test/test_reference_bounds.py | face_sentinel.py prune_oldest() + enroll() + MAX_REFERENCES constant | :tested |
+| LZ-007 | watch-loop state transitions | Operational | example-tested | test/test_watch_state_transitions.py (8 branches + 2 early-return paths via module-patching) | face_sentinel.py check_once() | :tested |
+| LZ-008 | --peek JSON output shape | Boundary | example-tested | test/test_peek_output.py (5 branches via FACE_COMPARE_STUB env-var + monkey-patched capture_full) | face_sentinel.py peek() | :tested |
 | LZ-009 | network-monitor classification | Operational | example-tested | test/test_network_monitor_classify.py | network_monitor.py classify() + AI_PROCESSES + KNOWN_GOOD + SYSTEM_PREFIXES | :tested |
 | LZ-010 | network-honeypot port listeners | Operational | manual | LAZARUS_SPEC.md LZ-010 + README.md §What it does | network_honeypot.py | :argued |
 | LZ-011 | oversight Tier 1 forensic logging | Operational | example-tested | test/test_oversight_action.sh | oversight_action.sh | :tested |
@@ -54,13 +54,14 @@ contain every Test/Proof and Source path listed.
 
 - Total: 15
 - `:proved`: 0
-- `:tested`: 5 (LZ-009, LZ-011, LZ-013, LZ-014, LZ-015)
+- `:tested`: 8 (LZ-006, LZ-007, LZ-008, LZ-009, LZ-011, LZ-013,
+  LZ-014, LZ-015)
 - `:verified`: 0
 - `:benchmarked`: 0
 - `:argued`: 7 (LZ-001, LZ-002, LZ-003, LZ-004, LZ-005, LZ-010, LZ-012)
-- `:open`: 3 (LZ-006, LZ-007, LZ-008)
+- `:open`: 0
 
-## Cross-audit A1–A6 self-check (post-v0.1.4)
+## Cross-audit A1–A6 self-check (post-v0.1.5)
 
 - **A1 — Coverage.** Every LZ-ID in `LAZARUS_SPEC.md` has a row
   here. ✓ (15 of 15).
@@ -70,36 +71,40 @@ contain every Test/Proof and Source path listed.
   "visual-skin/security-primitive decoupling" → registry
   "visual-skin/security decoupling"); LZ-ID is the canonical
   link. ✓.
-- **A3 — Evidence exists.** LZ-009 cites
-  `test/test_network_monitor_classify.py` (exists; runs from
-  repo root). LZ-011 cites `test/test_oversight_action.sh`
-  (exists). LZ-013 cites `test/test_liveness_check.py`
-  (exists) + `docs/lazarus_liveness_v0_1_2_companion.md`.
-  LZ-014 cites `test/test_prune_logic.py` (exists) +
-  `docs/lazarus_prune_v0_1_3_companion.md`.
-  LZ-015 cites `test/test_touchid_check.py` (exists) +
-  `docs/lazarus_touchid_v0_1_4_companion.md` (manual
-  evidence for the real `bioutil` invocation, which the
-  unit test stubs out).
+- **A3 — Evidence exists.** All 8 `:tested` entries cite
+  runnable artifacts under `test/`:
+  - LZ-006 → `test/test_reference_bounds.py`
+  - LZ-007 → `test/test_watch_state_transitions.py`
+  - LZ-008 → `test/test_peek_output.py`
+  - LZ-009 → `test/test_network_monitor_classify.py`
+  - LZ-011 → `test/test_oversight_action.sh`
+  - LZ-013 → `test/test_liveness_check.py` +
+    `docs/lazarus_liveness_v0_1_2_companion.md`
+  - LZ-014 → `test/test_prune_logic.py` +
+    `docs/lazarus_prune_v0_1_3_companion.md`
+  - LZ-015 → `test/test_touchid_check.py` +
+    `docs/lazarus_touchid_v0_1_4_companion.md`
   The seven `:argued` entries cite manual evidence in spec /
-  companion / README. The three `:open` entries cite "—"
-  honestly.
-- **A4 — Status honesty.** Five `:tested` entries carry
+  companion / README. The `:open` count is zero.
+- **A4 — Status honesty.** Eight `:tested` entries carry
   `example-tested`. Seven `:argued` entries carry `manual` or
-  `example-tested` (LZ-004 has an in-session demonstration but
-  no CI artifact yet). Three `:open` entries carry `none`. No
+  `example-tested` (LZ-004 has an in-session demonstration
+  but no CI artifact yet). No `:open` entries remain. No
   entry has a status its evidence type cannot support.
-- **A5 — Stale counts.** Counts above (15 / 0 / 5 / 0 / 0 / 7 /
-  3) match `LAZARUS_SPEC.md` final-section counts and
+- **A5 — Stale counts.** Counts above (15 / 0 / 8 / 0 / 0 / 7 /
+  0) match `LAZARUS_SPEC.md` final-section counts and
   `dashboard.md` summary.
-- **A6 — Test sync.** LZ-009, LZ-011, LZ-013, LZ-014, LZ-015
-  tests run from `test/` and pass on `macos-latest` via
+- **A6 — Test sync.** All 8 `:tested` entries are exercised by
+  tests under `test/` that run on `macos-latest` via
   `.github/workflows/test.yml` on every push. Locally:
   `bash test/test_oversight_action.sh`,
   `python3 test/test_network_monitor_classify.py`,
   `python3 test/test_liveness_check.py`,
   `python3 test/test_prune_logic.py`,
-  `python3 test/test_touchid_check.py`.
+  `python3 test/test_touchid_check.py`,
+  `python3 test/test_reference_bounds.py`,
+  `python3 test/test_peek_output.py`,
+  `python3 test/test_watch_state_transitions.py`.
 
 ## Dependencies on other Triad-Deployment spec entries
 

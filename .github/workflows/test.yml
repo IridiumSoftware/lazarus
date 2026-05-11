@@ -1,8 +1,11 @@
 # Lazarus CI — runs the test suite on macos-latest. Apple Vision
 # is the face-comparison backend; Linux / Windows are out of
-# scope per README §Limitations. As of v0.1.4, five LZ-NNN
+# scope per README §Limitations. As of v0.1.5, eight LZ-NNN
 # entries are :tested and exercised here:
 #
+#   LZ-006 (reference-storage bounded)          → test_reference_bounds.py
+#   LZ-007 (watch-loop state transitions)       → test_watch_state_transitions.py
+#   LZ-008 (--peek JSON output shape)           → test_peek_output.py
 #   LZ-009 (network-monitor classification)     → test_network_monitor_classify.py
 #   LZ-011 (oversight Tier 1 forensic logger)   → test_oversight_action.sh
 #   LZ-013 (anti-spoof liveness probe)          → test_liveness_check.py
@@ -10,8 +13,8 @@
 #   LZ-015 (Touch ID opportunistic pre-face)    → test_touchid_check.py
 #
 # The face_compare Swift binary is built as a sanity check; the
-# tests don't yet depend on it (LZ-006/007/008 promotions will,
-# once a stub shim lands — see dashboard.md priority #1).
+# tests stub it out via module-level patching or the
+# FACE_COMPARE_STUB env-var shim (added v0.1.5).
 
 name: CI
 
@@ -55,3 +58,12 @@ jobs:
 
       - name: LZ-015 — test_touchid_check.py
         run: python3 test/test_touchid_check.py
+
+      - name: LZ-006 — test_reference_bounds.py
+        run: python3 test/test_reference_bounds.py
+
+      - name: LZ-008 — test_peek_output.py
+        run: python3 test/test_peek_output.py
+
+      - name: LZ-007 — test_watch_state_transitions.py
+        run: python3 test/test_watch_state_transitions.py

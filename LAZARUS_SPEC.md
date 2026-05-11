@@ -129,47 +129,60 @@ Tier 1 forensic camera/mic event logger. Twelve LZ-NNN entries.
   via `prune_oldest`, which sorts references by mtime and
   deletes the oldest until the count is at or below cap. Each
   reference is a (`.fpdata`, `.json`, `.jpg`) triple; the JPEG
-  is downscaled to 480px via `sips`. The `--prune` command
-  flags references whose self-distance exceeds 2× the average
-  (likely outliers).
+  is downscaled to 480px via `sips`. The companion `--prune`
+  command (LZ-014) reports outliers via leave-one-out
+  nearest-neighbor scoring. `prune_oldest` guards against the
+  under-cap negative-index case via `if to_remove <= 0: return`
+  (fixed in v0.1.5 — without this, calling the function under
+  cap would silently delete all-but-newest).
 - Evidence type: example-tested
-- Status: :open
-- Source: `face_sentinel.py` `enroll()` / `prune_oldest()` /
-  `prune_cmd()`.
-- Notes: Test/Proof file pending — a `test/test_reference_bounds.sh`
-  fixture-driven test would create 51 fake reference triples
-  (no actual images required since the test only exercises the
-  pruning loop), call `enroll` or `prune_oldest`, and assert
-  the count returns to 50.
+- Status: :tested
+- Source: `face_sentinel.py` `enroll()` / `prune_oldest()`.
+- Test/Proof: `test/test_reference_bounds.py` covers
+  under-cap (no-op), at-cap (no-op), over-by-one (removes
+  oldest by mtime), over-by-ten, all-three-files-per-ref
+  removal, mtime-vs-alphabetical ordering, and the
+  regression test for the negative-index bug. Plus a value
+  lock on `MAX_REFERENCES == 50`.
 
 ### LZ-007 — watch-loop-state-transitions
-- Key: check_once handles 5 branches (match, no-face+seen,
-  bg-shift, uncertain, mismatch)
+- Key: check_once handles 8 branches over the capture+match cycle
 - Logic tier: Operational
-- Description: The `--watch` daemon's `check_once` function is a
-  five-branch state machine over the result of one capture +
-  match cycle:
-  1. `faces == 0` and `last_seen_owner` set: passive ok unless
-     background has shifted (then `bg_shift` event).
-  2. `faces == 0` and no prior owner sighting: `no_face` event,
-     no state change.
-  3. `is_match`: run the LZ-013 liveness probe; on
-     `static_likely`, fall through to the same Shakespeare-mode
-     state transition as branch 5; otherwise refresh
-     `last_seen_owner`, log `match_ok`.
-  4. `uncertain`: log `uncertain` event, keep capture for
-     review, no state change.
-  5. mismatch: set `mode="shakespeare"`,
-     `authenticated=false`, log `MISMATCH`; if distance >
-     `LOCK_THRESHOLD`, also `lock_screen()`.
+- Description: The `--watch` daemon's `check_once` function is
+  an 8-branch state machine (post-v0.1.2 anti-spoof liveness
+  fold-in):
+  - **A.** `faces == 0` + `last_seen_owner` set + bg unchanged
+    → `no_face owner_walked_away`, return.
+  - **B.** `faces == 0` + `last_seen_owner` set + bg shifted →
+    `no_face owner_walked_away` + `bg_shift`, return.
+  - **C.** `faces == 0` + no `last_seen_owner` →
+    `no_face owner_never_seen`, return.
+  - **D.** `is_match` + liveness `live` → refresh
+    `last_seen_owner`, log `match_ok` with `liveness_delta`.
+  - **E.** `is_match` + liveness `not live` (LZ-013) →
+    `liveness_fail` → `mode="shakespeare"`,
+    `lockout_reason="liveness_fail"`, `authenticated=false`.
+  - **F.** `uncertain` → log `uncertain`, no state change,
+    keep capture for review.
+  - **G.** mismatch + distance ≤ `LOCK_THRESHOLD` →
+    `mode="shakespeare"`, `authenticated=false`, log
+    `MISMATCH`.
+  - **H.** mismatch + distance > `LOCK_THRESHOLD` → branch G
+    plus `lock_screen()` and `LOCK` log event.
+  Plus early-return paths for `capture_fail` (camera failure)
+  and `match_error` (face_compare error).
 - Evidence type: example-tested
-- Status: :open
+- Status: :tested
 - Source: `face_sentinel.py` `check_once()`.
-- Notes: Test/Proof file pending. The branches can be exercised
-  without a camera by stubbing `run_face_compare` and
-  `liveness_check` and feeding synthetic JSON (faces, distance,
-  match, uncertain, live), then asserting on the resulting
-  state.json + log lines.
+- Test/Proof: `test/test_watch_state_transitions.py`
+  exercises all 8 branches + 2 early-return paths by
+  module-patching `capture_full`, `run_face_compare`,
+  `liveness_check`, `backgrounds_similar`, `shrink`,
+  `lock_screen` plus tempdir overrides for `REF_DIR`,
+  `CAP_DIR`, `LOG_FILE`, `STATE_FILE`, `BG_SNAPSHOT`.
+  Assertions cover the resulting `state.json` mutations
+  and the `sentinel.log` event sequence. Plus a value lock
+  on `LOCK_THRESHOLD == 35.0`.
 
 ### LZ-008 — peek-json-output-shape
 - Key: --peek emits a single line of JSON with desk/who/faces/distance
@@ -181,12 +194,18 @@ Tier 1 forensic camera/mic event logger. Twelve LZ-NNN entries.
   - occupied: `{"desk": "occupied", "who": "owner"|"uncertain"|
     "stranger", "faces": <int>, "distance": <float, 1dp>}`
   - capture failure: `{"desk": "unknown", "error": "capture
-    failed"}`
+    failed"}` (with `sys.exit(1)`)
 - Evidence type: example-tested
-- Status: :open
-- Source: `face_sentinel.py` `peek()` lines 383–415.
-- Notes: Test/Proof file pending. Like LZ-007, exercisable with
-  a stubbed `run_face_compare` returning canned JSON.
+- Status: :tested
+- Source: `face_sentinel.py` `peek()`.
+- Test/Proof: `test/test_peek_output.py` exercises all 5
+  branches (capture-fail, empty, owner, uncertain, stranger)
+  using the `FACE_COMPARE_STUB` env-var shim plus a
+  monkey-patched `capture_full`. Assertions cover the
+  output JSON shape (desk/who/faces/distance fields), the
+  single-line property (no trailing garbage), the
+  `sys.exit(1)` code path on capture failure, and the
+  distance-rounded-to-1-decimal contract.
 
 ### LZ-009 — network-monitor-classification
 - Key: outbound conns classified as AI_WATCH / KNOWN / SYSTEM / OTHER
@@ -426,15 +445,37 @@ hardware (or with hardware that's misbehaving).
 
 ---
 
-## Counts (post-v0.1.4)
+## v0.1.5 (2026-05-10) — :open entries promoted to :tested
+
+No new LZ-NNN entries. The three `:open` entries from v0.1.0
+(LZ-006 reference-storage-bounded, LZ-007
+watch-loop-state-transitions, LZ-008 peek-json-output-shape)
+are promoted to `:tested` via three new test files. Plus one
+drive-by fix: `prune_oldest` now guards against the under-cap
+negative-index case (previously it would have silently
+deleted all-but-newest if ever called with N < MAX_REFERENCES;
+production callers already guarded against this, but exposing
+the function to direct test / CLI use made the latent bug
+real). Plus one test affordance: `FACE_COMPARE_STUB` env var
+short-circuits `run_face_compare` for shell-driven manual
+testing.
+
+The `:open` count drops to zero. Every spec entry now has at
+least manual evidence (`:argued`) or runnable evidence
+(`:tested`).
+
+---
+
+## Counts (post-v0.1.5)
 
 - Total: 15
 - `:proved`: 0
-- `:tested`: 5 (LZ-009, LZ-011, LZ-013, LZ-014, LZ-015)
+- `:tested`: 8 (LZ-006, LZ-007, LZ-008, LZ-009, LZ-011, LZ-013,
+  LZ-014, LZ-015)
 - `:verified`: 0
 - `:benchmarked`: 0
 - `:argued`: 7 (LZ-001, LZ-002, LZ-003, LZ-004, LZ-005, LZ-010, LZ-012)
-- `:open`: 3 (LZ-006, LZ-007, LZ-008)
+- `:open`: 0
 
 Promotion queue (highest-leverage, ordered by ease):
 1. **LZ-006 / LZ-007 / LZ-008** — all three are exercisable

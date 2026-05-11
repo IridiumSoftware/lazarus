@@ -1,55 +1,55 @@
 # Dashboard — Lazarus
 
-Last updated: 2026-05-10 (post-v0.1.4 Touch ID opportunistic pre-face gate).
+Last updated: 2026-05-10 (post-v0.1.5 :open count reaches zero).
 
 ## Status summary
 
 - Spec: 15 LZ-NNN entries in `LAZARUS_SPEC.md`.
-- Counts: **15 / 0 / 5 / 0 / 0 / 7 / 3** (total / proved /
+- Counts: **15 / 0 / 8 / 0 / 0 / 7 / 0** (total / proved /
   tested / verified / benchmarked / argued / open).
-- Tests: 5/5 passing locally and on `macos-latest` via CI.
+- Tests: 8/8 passing locally and on `macos-latest` via CI.
+  - `test/test_reference_bounds.py` (LZ-006)
+  - `test/test_watch_state_transitions.py` (LZ-007)
+  - `test/test_peek_output.py` (LZ-008)
   - `test/test_network_monitor_classify.py` (LZ-009)
   - `test/test_oversight_action.sh` (LZ-011)
   - `test/test_liveness_check.py` (LZ-013)
   - `test/test_prune_logic.py` (LZ-014)
   - `test/test_touchid_check.py` (LZ-015)
-- CI: `.github/workflows/test.yml` runs both tests on
-  `macos-latest`. First run green at 26s on commit `0bd92bf`
-  (face_compare build + 2 tests + checkout/teardown).
-  Outstanding: `actions/checkout@v4` Node.js 20 deprecation
-  (deadline Sept 2026; bump when a v5 ships).
+- CI: `.github/workflows/test.yml` runs the full test suite
+  on `macos-latest` on every push. Outstanding:
+  `actions/checkout@v4` Node.js 20 deprecation (deadline
+  Sept 2026; bump when v5 ships).
 - Public release shape: face sentinel + network monitor +
   honeypot + OverSight Tier 1 logger + `/lazarus` companion.
 
 ## Priority stack (highest leverage first)
 
-1. **LZ-006 / LZ-007 / LZ-008 promotion** — three `:open`
-   entries that all become `:tested` once `face_compare` is
-   stub-able. Suggested approach: introduce a
-   `FACE_COMPARE_STUB=<json>` env var that
-   `run_face_compare()` reads first; if set, return the
-   parsed JSON instead of invoking the binary. One small
-   patch unlocks all three tests.
-
-2. **LZ-005 grep-lint** — CI step that grep-fails on
+1. **LZ-005 grep-lint** — CI step that grep-fails on
    networking imports (`URLSession`, `Network`, `urllib`,
    `requests`, `socket`) in `face_compare.swift` /
    `face_sentinel.py`. Promotes LZ-005 to `:tested`. ~10
    minutes; folds into `.github/workflows/test.yml`.
 
-3. **LZ-002 fixture set** — small set of (image, expected
-   band) JPEGs for the distance-band claim. Requires care to
-   not commit identifiable face data; consider synthetic /
-   public-domain reference images. Promotes LZ-002 to
+2. **LZ-002 fixture set** — small set of (image, expected
+   band) JPEGs for the distance-band claim. Requires care
+   to not commit identifiable face data; consider synthetic
+   / public-domain reference images. Promotes LZ-002 to
    `:tested`.
 
-4. **OverSight Tier 2** — auto-lockdown on non-allowlisted
+3. **OverSight Tier 2** — auto-lockdown on non-allowlisted
    camera/mic activation. Documented inline in
-   `oversight_action.sh`. New spec entry LZ-013 + companion
-   doc + test.
+   `oversight_action.sh`. New spec entry **LZ-016** +
+   companion doc + test.
 
-5. **LZ-010 honeypot loop-connect test** — fragile in CI;
+4. **LZ-010 honeypot loop-connect test** — fragile in CI;
    defer until the rest of the stack is green.
+
+5. **`--strict-touchid` flag** — turn Touch ID into a hard
+   gate. New spec entry LZ-NNN with a clear story for
+   headless / no-hardware scenarios (escape hatch via
+   `--no-touchid`?). Held until/unless an actual use case
+   surfaces.
 
 ## Open questions
 
@@ -68,6 +68,15 @@ Last updated: 2026-05-10 (post-v0.1.4 Touch ID opportunistic pre-face gate).
 
 ## Recently completed
 
+- 2026-05-10 — v0.1.5: LZ-006 / LZ-007 / LZ-008 promoted from
+  `:open` to `:tested`. Three new test files
+  (`test_reference_bounds.py`, `test_watch_state_transitions.py`,
+  `test_peek_output.py`), one drive-by bug fix in
+  `prune_oldest` (under-cap negative-index guard), and one
+  test affordance (`FACE_COMPARE_STUB` env var). `:open`
+  count reaches zero; counts go from 15 / 0 / 5 / 0 / 0 / 7
+  / 3 to **15 / 0 / 8 / 0 / 0 / 7 / 0**. CI now runs eight
+  tests on every push.
 - 2026-05-10 — v0.1.4: Touch ID opportunistic pre-face gate
   (LZ-015) ports from `~/Projects/Possibilistic_Security/
   face_sentinel.py`. `--auth` is now two-factor (fingerprint
