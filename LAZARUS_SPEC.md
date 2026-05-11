@@ -27,13 +27,48 @@ Tier 1 forensic camera/mic event logger. Twelve LZ-NNN entries.
   silence, Klingon, or any other lockout style does not change
   the security primitive. Same architectural separation as
   LavaLamp LL-002.
-- Evidence type: manual
-- Status: :argued
-- Source: `face_sentinel.py` (state machine), `lazarus.md`
-  (companion prompt), `README.md` §Customization.
-- Notes: Promotion to `:tested` requires a test that swaps the
-  visual skin and confirms the security state machine is
-  unchanged. Held at `:argued` until that test exists.
+  - **Producer:** `face_sentinel.py` writes `mode` and
+    `authenticated` to `state.json`. Knows nothing about
+    presentation.
+  - **Consumer:** `lazarus.md` reads `state.json.mode` and
+    chooses presentation (ASCII art, Shakespeare quotes,
+    warm one-liners).
+  - **Contract:** the mode-value vocabulary (`"normal"`,
+    `"shakespeare"`).
+- Evidence type: example-tested
+- Status: :tested
+- Source: `face_sentinel.py` (producer side of the state
+  machine), `lazarus.md` (consumer side), `README.md`
+  §Customization (architectural documentation of the
+  swap-the-skin pattern).
+- Test/Proof: `test/test_visual_skin_decoupling.py` covers six
+  layers:
+  1. Producer writes the mode-value vocabulary (`"normal"`
+     and `"shakespeare"` literals + the `state["mode"] =`
+     assignment).
+  2. Producer does NOT contain presentation content
+     (forbidden patterns: archaic-pronoun substrings inside
+     quote text, specific Shakespeare-quote phrases, the
+     cloud ASCII art fragment, "I am Mother" character
+     voice).
+  3. Consumer carries the skin (ASCII art fragment +
+     Shakespeare-mode section header).
+  4. Mode-value vocabulary matches: consumer references both
+     `"shakespeare"` and `"normal"` literals — drift would
+     produce a silent lockout failure.
+  5. README §Customization documents "Bring your own lockout
+     mode" (the swap pattern).
+  6. Spec entry names the `mode` and `authenticated` fields
+     (catches doc-stripping refactors).
+- Notes: Honest framing — this is a static / architectural
+  test. It catches the silent regression of folding
+  presentation content into the producer or breaking the
+  shared mode-value vocabulary. It does NOT prove an LLM
+  consumer respects the mode flag at runtime — that's a
+  prompt-layer guarantee enforced by review, not a code
+  invariant. The pragmatic threat model is "developer
+  refactors `face_sentinel.py` and accidentally inlines
+  presentation," which is the failure mode the test catches.
 
 ### LZ-002 — face-match-distance-bands
 - Key: VNFeaturePrintObservation distance bands 18 / 25 / 35
@@ -528,15 +563,27 @@ The calibration gap stays as a future-work open question.
 
 ---
 
-## Counts (post-v0.1.7)
+## v0.1.8 (2026-05-10) — LZ-001 producer/consumer decoupling test
+
+No new LZ-NNN entry. LZ-001 (visual-skin/security-primitive
+decoupling) promotes from `:argued` to `:tested` via a
+producer/consumer architecture test that locks the
+separation between `face_sentinel.py` (producer of the mode
+flag) and `lazarus.md` (consumer of the mode flag), the
+forbidden-presentation-content surface, and the
+mode-value-vocabulary contract.
+
+---
+
+## Counts (post-v0.1.8)
 
 - Total: 15
 - `:proved`: 0
-- `:tested`: 10 (LZ-002, LZ-005, LZ-006, LZ-007, LZ-008, LZ-009,
-  LZ-011, LZ-013, LZ-014, LZ-015)
+- `:tested`: 11 (LZ-001, LZ-002, LZ-005, LZ-006, LZ-007, LZ-008,
+  LZ-009, LZ-011, LZ-013, LZ-014, LZ-015)
 - `:verified`: 0
 - `:benchmarked`: 0
-- `:argued`: 5 (LZ-001, LZ-003, LZ-004, LZ-010, LZ-012)
+- `:argued`: 4 (LZ-003, LZ-004, LZ-010, LZ-012)
 - `:open`: 0
 
 Promotion queue (highest-leverage, ordered by ease):

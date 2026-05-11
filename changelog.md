@@ -1,5 +1,70 @@
 # Changelog — Lazarus
 
+## v0.1.8 — 2026-05-10 — LZ-001 producer/consumer decoupling test
+
+Promotes LZ-001 (visual-skin/security-primitive decoupling)
+from `:argued` to `:tested` via a static architecture test
+that locks the producer/consumer separation between
+`face_sentinel.py` and `lazarus.md`.
+
+### Added
+
+- `test/test_visual_skin_decoupling.py` — six layers of
+  architectural check:
+  1. Producer writes mode-value vocabulary (`"normal"` and
+     `"shakespeare"` literals + `state["mode"] =`
+     assignment).
+  2. Producer is free of presentation content. Forbidden
+     patterns:
+     - archaic-pronoun substrings inside quote text (`doth`,
+       `thou`, `thee`, `thy`) with word-boundary matching
+       so common English words like "without" don't false-
+       positive
+     - four specific Shakespeare-quote phrases
+     - the cloud ASCII-art fragment
+     - "I am Mother" character-voice string
+  3. Consumer carries the skin (ASCII-art fragment +
+     Shakespeare-mode section header).
+  4. Mode-value vocabulary parity: consumer references both
+     `"shakespeare"` and `"normal"` literals.
+  5. README §Customization documents the swap pattern
+     ("Bring your own lockout mode").
+  6. Spec entry names the `mode` and `authenticated` fields.
+- `.github/workflows/test.yml` — runs the new test as the
+  eleventh step on every push.
+
+### Status changes
+
+- LZ-001 → `:argued` to `:tested`. Evidence type → `manual`
+  to `example-tested`.
+- Counts: 15 / 0 / 10 / 0 / 0 / 5 / 0 → **15 / 0 / 11 / 0 /
+  0 / 4 / 0**.
+
+### Honest framing
+
+This is a static / architectural test. It cannot directly
+prove that an LLM consumer respects the mode flag at
+runtime — that's a prompt-layer guarantee enforced by
+review of the conversation transcript. What the test DOES
+catch is the silent regression where a refactor folds
+presentation content into the producer or breaks the shared
+mode-value vocabulary. The pragmatic threat model is
+"developer accidentally inlines a Shakespeare quote in
+face_sentinel.py during a refactor," which the test
+catches.
+
+### Iteration note
+
+First implementation banned `\bBard\b` as a forbidden
+pattern; that immediately tripped because the producer's
+module docstring uses "Bard" as a descriptive label for
+the lockout mode ("Claude speaks only in Bard"). Walked
+back to allow the descriptive label (and "Shakespeare" by
+extension) while continuing to ban actual quote text
+(archaic pronouns, named quote phrases). Honest framing:
+the test policy is "no presentation content," not "no
+mention of the skin's name."
+
 ## v0.1.7 — 2026-05-10 — LZ-002 band-consistency test
 
 Promotes LZ-002 (face-match distance bands) from `:argued`

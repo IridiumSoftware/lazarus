@@ -1,13 +1,14 @@
 # Dashboard — Lazarus
 
-Last updated: 2026-05-10 (post-v0.1.7 LZ-002 band-consistency test).
+Last updated: 2026-05-10 (post-v0.1.8 LZ-001 producer/consumer decoupling test).
 
 ## Status summary
 
 - Spec: 15 LZ-NNN entries in `LAZARUS_SPEC.md`.
-- Counts: **15 / 0 / 10 / 0 / 0 / 5 / 0** (total / proved /
+- Counts: **15 / 0 / 11 / 0 / 0 / 4 / 0** (total / proved /
   tested / verified / benchmarked / argued / open).
-- Tests: 10/10 passing locally and on `macos-latest` via CI.
+- Tests: 11/11 passing locally and on `macos-latest` via CI.
+  - `test/test_visual_skin_decoupling.py` (LZ-001)
   - `test/test_distance_band_thresholds.py` (LZ-002)
   - `test/test_no_networking_imports.sh` (LZ-005)
   - `test/test_reference_bounds.py` (LZ-006)
@@ -41,13 +42,13 @@ Last updated: 2026-05-10 (post-v0.1.7 LZ-002 band-consistency test).
    `--no-touchid`?). Held until/unless an actual use case
    surfaces.
 
-4. **LZ-001 / LZ-003 / LZ-004 / LZ-012 promotion** —
-   prompt-layer claims (visual-skin/security decoupling,
-   Shakespeare-mode companion refusal, --auth state
-   clearing, companion read-only discipline). Held at
-   `:argued` because enforcement is at the LLM-prompt
-   layer; promotion to `:tested` would need a
-   transcript-level audit harness. Long-tail.
+4. **LZ-003 / LZ-004 / LZ-012 promotion** — prompt-layer
+   LLM-behavior claims (Shakespeare-mode companion refusal,
+   --auth state clearing, companion read-only discipline).
+   Held at `:argued` because enforcement is at the LLM-
+   prompt layer at runtime; promotion to `:tested` would
+   need a transcript-level audit harness or a model-in-the-
+   loop integration test. Long-tail.
 
 ## Open questions
 
@@ -74,6 +75,16 @@ Last updated: 2026-05-10 (post-v0.1.7 LZ-002 band-consistency test).
 
 ## Recently completed
 
+- 2026-05-10 — v0.1.8: LZ-001 producer/consumer decoupling
+  test (`test_visual_skin_decoupling.py`). Locks the
+  architectural separation: `face_sentinel.py` (producer)
+  writes mode-vocabulary literals without carrying
+  presentation content; `lazarus.md` (consumer) carries the
+  ASCII art + Shakespeare-mode affordance; both files
+  reference the same `"normal"` / `"shakespeare"` strings;
+  README §Customization documents the swap pattern. Counts:
+  15 / 0 / 10 / 0 / 0 / 5 / 0 → **15 / 0 / 11 / 0 / 0 /
+  4 / 0**.
 - 2026-05-10 — v0.1.7: LZ-002 band-consistency test
   (`test_distance_band_thresholds.py`). Locks threshold
   values (MATCH=18.0, UNCERTAIN=25.0, LOCK=35.0), band
