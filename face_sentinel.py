@@ -375,6 +375,145 @@ def auth(strict_touchid: bool = False):
     log_event({"event": "auth_ok", "distance": dist})
 
 
+# ── Recovery (LZ-027 break-glass) ──────────────────────────────────
+#
+# When Shakespeare mode persists due to a camera failure, a
+# face_compare regression, an LZ-013 liveness threshold mis-
+# calibration (cold room, glasses change, etc.), or any other
+# false-positive lockout, the legitimate owner needs a documented
+# break-glass path that does NOT depend on the face-match
+# pipeline. Without one, the only options are (a) edit state.json
+# from a Terminal that hasn't loaded /lazarus, which is an
+# accident-of-the-implementation rather than a feature, or
+# (b) wait for the camera/face_compare situation to resolve,
+# which may not happen.
+#
+# Two recovery methods, in priority order:
+#
+#   1. Touch ID success (LZ-015's _touchid_check returns "ok").
+#      Most users will have Touch ID hardware and a single press
+#      is faster than typing a token.
+#
+#   2. Recovery-token match. A 64-character hex secret stored at
+#      ~/.face_sentinel/recovery_token.txt (mode 0600, generated
+#      manually by the owner via `python3 -c "import secrets;
+#      print(secrets.token_hex(32))"` and saved out-of-band —
+#      e.g., in a password manager). The token is compared via
+#      hmac.compare_digest for timing safety.
+#
+# Failure to satisfy EITHER method exits non-zero. Recovery use
+# is logged as `recovery_used` with the method that succeeded,
+# so a high recovery-use rate signals the primitive is
+# mis-calibrated. Honest framing in LZ-027: recovery paths
+# weaken the cryptographic story but strengthen the operational
+# story — without them the system is unusable as a daily-driver
+# sentinel because false-positive lockouts have no off-ramp.
+
+RECOVERY_TOKEN_FILE = BASE_DIR / "recovery_token.txt"
+
+
+def _read_recovery_token() -> str:
+    """Read the recovery token from ~/.face_sentinel/recovery_token.txt
+    (a 64-character hex secret, one line). Returns the trimmed
+    contents, or empty string if the file is missing / unreadable.
+    Production callers should compare via hmac.compare_digest."""
+    if not RECOVERY_TOKEN_FILE.exists():
+        return ""
+    try:
+        return RECOVERY_TOKEN_FILE.read_text().strip()
+    except OSError:
+        return ""
+
+
+def recover(token: str = None) -> None:
+    """Break-glass recovery from a persistent Shakespeare-mode
+    lockout. Flips `state.json` back to mode="normal" via one of
+    two methods:
+
+      - Touch ID success (preferred; matches LZ-015 semantics).
+      - Recovery-token match against
+        ~/.face_sentinel/recovery_token.txt.
+
+    Either method, on success, sets `mode="normal"`,
+    `authenticated=true`, refreshes `auth_time` and
+    `last_seen_owner`, pops `lockout_time` and
+    `lockout_distance`, and logs a `recovery_used` event with
+    the method that succeeded.
+
+    If neither method is available (no Touch ID hardware AND no
+    token file), or if both fail, exits non-zero. No silent
+    fall-through.
+    """
+    import hmac as _hmac
+    ensure_dirs()
+
+    state = load_state()
+    prior_mode = state.get("mode", "normal")
+    prior_lockout_reason = state.get("lockout_reason")
+
+    # ── Method 1: Touch ID ────────────────────────────────────────
+    print("Recovery: attempting Touch ID...")
+    touchid_result = _touchid_check()
+    if touchid_result == "ok":
+        method = "touchid"
+        log_event({"event": "touchid_ok", "context": "recovery"})
+    else:
+        # Touch ID didn't succeed. Fall through to token check.
+        print(f"Touch ID {touchid_result}. Trying recovery token...")
+        log_event({"event": "touchid_" + touchid_result,
+                   "context": "recovery"})
+
+        if token is None:
+            # User didn't supply a token on the CLI. Check the
+            # token file via the helper.
+            saved_token = _read_recovery_token()
+            if not saved_token:
+                print("ERROR: Touch ID failed and no recovery token "
+                      "supplied or saved. Recovery denied.")
+                log_event({"event": "recovery_denied",
+                           "reason": "no_method_available"})
+                sys.exit(1)
+            print("ERROR: Touch ID failed. Pass --token <hex> to "
+                  "use the saved recovery token.")
+            log_event({"event": "recovery_denied",
+                       "reason": "touchid_failed_no_token_supplied"})
+            sys.exit(1)
+
+        # User supplied a token. Compare it to the saved value
+        # with timing-safe comparison.
+        saved_token = _read_recovery_token()
+        if not saved_token:
+            print("ERROR: --token supplied but no recovery token "
+                  "saved at ~/.face_sentinel/recovery_token.txt.")
+            log_event({"event": "recovery_denied",
+                       "reason": "token_supplied_but_none_saved"})
+            sys.exit(1)
+        if not _hmac.compare_digest(token.strip(), saved_token):
+            print("ERROR: Recovery token mismatch. Recovery denied.")
+            log_event({"event": "recovery_denied",
+                       "reason": "token_mismatch"})
+            sys.exit(1)
+        method = "token"
+
+    # ── Success path: flip state to normal ────────────────────────
+    state["authenticated"] = True
+    state["auth_time"] = datetime.now().isoformat()
+    state["last_seen_owner"] = datetime.now().isoformat()
+    state["mode"] = "normal"
+    state.pop("lockout_time", None)
+    state.pop("lockout_distance", None)
+    save_state(state)
+
+    print(f"RECOVERY OK. Method: {method}. Mode restored to normal.")
+    if prior_mode == "shakespeare":
+        print(f"  (cleared Shakespeare mode; prior lockout_reason: "
+              f"{prior_lockout_reason or 'unset'})")
+    log_event({"event": "recovery_used",
+               "method": method,
+               "prior_mode": prior_mode,
+               "prior_lockout_reason": prior_lockout_reason})
+
+
 # ── Enroll ─────────────────────────────────────────────────────────
 
 def enroll():
@@ -825,11 +964,17 @@ if __name__ == "__main__":
     group.add_argument("--peek", action="store_true", help="One-shot: who is at the desk?")
     group.add_argument("--prune", action="store_true", help="Check reference quality")
     group.add_argument("--status", action="store_true", help="Show status")
+    group.add_argument("--recover", action="store_true",
+                       help="Break-glass recovery from persistent Shakespeare-mode "
+                            "lockout (Touch ID + optional --token)")
     parser.add_argument("--interval", type=int, default=WATCH_INTERVAL,
                         help=f"Watch interval in seconds (default: {WATCH_INTERVAL})")
     parser.add_argument("--strict-touchid", action="store_true",
                         help="Treat Touch ID nonzero/unavailable as hard auth "
                              "failure (default: opportunistic / fail-open)")
+    parser.add_argument("--token", type=str, default=None,
+                        help="Recovery token (hex). Used with --recover when "
+                             "Touch ID is unavailable or fails.")
 
     args = parser.parse_args()
 
@@ -850,3 +995,5 @@ if __name__ == "__main__":
         prune_cmd()
     elif args.status:
         status()
+    elif args.recover:
+        recover(token=args.token)

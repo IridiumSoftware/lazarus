@@ -1,5 +1,147 @@
 # Changelog — Lazarus
 
+## v0.1.20 — 2026-05-11 — TCE joint-closures (LZ-022..LZ-026) + break-glass recovery (LZ-027)
+
+The third per-deployment Discovery.Triadic engine pass in the
+Triad Deployments series (after LavaLamp's LL-030..LL-038 surfacing
+at engine v0.2.4 / v0.2.9 and PharOS's 10-entry pass at engine
+v0.2.10). Engine pass details + companion in the
+triadic-coordination-engine repo:
+- driver: `src/haskell/test/LazarusDiscovery.hs`
+- companion: `docs/lazarus_discovery_companion.md`
+- engine version: v0.2.11, commit 3fcccf3
+- corpus: 19 entries (LZ-001..LZ-019; the pass predates Aaron's
+  parallel LZ-020 / LZ-021 additions but the structural findings
+  stand independently)
+
+Five new spec entries surfaced from the pass, all added at
+`:argued` per the conjunctive-claim discipline (sub-claim evidence
+— each component's individual `:tested`/`:proved` status — does
+NOT promote the joint claim; promotion to `:tested` requires a
+joint integration test exercising the conjunction):
+
+- **LZ-022 network-exfiltration-joint-closure** — TCE STRICT
+  HIGH-band triple [LZ-005, LZ-010, LZ-019] at score 10.00.
+  Three-angle V-NETWORK-EXFIL defense: prevent (LZ-005
+  apple-vision-local-only) + detect (LZ-010 honeypot) + control
+  (LZ-019 strict-touchid).
+- **LZ-023 prompt-contract-joint-closure** — TCE STRICT HIGH-band
+  triple [LZ-001, LZ-003, LZ-012] at score 10.00. The prompt-
+  contract enforcement triple: visual decoupling + Shakespeare-
+  mode refusal + companion-read-only discipline (LZ-012 mentions
+  both LZ-001 and LZ-003 in its body, anchoring the triple as a
+  spec-level structural unit).
+- **LZ-024 face-reference-lean-scaffold-joint-closure** — TCE
+  STRICT HIGH-band triple [LZ-006, LZ-014, LZ-016] at score 9.50,
+  status-diversity 2 (tested + tested + proved). Proof-scaffold-
+  meets-implementation cluster on the face-reference axis.
+- **LZ-025 liveness-lean-scaffold-joint-closure** — TCE STRICT
+  HIGH-band triple [LZ-007, LZ-013, LZ-017] at score 9.50,
+  status-diversity 2. Parallel shape to LZ-024 on the liveness
+  axis.
+- **LZ-026 categorical-triadic-closure-of-lean-proved-trio** —
+  THE ONLY directional 3-cycle in the Lazarus mention graph:
+  LZ-016 mentions LZ-018 → LZ-018 mentions LZ-017 → LZ-017
+  mentions LZ-016 closes the cycle. First-of-its-kind across all
+  three Triad-deployment TCE passes (LavaLamp 44-entry corpus:
+  0 cycles; PharOS 10-entry: 0; Lazarus 19-entry: exactly 1,
+  here). The Lean-proved compositional scaffold — three abstract
+  modules that mutually constrain each other as proof obligations.
+  Cleanest `:proved`-promotion target among the five since the
+  Lean modules already exist; needs a new `composed_correctness`
+  theorem in `src/lean4/` formalising the 3-cycle dependency.
+
+### Also added — LZ-027 break-glass recovery
+
+Closes the operational fail-closed risk surfaced in Brian
+Crabtree's external Triad review (2026-05-11): prior to
+v0.1.20, a persistent Shakespeare-mode lockout (camera
+failure, `face_compare` regression, LZ-013 threshold
+mis-calibration) had no documented recovery path other than
+manually editing `~/.face_sentinel/state.json` from a Terminal
+that hadn't loaded `/lazarus`. New `--recover` command
+provides a documented two-method break-glass surface.
+
+Spec-only at this commit. The `face_sentinel.py` implementation
++ `test/test_recovery.py` test file land in a follow-up commit
+so the joint TCE / break-glass governance update is reviewable
+as a single atomic spec change.
+
+Surface (shipping at v0.1.21):
+
+- `face_sentinel.py`:
+  - `recover(token: str = None)` — break-glass entry point.
+    Two methods in priority order: (1) Touch ID via
+    `_touchid_check()`; (2) recovery-token match against
+    `~/.face_sentinel/recovery_token.txt` (64-char hex,
+    `hmac.compare_digest` for timing safety, whitespace
+    stripped before compare). Either method on success
+    flips `state.json` to `mode="normal"`,
+    `authenticated=True`, refreshes `auth_time` +
+    `last_seen_owner`, pops `lockout_time` +
+    `lockout_distance`, logs `recovery_used` with method
+    + `prior_mode` + `prior_lockout_reason`.
+  - `_read_recovery_token()` — reads the token file,
+    returns empty string on missing/unreadable.
+  - `RECOVERY_TOKEN_FILE` constant — `BASE_DIR /
+    "recovery_token.txt"`.
+  - argparse `--recover` (mutex with --auth/--enroll/etc.)
+    and `--token <hex>` (modifier for the no-Touch-ID
+    path). Dispatched via `recover(token=args.token)`.
+- `test/test_recovery.py` — 7 branches + 2 locks
+  (default-parameter via `inspect.signature` and
+  `RECOVERY_TOKEN_FILE` path lock).
+
+### Status changes
+
+- **LZ-022..LZ-026** enter the spec at `:argued` with
+  evidence type `manual`. Five joint-closure entries from
+  the TCE pass.
+- **LZ-027** enters the spec at `:tested` with evidence
+  type `example-tested` (spec entry only; implementation
+  lands at v0.1.21).
+- Counts: 21/3/18/0/0/0/0 → **27/3/19/0/0/5/0**. The
+  `:argued` count goes from 0 to 5 (honest per
+  conjunctive-claim discipline); all 5 carry explicit
+  promotion paths in their `Notes:` fields. `:tested` goes
+  18 → 19 (LZ-027).
+
+### Honest framing — break-glass recovery
+
+Recovery paths weaken the cryptographic story but strengthen
+the operational story — without them false-positive lockouts
+have no off-ramp and the system is unusable as a daily-driver
+sentinel. Recovery use rate should be near-zero in steady
+state; high rate signals the primitive is mis-calibrated.
+
+The recovery surface does NOT expand the auth surface — an
+attacker with the owner's Touch ID finger or the recovery
+token can clear lockout, but those are the same two factors
+the owner uses to auth in the first place. Storing the
+recovery token in a password manager (not in
+`~/.face_sentinel/` itself) separates the blast radius.
+
+**What this DOESN'T cover.** If Touch ID hardware fails AND
+no recovery token was provisioned, the owner is still locked
+out and must edit `state.json` manually. The spec
+acknowledges this gap rather than pretending it's solved.
+
+### Files changed
+
+- `LAZARUS_SPEC.md` — new v0.1.20 section with LZ-022..LZ-026
+  joint-closure entries + LZ-027 break-glass entry; counts
+  refreshed.
+- `dashboard.md` — last-updated stamp; counts refreshed;
+  priority stack reordered; tests list extended.
+- `changelog.md` — this entry.
+
+No source code changes in this commit. TCE entries capture
+spec discoveries from the engine (driver shipped at
+triadic-coordination-engine commit 3fcccf3); LZ-027
+implementation lands at v0.1.21.
+
+---
+
 ## v0.1.17 — 2026-05-11 — OverSight Tier 2 allowlist + state-flip (LZ-021)
 
 The OverSight integration gains its second tier: on non-

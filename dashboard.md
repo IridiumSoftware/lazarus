@@ -1,15 +1,19 @@
 # Dashboard — Lazarus
 
-Last updated: 2026-05-11 (post-v0.1.17 — OverSight Tier 2 allowlist + state-flip landed as LZ-021).
+Last updated: 2026-05-11 (post-v0.1.19 — **break-glass recovery (LZ-027) + TCE Discovery.Triadic joint-closure entries (LZ-022..LZ-026).** Two pieces of work landed in the working tree concurrently, shipped together at v0.1.20. (1) The third per-deployment TCE pass in the Triad series (after LavaLamp's LL-030..LL-038 and PharOS's too-early 10-entry pass) surfaced 4 HIGH-band conjunctive triples + 1 directional 3-cycle from Lazarus's 19-entry corpus. The 3-cycle [LZ-016, LZ-017, LZ-018] is the **first directional cycle** across all three Triad-deployment TCE passes (LavaLamp 44-entry: 0; PharOS 10-entry: 0; Lazarus 19-entry: 1). All 5 new entries at `:argued` per conjunctive-claim discipline. (2) LZ-027 closes the fail-closed availability risk surfaced in Brian Crabtree's external Triad review — `--recover` command provides a documented two-method (Touch ID OR recovery-token) break-glass surface. Counts shift: 21/3/18/0/0/0/0 → **27/3/19/0/0/5/0**. TCE driver + companion at triadic-coordination-engine commit 3fcccf3).
 
 ## Status summary
 
-- Spec: 21 LZ-NNN entries in `LAZARUS_SPEC.md`.
-- Counts: **21 / 3 / 18 / 0 / 0 / 0 / 0** (total / proved /
+- Spec: 27 LZ-NNN entries in `LAZARUS_SPEC.md`.
+- Counts: **27 / 3 / 19 / 0 / 0 / 5 / 0** (total / proved /
   tested / verified / benchmarked / argued / open).
   Three `:proved` entries (LZ-016 outliers, LZ-017 liveness
   metric, LZ-018 classification dispatcher) via hermetic
-  Lean4 proofs. `:argued` and `:open` both at zero.
+  Lean4 proofs. Five `:argued` joint-closure entries (LZ-022
+  through LZ-026) from the TCE Discovery.Triadic pass —
+  promotion to `:tested` requires joint integration tests.
+  LZ-027 break-glass recovery at `:tested`.
+  `:open` at zero.
 - Tests: 15/15 passing locally and on `macos-latest` via CI.
   - `test/test_visual_skin_decoupling.py` (LZ-001)
   - `test/test_distance_band_thresholds.py` (LZ-002)
@@ -41,40 +45,57 @@ Last updated: 2026-05-11 (post-v0.1.17 — OverSight Tier 2 allowlist + state-fl
 
 ## Priority stack (highest leverage first)
 
-The 15-entry spec is fully test-covered as of v0.1.11. The
-remaining priority items are forward work — new features and
-new claims, not existing-claim promotions.
+Reordered 2026-05-11 after Brian Crabtree's external Triad
+review surfaced break-glass / lockout-risk as the
+highest-impact gap in the current shipping surface.
 
-1. ~~OverSight Tier 2~~ — shipped at v0.1.17 as LZ-021
-   (allowlist + state-flip). **Tier 2b** (screen lock via
-   `pmset` on Tier 2 alert) remains as opt-in future work
-   if disruptive-response semantics are wanted.
+1. **LZ-022 break-glass recovery (IN PROGRESS, v0.1.18).**
+   `face_sentinel.py` currently has no documented recovery
+   path when Shakespeare mode persists due to camera
+   failure, `face_compare` regression, or LZ-013 liveness
+   threshold mis-calibration. Spec entry + `--recover`
+   command + Touch ID-only + optional recovery-token
+   sub-path. Closes the operational fail-closed risk
+   surfaced in Brian's external review of the Triad.
 
-2. ~~`--strict-touchid` flag~~ — shipped at v0.1.15 as
-   LZ-019. The `--no-touchid` escape hatch was considered
-   and deferred; opportunistic mode (default) covers the
-   hardware-less case.
+2. **`LAZARUS_RECOVERY_SPEC.md` + Lazarus.jl absorption
+   decision.** Brian's review framed a forward Julia
+   resurrection layer (Shamir + Hardware Envelope + TPM)
+   as the long-horizon evolution of lazarus. Architectural
+   choice still pending: (A) absorb into current repo as
+   LZ-NNN, (B) spin out as a fourth Triad-deployment repo,
+   (C) extend LavaLamp. Spec-doc work blocked until the
+   architectural call is made.
 
-3. **Runtime LLM-behavior harness** — partially addressed
-   in v0.1.16 (LZ-020 transcript audit, point-in-time
-   evidence). The Anthropic-API integration test (approach
-   B in `docs/runtime_harness_design.md`) is held until
-   model-drift becomes a concrete failure mode.
+3. **Lean expansion** — more proofs on the `:tested`
+   entries that admit formalization. Natural next
+   candidates: LZ-006 prune-bounded list invariant,
+   LZ-007 watch-loop state-machine, LZ-013 byte-diff
+   inequalities. Each ~30-50 lines of Lean given the
+   existing `src/lean4/` infrastructure.
 
-4. **LZ-002 calibration fixture set** — covered as a
-   future-work open question (face-data identifiability
-   problem). Adding a fixture set of (image, expected band)
-   pairs would lift LZ-002's `example-tested` evidence to
-   include the empirical calibration claim, not just the
-   threshold-band consistency claim.
+4. **TPM/SEP binding (deferred — PharOS dependency).**
+   The substrate-binding portion of the proposed Lazarus.jl
+   needs hardware-root-of-trust patterns to land in PharOS
+   first (v0.0.7 roadmap). Hold until that pattern
+   stabilizes.
 
-5. **Cleanup item — auth() should pop lockout_reason +
-   liveness_delta** — `test_auth_clears_shakespeare.py`
-   currently locks the documented behavior that these
-   linger after auth. If you want auth to fully reset the
-   lockout metadata, add the pops and update the test.
-   Low priority; lingering data doesn't affect security
-   (mode flip is what matters).
+### Lower-priority items (carried from earlier reviews)
+
+- **Runtime LLM-behavior harness — Approach B**: partially
+  addressed in v0.1.16 (LZ-020 transcript audit, point-in-
+  time). Anthropic-API integration held until model-drift
+  becomes a concrete failure mode.
+- **LZ-002 calibration fixture set**: face-data
+  identifiability problem; held until a clean fixture
+  source emerges.
+- **OverSight Tier 2b** (screen lock via `pmset`): opt-in
+  via sentinel-file design; ships when an actual use case
+  surfaces.
+- **`auth()` cleanup**: pop `lockout_reason` +
+  `liveness_delta` on success (currently
+  `test_auth_clears_shakespeare.py` locks the documented
+  linger behavior).
 
 ## Open questions
 

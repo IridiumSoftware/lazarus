@@ -1073,18 +1073,304 @@ has runnable evidence.
 
 ---
 
-## Counts (post-v0.1.11)
+## v0.1.20 (2026-05-11) — TCE joint-closures (LZ-022..LZ-026) + break-glass recovery (LZ-027)
 
-- Total: 21
+Discovery.Triadic engine pass over the 19-entry Lazarus corpus
+(`triadic-coordination-engine` v0.2.11, `LazarusDiscovery.hs`,
+commit 3fcccf3) surfaced four HIGH-band conjunctive-claim
+triples (≥ 9.00 score) and one directional 3-cycle in the
+mention graph. The five findings are added here as `:argued`
+joint-closure entries per the conjunctive-claim discipline
+(sub-claim evidence — each component's individual
+`:tested`/`:proved` status — does NOT promote the joint claim;
+promotion to `:tested` requires a joint integration test
+exercising the conjunction explicitly).
+
+Third per-deployment TCE pass in the Triad. LavaLamp's pass
+surfaced LL-030..LL-038 (all promoted to `:tested` via
+integration-test scenarios in `runtests.jl`); PharOS's pass
+at 10 entries was too early to promote anything; Lazarus's
+19-entry pass sits between.
+
+Companion: `docs/lazarus_discovery_companion.md` in the
+triadic-coordination-engine repo.
+
+### LZ-022 — network-exfiltration-joint-closure
+- Key: LZ-005 ∧ LZ-010 ∧ LZ-019 triangulate the no-data-
+  exfiltration defense from three independent angles
+- Logic tier: Operational
+- Description: TCE surfaced [LZ-005, LZ-010, LZ-019] as a
+  STRICT HIGH-band triple at score 10.00 sharing the
+  V-NETWORK-EXFIL attack-class tag. LZ-005 (apple-vision-
+  local-only) prevents face-data from ever crossing the
+  device boundary — a Boundary-tier *prevention* claim.
+  LZ-010 (network-honeypot-port-listeners) is an active
+  *detection* claim — trap outbound connections to known-
+  malicious ports. LZ-019 (strict-touchid-hard-gate) is a
+  *control* claim — gate auth on biometric so that even if
+  the other two layers were bypassed, an attacker without
+  the user's finger can't trigger the data flow. The three
+  together close a defense triangle: prevent + detect +
+  control. Removing any one weakens the joint claim
+  asymmetrically.
+- Evidence type: manual (TCE Discovery.Triadic pass at
+  v0.2.11; structural argument; no integration test that
+  exercises the conjunction yet)
+- Status: :argued
+- Source: `LAZARUS_SPEC.md` LZ-005 + LZ-010 + LZ-019 entries;
+  TCE companion `docs/lazarus_discovery_companion.md` in the
+  triadic-coordination-engine repo
+- Notes: Promotion to `:tested` requires an integration test
+  exercising the three-way conjunction — e.g., scripted
+  scenario where (a) LZ-005's local-only flag is flipped,
+  (b) LZ-010's honeypot detects an outbound attempt,
+  (c) LZ-019's hard-gate denies admit, all in a single
+  end-to-end harness. Per conjunctive-claim discipline, the
+  sum of the three individual `:tested` statuses does not
+  promote the joint claim.
+
+### LZ-023 — prompt-contract-joint-closure
+- Key: LZ-001 ∧ LZ-003 ∧ LZ-012 form the prompt-contract
+  enforcement triple (V-DECOUPLING ∧ V-PROMPT-INJECTION)
+- Logic tier: Boundary
+- Description: TCE surfaced [LZ-001, LZ-003, LZ-012] as a
+  STRICT HIGH-band triple at score 10.00. LZ-001
+  (visual-skin/security-primitive decoupling) is the
+  architectural separation between the user-facing visual
+  layer and the security primitive — same shape as LavaLamp
+  LL-002. LZ-003 (shakespeare-mode-as-companion-refusal) is
+  the prompt-contract enforcement that Shakespeare-mode
+  refuses substantive work without re-auth — a refusal-of-
+  cooperation primitive. LZ-012 (companion-read-only-
+  discipline) is the higher-level discipline that the
+  companion never WRITES code or state, only READS and
+  REPORTS — the meta-rule that makes the other two
+  enforceable. LZ-012 explicitly references both LZ-001
+  and LZ-003 in its body, anchoring the triple as a
+  spec-level structural unit. Tier mix Boundary/Operational/
+  Boundary; sd=1 (all `:tested`); score 10.00 reflects
+  strong co-defense + mention density.
+- Evidence type: manual (TCE Discovery.Triadic pass at
+  v0.2.11; mention pattern + V co-defense; no integration
+  test for the conjunction yet)
+- Status: :argued
+- Source: `LAZARUS_SPEC.md` LZ-001 + LZ-003 + LZ-012
+  entries; TCE companion
+- Notes: Promotion to `:tested` requires a joint test
+  simultaneously asserting all three properties — e.g., a
+  prompt-injection scenario where (a) the visual layer's
+  failure mode is decoupled from the security primitive's
+  output, (b) Shakespeare-mode triggers, (c) the companion
+  rejects any attempt to write rather than only refusing
+  substantive work. The three existing tests (LZ-001
+  producer/consumer decoupling, LZ-003 prompt-contract
+  scan, LZ-012 six-prohibition lint) exist independently
+  but don't run as a conjunction.
+
+### LZ-024 — face-reference-lean-scaffold-joint-closure
+- Key: LZ-006 ∧ LZ-014 ∧ LZ-016 form the face-reference
+  Lean-proved-meets-implementation scaffold
+- Logic tier: Operational
+- Description: TCE surfaced [LZ-006, LZ-014, LZ-016] as a
+  STRICT HIGH-band triple at score 9.50, status-diversity 2
+  (tested + tested + proved). LZ-006 (reference-storage-
+  bounded) caps the face-reference pool size. LZ-014
+  (reference-pool-leave-one-out-pruning) is the algorithm
+  that maintains pool quality by pruning outliers via
+  leave-one-out scoring. LZ-016 (outlier-detection-abstract-
+  algorithm) is the Lean-proved abstract counterpart —
+  formal properties the pruning algorithm satisfies
+  (totality, bounded cost, outlier-monotonicity). LZ-016
+  mentions both LZ-006 and LZ-014; LZ-006 mentions LZ-014;
+  together they form a proof-scaffold-meets-implementation
+  cluster. V={V-FACE-SPOOF, V-REFERENCE-DRIFT}.
+- Evidence type: manual
+- Status: :argued
+- Source: `LAZARUS_SPEC.md` LZ-006 + LZ-014 + LZ-016 entries;
+  `src/lean4/` for LZ-016's existing Lean theorems;
+  TCE companion
+- Notes: Promotion to `:tested` requires the existing
+  reference-pool integration test to assert conformance with
+  LZ-016's abstract properties explicitly on the operational
+  data path. A Lean-proved upgrade is plausible: add a
+  `compositionLemma` in `src/lean4/` linking LZ-014's spec
+  to LZ-016's abstract properties.
+
+### LZ-025 — liveness-lean-scaffold-joint-closure
+- Key: LZ-007 ∧ LZ-013 ∧ LZ-017 form the liveness Lean-
+  proved-meets-implementation scaffold (parallel to LZ-023)
+- Logic tier: Operational
+- Description: TCE surfaced [LZ-007, LZ-013, LZ-017] as a
+  STRICT HIGH-band triple at score 9.50, status-diversity 2.
+  Same shape as LZ-023 on the liveness axis: LZ-007
+  (watch-loop-state-transitions) is the operational state
+  machine; LZ-013 (anti-spoof-liveness-probe) is the
+  liveness primitive that defends against static-photo
+  presentation attacks; LZ-017 (liveness-metric-abstract-
+  properties) is the Lean-proved abstract counterpart
+  formalising metric monotonicity + threshold semantics.
+  LZ-017 mentions both LZ-013 and LZ-014; LZ-007 mentions
+  LZ-013. The three together form the proof-scaffold-meets-
+  implementation liveness cluster. V={V-FACE-SPOOF,
+  V-LIVENESS}.
+- Evidence type: manual
+- Status: :argued
+- Source: `LAZARUS_SPEC.md` LZ-007 + LZ-013 + LZ-017 entries;
+  `src/lean4/` for LZ-017's Lean theorems; TCE companion
+- Notes: Promotion to `:tested` requires the watch-loop
+  integration test to assert conformance with LZ-017's
+  abstract liveness-metric properties on the operational
+  data path — e.g., feed the watch loop a static-photo
+  attack sequence and verify both LZ-013's liveness fail
+  triggers AND LZ-017's metric-monotonicity holds end-to-
+  end. Lean-proved upgrade path parallel to LZ-023.
+
+### LZ-026 — categorical-triadic-closure-of-lean-proved-trio
+- Key: LZ-016 ∧ LZ-017 ∧ LZ-018 form the only directional
+  3-cycle in the Lazarus mention graph — a genuine
+  categorical triadic closure
+- Logic tier: Boundary
+- Description: TCE surfaced [LZ-016, LZ-017, LZ-018] as
+  **the only directional 3-cycle** in the Lazarus mention
+  graph. Verified by inspection: LZ-016 mentions LZ-018
+  → LZ-018 mentions LZ-017 → LZ-017 mentions LZ-016
+  closes the cycle. This is the most structurally strong
+  form of triadic relation surfaced across all three Triad-
+  deployment TCE passes (LavaLamp 44-entry corpus: 0
+  cycles; PharOS 10-entry: 0 cycles; Lazarus 19-entry:
+  exactly 1, here). Each Lean-proved entry references
+  another as a proof obligation: LZ-016 (outlier-detection
+  abstract algorithm) references LZ-018 (priority
+  dispatcher) as a use-site for its bounded-cost guarantee;
+  LZ-018 references LZ-017 (liveness metric) as the input
+  it dispatches on; LZ-017 references LZ-016 as the
+  underlying algorithm whose abstract properties it
+  formalises. The 3-cycle IS the Lean-proved compositional
+  scaffold — three abstract modules that mutually constrain
+  each other.
+
+  **Scoring nuance.** Under the current TCE scoring
+  function this triple receives only 7.00 (below the
+  9.00 HIGH-band threshold) because tier-diversity = 1
+  (all Operational) and status-diversity = 1 (all
+  `:proved`); the 2.5 directional-cycle bonus pushes it
+  above the 5.00 LOW-band floor. A future TCE scoring
+  refinement could weight cycle bonuses higher when the
+  cycle is evidence-tier-homogeneous, since that signals a
+  genuine compositional unit rather than coincidence.
+- Evidence type: manual
+- Status: :argued
+- Source: `LAZARUS_SPEC.md` LZ-016 + LZ-017 + LZ-018
+  entries; `src/lean4/` for the three existing Lean
+  theorems; TCE companion in triadic-coordination-engine
+  repo
+- Notes: This is the cleanest `:proved`-promotion target
+  among the five new entries since the Lean modules already
+  exist. Promotion to `:proved` requires a new Lean
+  theorem in `src/lean4/` that formalises the compositional
+  structure — concretely, a theorem `composed_correctness`
+  showing the three modules' guarantees compose under the
+  3-cycle directional dependency. The existing per-module
+  theorems do not (yet) formally reference each other at
+  the Lean level even though their spec entries do
+  textually. The directional cycle is currently spec-body
+  structural evidence; a Lean upgrade lifts it to formal
+  compositional evidence.
+
+---
+
+## v0.1.19 (2026-05-11) — LZ-027 break-glass recovery
+
+Closes the operational fail-closed risk surfaced in Brian
+Crabtree's external Triad review (2026-05-11). Prior to
+v0.1.19 a persistent Shakespeare-mode lockout (camera
+failure, `face_compare` regression, LZ-013 threshold mis-
+calibration) had no documented break-glass path other than
+manually editing `state.json` from a Terminal that hadn't
+loaded `/lazarus`.
+
+### LZ-027 — break-glass-recovery
+- Key: --recover provides Touch ID or recovery-token paths to clear persistent lockout
+- Logic tier: Operational
+- Description: `face_sentinel.py --recover` invokes
+  `recover(token=None)` which attempts two methods in
+  priority order:
+  1. **Touch ID** (preferred): `_touchid_check()` from
+     LZ-015. On `"ok"`, recovery succeeds via the
+     `touchid` method.
+  2. **Recovery token**: if Touch ID returns anything
+     other than `"ok"`, the function checks for a hex
+     token supplied via `--token <hex>` and compares it
+     via `hmac.compare_digest` against
+     `~/.face_sentinel/recovery_token.txt` (64-character
+     hex secret, mode 0600, generated by the owner out-
+     of-band via `secrets.token_hex(32)` and saved in a
+     password manager). Whitespace on either side is
+     stripped before comparison.
+  On either method's success, the function flips
+  `state.json` to `mode="normal"`, `authenticated=True`,
+  refreshes `auth_time` + `last_seen_owner`, pops
+  `lockout_time` + `lockout_distance`, and logs a
+  `recovery_used` event with the successful method and
+  `prior_mode` / `prior_lockout_reason` fields.
+  On failure of both methods, the function logs
+  `recovery_denied` with a structured `reason` field
+  (`no_method_available`, `touchid_failed_no_token_supplied`,
+  `token_supplied_but_none_saved`, `token_mismatch`) and
+  `sys.exit(1)`. No silent fall-through.
+- Evidence type: example-tested
+- Status: :tested
+- Source: `face_sentinel.py` `recover()` +
+  `_read_recovery_token()` + `RECOVERY_TOKEN_FILE`
+  constant + argparse `--recover` flag + `--token` flag +
+  CLI dispatch.
+- Test/Proof: `test/test_recovery.py` covers 7 branches
+  (Touch ID succeeds; no method available; token supplied
+  + no saved; token mismatch; good token; whitespace-
+  padded token still matches; already-normal pre-state
+  with Touch ID) plus default-parameter lock via
+  `inspect.signature(recover)` and `RECOVERY_TOKEN_FILE`
+  path lock against `BASE_DIR / "recovery_token.txt"`.
+- Notes: **Honest framing.** Recovery paths weaken the
+  cryptographic story but strengthen the operational story
+  — without them, false-positive lockouts have no off-ramp
+  and the system is unusable as a daily-driver sentinel.
+  Recovery use rate should be near-zero in steady state; a
+  high rate signals the primitive is mis-calibrated. The
+  `recovery_used` event with `prior_mode` + method fields
+  is the audit trail.
+  **Threat model.** An attacker with the owner's Touch ID
+  finger or the recovery-token secret can clear lockout —
+  but those are the same two factors the owner uses to
+  auth in the first place. The recovery surface does NOT
+  expand the auth surface. Storing the recovery token in
+  a password manager (not in `~/.face_sentinel/` itself)
+  separates the blast radius.
+  **What this DOESN'T cover.** If Touch ID hardware fails
+  AND no recovery token was provisioned, the owner is
+  still locked out and must edit `state.json` manually.
+  Acknowledged gap.
+
+---
+
+## Counts (post-v0.1.19)
+
+- Total: 27
 - `:proved`: 3 — LZ-016 (outlier-detection algorithm),
   LZ-017 (liveness metric properties), LZ-018 (priority
   dispatcher correctness), all lean-proved hermetically in
   `src/lean4/`
-- `:tested`: 18 — LZ-001..LZ-015 + LZ-019 + LZ-020 + LZ-021,
-  every operational entry backed by a runnable test
+- `:tested`: 19 — LZ-001..LZ-015 + LZ-019 + LZ-020 + LZ-021 +
+  LZ-027, every operational entry backed by a runnable test
 - `:verified`: 0
 - `:benchmarked`: 0
-- `:argued`: 0
+- `:argued`: 5 — LZ-022..LZ-026, TCE Discovery.Triadic
+  joint-closure entries (4 HIGH-band conjunctive triples +
+  1 directional 3-cycle). Per conjunctive-claim discipline,
+  sub-claim evidence (each component's individual `:tested`/
+  `:proved` status) does not promote the joint claim;
+  promotion to `:tested` requires a joint integration test
+  exercising the conjunction.
 - `:open`: 0
 
 Promotion queue (highest-leverage, ordered by ease):
