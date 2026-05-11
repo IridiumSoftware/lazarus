@@ -1,16 +1,19 @@
 # Dashboard — Lazarus
 
-Last updated: 2026-05-11 (post-v0.1.10 LZ-003 Shakespeare-mode prompt-contract test).
+Last updated: 2026-05-11 (post-v0.1.11 — `:argued` count reaches zero; every LZ-NNN entry now `:tested`).
 
 ## Status summary
 
 - Spec: 15 LZ-NNN entries in `LAZARUS_SPEC.md`.
-- Counts: **15 / 0 / 13 / 0 / 0 / 2 / 0** (total / proved /
+- Counts: **15 / 0 / 15 / 0 / 0 / 0 / 0** (total / proved /
   tested / verified / benchmarked / argued / open).
-- Tests: 13/13 passing locally and on `macos-latest` via CI.
+  `:argued` and `:open` both at zero — every entry has
+  runnable evidence.
+- Tests: 15/15 passing locally and on `macos-latest` via CI.
   - `test/test_visual_skin_decoupling.py` (LZ-001)
   - `test/test_distance_band_thresholds.py` (LZ-002)
   - `test/test_shakespeare_mode_refusal.py` (LZ-003)
+  - `test/test_auth_clears_shakespeare.py` (LZ-004)
   - `test/test_no_networking_imports.sh` (LZ-005)
   - `test/test_reference_bounds.py` (LZ-006)
   - `test/test_watch_state_transitions.py` (LZ-007)
@@ -18,6 +21,7 @@ Last updated: 2026-05-11 (post-v0.1.10 LZ-003 Shakespeare-mode prompt-contract t
   - `test/test_network_monitor_classify.py` (LZ-009)
   - `test/test_honeypot_listener.py` (LZ-010)
   - `test/test_oversight_action.sh` (LZ-011)
+  - `test/test_companion_readonly_discipline.py` (LZ-012)
   - `test/test_liveness_check.py` (LZ-013)
   - `test/test_prune_logic.py` (LZ-014)
   - `test/test_touchid_check.py` (LZ-015)
@@ -30,6 +34,10 @@ Last updated: 2026-05-11 (post-v0.1.10 LZ-003 Shakespeare-mode prompt-contract t
 
 ## Priority stack (highest leverage first)
 
+The 15-entry spec is fully test-covered as of v0.1.11. The
+remaining priority items are forward work — new features and
+new claims, not existing-claim promotions.
+
 1. **OverSight Tier 2** — auto-lockdown on non-allowlisted
    camera/mic activation. Documented inline in
    `oversight_action.sh`. New spec entry **LZ-016** +
@@ -41,14 +49,30 @@ Last updated: 2026-05-11 (post-v0.1.10 LZ-003 Shakespeare-mode prompt-contract t
    `--no-touchid`?). Held until/unless an actual use case
    surfaces.
 
-3. **LZ-004 / LZ-012 promotion** — prompt-layer LLM-behavior
-   claims (`--auth` state clearing, companion read-only
-   discipline). LZ-003 promoted via prompt-contract test at
-   v0.1.10; LZ-004 and LZ-012 are the remaining pair. The
-   same prompt-contract pattern applies: lock the producer
-   side of `--auth` (mode-flip semantics, already partially
-   covered by LZ-003's test) and the consumer-side
-   read-only directives in `lazarus.md` §What you do NOT do.
+3. **Runtime LLM-behavior harness** — the LZ-001 / LZ-003 /
+   LZ-004 / LZ-012 prompt-contract tests catch refactors
+   that weaken the prompt, but not LLM models that ignore
+   the prompt. A model-in-the-loop integration test
+   (Claude API call + state-file fixtures + response
+   assertions) would close the runtime gap. Non-
+   deterministic, billable, slow — held until/unless the
+   prompt-contract layer demonstrates inadequacy in
+   practice.
+
+4. **LZ-002 calibration fixture set** — covered as a
+   future-work open question (face-data identifiability
+   problem). Adding a fixture set of (image, expected band)
+   pairs would lift LZ-002's `example-tested` evidence to
+   include the empirical calibration claim, not just the
+   threshold-band consistency claim.
+
+5. **Cleanup item — auth() should pop lockout_reason +
+   liveness_delta** — `test_auth_clears_shakespeare.py`
+   currently locks the documented behavior that these
+   linger after auth. If you want auth to fully reset the
+   lockout metadata, add the pops and update the test.
+   Low priority; lingering data doesn't affect security
+   (mode flip is what matters).
 
 ## Open questions
 
@@ -75,6 +99,16 @@ Last updated: 2026-05-11 (post-v0.1.10 LZ-003 Shakespeare-mode prompt-contract t
 
 ## Recently completed
 
+- 2026-05-11 — v0.1.11: **LZ-004 + LZ-012 promoted to
+  `:tested`**. Two new tests
+  (`test_auth_clears_shakespeare.py` drives the full
+  `auth()` flow with all IO stubbed across 4 pre-states;
+  `test_companion_readonly_discipline.py` locks the six
+  prohibition directives + observe/flag/watch + counter-
+  positive permissive-language scan). Counts:
+  15 / 0 / 13 / 0 / 0 / 2 / 0 → **15 / 0 / 15 / 0 / 0 /
+  0 / 0**. **Every LZ-NNN entry now has runnable
+  evidence; `:argued` and `:open` both reach zero.**
 - 2026-05-11 — v0.1.10: LZ-003 Shakespeare-mode prompt-contract
   test (`test_shakespeare_mode_refusal.py`). Nine-layer static
   lint on `lazarus.md` §Shakespeare mode + `face_sentinel.py`

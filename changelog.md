@@ -1,5 +1,79 @@
 # Changelog — Lazarus
 
+## v0.1.11 — 2026-05-11 — LZ-004 + LZ-012 → :argued = 0
+
+Closes the last two `:argued` claims. Every LZ-NNN entry in
+the spec now has runnable evidence under `test/`. Counts
+reach **15 / 0 / 15 / 0 / 0 / 0 / 0**.
+
+### Added
+
+- `test/test_auth_clears_shakespeare.py` (LZ-004) — drives
+  `face_sentinel.auth()` with all IO dependencies stubbed
+  (`_touchid_check`, `capture_full`, `run_face_compare`,
+  `shrink`) across four pre-state branches:
+  1. **shakespeare → clear**: pre-state has
+     `mode="shakespeare"` + `lockout_time` + `lockout_distance`.
+     Post-state: `mode="normal"`, `authenticated=True`,
+     lockout fields popped, `auth_time` + `last_seen_owner`
+     refreshed. Log emits both `shakespeare_cleared` AND
+     `auth_ok`.
+  2. **fresh auth**: pre-state `mode="normal"`. Post:
+     unchanged mode, `authenticated=True`. Log emits
+     `auth_ok` only (no `shakespeare_cleared`).
+  3. **empty state**: pre-state `{}`. Post: mode and
+     authenticated set cleanly from scratch.
+  4. **lockout_reason linger lock**: pre-state with
+     `lockout_reason="liveness_fail"` + `liveness_delta`.
+     Post: mode/lockout_time/lockout_distance cleared, but
+     `lockout_reason` + `liveness_delta` intentionally
+     linger. Documents current behavior so a future change
+     trips the test.
+- `test/test_companion_readonly_discipline.py` (LZ-012) —
+  static prompt-contract lint on `lazarus.md` §"What you
+  do NOT do":
+  1. Section header exists.
+  2. All six prohibition directives present verbatim.
+  3. Closing observe/flag/watch + "That is all." anchor.
+  4. **Counter-positive scan**: within the prohibition
+     section, no permissive-language patterns (`"you can
+     write"`, `"you may commit"`, etc.) — catches refactors
+     that accidentally invert a prohibition.
+  5. Spec entry references the section name.
+  6. README's user-facing discipline phrasing intact.
+- `.github/workflows/test.yml` — two new CI steps.
+
+### Status changes
+
+- LZ-004 → `:argued` to `:tested`.
+- LZ-012 → `:argued` to `:tested`.
+- Counts: 15 / 0 / 13 / 0 / 0 / 2 / 0 → **15 / 0 / 15 / 0 /
+  0 / 0 / 0**. Every LZ-NNN entry now backed by a runnable
+  test.
+
+### Honest framing
+
+All four prompt-layer LLM-behavior claims (LZ-001, LZ-003,
+LZ-004, LZ-012) are now `:tested` via static prompt-contract
+tests rather than runtime LLM-behavior tests. The tests catch
+refactors that weaken the contract; they do NOT prove an LLM
+consumer respects the contract at runtime. The pragmatic
+threat model is "developer accidentally inverts a directive
+during a refactor" — which the tests catch. A model-in-the-
+loop integration harness would close the runtime gap; it's
+tracked as priority #3 in the dashboard, held until/unless
+the prompt-contract layer demonstrates inadequacy in
+practice.
+
+### Cleanup pointer
+
+The LZ-004 test locks the current behavior where `auth()`
+pops `lockout_time` + `lockout_distance` but NOT
+`lockout_reason` + `liveness_delta`. If you want a fully-
+clean post-auth state, add those two pops and update the
+test alongside. Low priority; doesn't affect security
+(mode flip is what matters).
+
 ## v0.1.10 — 2026-05-11 — LZ-003 Shakespeare-mode prompt-contract test
 
 Promotes LZ-003 (Shakespeare-mode companion refusal) from

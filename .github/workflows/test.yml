@@ -1,11 +1,12 @@
 # Lazarus CI — runs the test suite on macos-latest. Apple Vision
 # is the face-comparison backend; Linux / Windows are out of
-# scope per README §Limitations. As of v0.1.10, thirteen LZ-NNN
-# entries are :tested and exercised here:
+# scope per README §Limitations. As of v0.1.11, every LZ-NNN
+# entry (LZ-001..LZ-015, 15/15) is :tested and exercised here:
 #
 #   LZ-001 (visual-skin/security decoupling)    → test_visual_skin_decoupling.py
 #   LZ-002 (face-match distance bands)          → test_distance_band_thresholds.py
 #   LZ-003 (shakespeare-mode companion refusal) → test_shakespeare_mode_refusal.py
+#   LZ-004 (--auth clears shakespeare)          → test_auth_clears_shakespeare.py
 #   LZ-005 (apple-vision local-only)            → test_no_networking_imports.sh
 #   LZ-006 (reference-storage bounded)          → test_reference_bounds.py
 #   LZ-007 (watch-loop state transitions)       → test_watch_state_transitions.py
@@ -13,6 +14,7 @@
 #   LZ-009 (network-monitor classification)     → test_network_monitor_classify.py
 #   LZ-010 (network-honeypot port listeners)    → test_honeypot_listener.py
 #   LZ-011 (oversight Tier 1 forensic logger)   → test_oversight_action.sh
+#   LZ-012 (companion read-only discipline)     → test_companion_readonly_discipline.py
 #   LZ-013 (anti-spoof liveness probe)          → test_liveness_check.py
 #   LZ-014 (leave-one-out pool quality scoring) → test_prune_logic.py
 #   LZ-015 (Touch ID opportunistic pre-face)    → test_touchid_check.py
@@ -87,3 +89,9 @@ jobs:
 
       - name: LZ-003 — test_shakespeare_mode_refusal.py
         run: python3 test/test_shakespeare_mode_refusal.py
+
+      - name: LZ-004 — test_auth_clears_shakespeare.py
+        run: python3 test/test_auth_clears_shakespeare.py
+
+      - name: LZ-012 — test_companion_readonly_discipline.py
+        run: python3 test/test_companion_readonly_discipline.py

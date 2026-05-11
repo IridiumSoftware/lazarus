@@ -180,11 +180,36 @@ Tier 1 forensic camera/mic event logger. Twelve LZ-NNN entries.
   `auth_time=<now>`, `last_seen_owner=<now>`,
   `mode="normal"`, and removes `lockout_time` and
   `lockout_distance`. The next `/lazarus` invocation reads the
-  cleared state and resumes normal diagnostics.
-- Evidence type: example-tested (in-session demonstration)
-- Status: :argued
+  cleared state and resumes normal diagnostics. Honestly-
+  documented current behavior: `lockout_reason` and
+  `liveness_delta` (set by LZ-013 liveness_fail path) are NOT
+  popped on clear — they linger in state until overwritten.
+  Future work may add them to the pop list; the test locks
+  the current behavior so a change is surfaced.
+- Evidence type: example-tested
+- Status: :tested
 - Source: `face_sentinel.py` `auth()` (Touch ID step → face
   match → state update), `lazarus.md` §Shakespeare mode.
+- Test/Proof: `test/test_auth_clears_shakespeare.py` drives
+  `auth()` against four pre-states with all IO dependencies
+  stubbed (`_touchid_check`, `capture_full`,
+  `run_face_compare`, `shrink`) and tempdir-redirected
+  `STATE_FILE`/`LOG_FILE`:
+  1. **shakespeare → clear**: mode flips to `"normal"`,
+     `authenticated=True`, lockout_time + lockout_distance
+     popped, `auth_time` + `last_seen_owner` refreshed,
+     log emits both `shakespeare_cleared` AND `auth_ok`.
+  2. **fresh auth**: pre-state `mode="normal"` (no prior
+     lockout) → log emits `auth_ok` WITHOUT
+     `shakespeare_cleared`.
+  3. **empty state**: pre-state `{}` → auth still sets
+     mode + authenticated cleanly.
+  4. **lockout_reason linger lock**: pre-state with
+     `lockout_reason="liveness_fail"` + `liveness_delta=0.0`
+     → mode cleared, lockout_time/distance popped, but
+     lockout_reason + liveness_delta intentionally remain.
+     Documents current behavior; test trips if/when this
+     changes.
 - Notes: Demonstrated live during the v0.1.0 rigor session
   (companion doc §3). Not yet a CI-runnable artifact — the
   match step requires a real camera and a real face. Held at
@@ -396,17 +421,43 @@ Tier 1 forensic camera/mic event logger. Twelve LZ-NNN entries.
 - Logic tier: Boundary
 - Description: The `/lazarus` slash command (`lazarus.md`)
   contains an explicit "What you do NOT do" section listing six
-  prohibitions: no writing/editing code, no commits, no file
-  touching, no security-setting changes, no decisions for the
-  user, no long answers. The companion is a watchful presence,
-  not an actor. As with LZ-003 this is a prompt-layer
-  enforcement, not a hard gate; the discipline failure mode is
-  caught by review of the session transcript.
-- Evidence type: manual
-- Status: :argued
-- Source: `lazarus.md` §What you do NOT do.
-- Notes: Promotion to `:tested` requires a transcript-level
-  audit harness, which is out of scope for v0.1.
+  prohibitions plus a closing affirmative anchor:
+  1. "You do not write or edit code"
+  2. "You do not make commits"
+  3. "You do not touch files"
+  4. "You do not change any security settings"
+  5. "You do not make decisions for the user"
+  6. "You do not give long answers"
+  Plus: "You observe. You flag. You watch. That is all."
+  The companion is a watchful presence, not an actor. As with
+  LZ-001 and LZ-003 this is a prompt-layer enforcement, not a
+  hard gate; the discipline failure mode is caught by review
+  of the session transcript.
+- Evidence type: example-tested
+- Status: :tested
+- Source: `lazarus.md` §What you do NOT do, `README.md`
+  top-of-file ("It doesn't write code. It doesn't fix bugs.
+  It doesn't make decisions.").
+- Test/Proof: `test/test_companion_readonly_discipline.py`
+  asserts:
+  1. `## What you do NOT do` section header exists.
+  2. All six prohibition directives present verbatim.
+  3. Closing observe/flag/watch anchor present
+     (`"You observe. You flag. You watch."` +
+     `"That is all."`).
+  4. **Counter-positive scan**: within the §What-you-do-
+     NOT-do section, no permissive language (`"you can
+     write"`, `"you may commit"`, `"you can edit"`, etc.)
+     — catches refactors that accidentally invert a
+     prohibition.
+  5. Spec entry references the section name (catches
+     doc-stripping).
+  6. README's user-facing discipline phrasing intact
+     (`"doesn't write code"`, `"doesn't make decisions"`).
+- Notes: Honest framing — prompt-contract regression test,
+  not a runtime LLM-behavior test. A hard gate would require
+  sandboxing the model's tool surface (file-write disabled at
+  the harness level), which is out of scope for v0.1.
 
 ---
 
@@ -652,15 +703,32 @@ what's CI-protected.
 
 ---
 
-## Counts (post-v0.1.10)
+## v0.1.11 (2026-05-11) — LZ-004 + LZ-012 promotions → :argued count = 0
+
+No new LZ-NNN entries. The two remaining `:argued` claims
+promote to `:tested`, taking the `:argued` count to zero
+alongside the long-zero `:open` count. Every spec entry now
+has runnable evidence.
+
+- **LZ-004** — drive-auth integration test exercising the
+  full `auth()` flow with all IO dependencies stubbed.
+  Four pre-states covered (shakespeare-clear, fresh,
+  empty, lockout_reason-linger).
+- **LZ-012** — six-prohibition + observe/flag/watch +
+  counter-positive permissive-language scan on
+  `lazarus.md` §"What you do NOT do".
+
+---
+
+## Counts (post-v0.1.11)
 
 - Total: 15
 - `:proved`: 0
-- `:tested`: 13 (LZ-001, LZ-002, LZ-003, LZ-005, LZ-006, LZ-007,
-  LZ-008, LZ-009, LZ-010, LZ-011, LZ-013, LZ-014, LZ-015)
+- `:tested`: 15 — every LZ-NNN entry (LZ-001..LZ-015) backed by
+  a runnable test
 - `:verified`: 0
 - `:benchmarked`: 0
-- `:argued`: 2 (LZ-004, LZ-012)
+- `:argued`: 0
 - `:open`: 0
 
 Promotion queue (highest-leverage, ordered by ease):
