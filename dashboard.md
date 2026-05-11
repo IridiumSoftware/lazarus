@@ -1,14 +1,15 @@
 # Dashboard — Lazarus
 
-Last updated: 2026-05-11 (post-v0.1.12 — first `:proved` entry; lazarus gains a hermetic Lean4 track at `src/lean4/`).
+Last updated: 2026-05-11 (post-v0.1.13 — second `:proved` entry; liveness metric properties proved in Lean).
 
 ## Status summary
 
-- Spec: 16 LZ-NNN entries in `LAZARUS_SPEC.md`.
-- Counts: **16 / 1 / 15 / 0 / 0 / 0 / 0** (total / proved /
+- Spec: 17 LZ-NNN entries in `LAZARUS_SPEC.md`.
+- Counts: **17 / 2 / 15 / 0 / 0 / 0 / 0** (total / proved /
   tested / verified / benchmarked / argued / open).
-  First `:proved` entry (LZ-016) lands via hermetic Lean4
-  proof. `:argued` and `:open` both at zero.
+  Two `:proved` entries (LZ-016 outlier-detection, LZ-017
+  liveness metric) via hermetic Lean4 proofs.
+  `:argued` and `:open` both at zero.
 - Tests: 15/15 passing locally and on `macos-latest` via CI.
   - `test/test_visual_skin_decoupling.py` (LZ-001)
   - `test/test_distance_band_thresholds.py` (LZ-002)
@@ -26,6 +27,7 @@ Last updated: 2026-05-11 (post-v0.1.12 — first `:proved` entry; lazarus gains 
   - `test/test_prune_logic.py` (LZ-014)
   - `test/test_touchid_check.py` (LZ-015)
   - `src/lean4/Outliers.lean` (LZ-016, lean-proved, 5 theorems)
+  - `src/lean4/Liveness.lean` (LZ-017, lean-proved, 4 theorems)
 - CI: `.github/workflows/test.yml` runs the full test suite
   on `macos-latest` on every push. Outstanding:
   `actions/checkout@v4` Node.js 20 deprecation (deadline
@@ -100,6 +102,13 @@ new claims, not existing-claim promotions.
 
 ## Recently completed
 
+- 2026-05-11 — v0.1.13: **second `:proved` entry. LZ-017**
+  proves the byte-diff metric properties underlying the
+  LZ-013 liveness probe (4 theorems: self-zero, symmetry,
+  length-bounded, zero-iff-equal). `src/lean4/Liveness.lean`
+  added alongside `Outliers.lean`. Counts:
+  16 / 1 / 15 / 0 / 0 / 0 / 0 → **17 / 2 / 15 / 0 / 0 / 0 /
+  0**.
 - 2026-05-11 — v0.1.12: **first `:proved` entry. LZ-016**
   adds the abstract outlier-detection algorithm proved in
   Lean4 hermetically (`src/lean4/Outliers.lean`, 5 theorems:

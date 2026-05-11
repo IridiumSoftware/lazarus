@@ -1,5 +1,73 @@
 # Changelog — Lazarus
 
+## v0.1.13 — 2026-05-11 — second `:proved` entry (LZ-017, liveness metric)
+
+Adds LZ-017: byte-diff metric properties proved in Lean4 as
+the abstract mathematical content underlying the LZ-013
+liveness probe. Same hermetic pattern as v0.1.12.
+
+### Added
+
+- `src/lean4/Liveness.lean` — four metric theorems:
+  - `deltaCount_self` — `delta(a, a) = 0`. A sequence
+    compared with itself has zero diffs.
+  - `deltaCount_symm` — `delta(a, b) = delta(b, a)` (under
+    the equal-length precondition).
+  - `deltaCount_le_length` — `delta(a, b) ≤ |a|`. Bounded by
+    sequence length (corollary: normalized delta ≤ 1.0).
+  - `deltaCount_zero_iff_eq` — `delta(a, b) = 0 ↔ a = b`
+    (under equal-length precondition). Discriminating: zero
+    distance exactly characterizes equality.
+- `src/lean4/lakefile.lean` — second `@[default_target]`
+  stanza adds `Liveness` to the default build set so
+  `lake build` compiles both proofs.
+
+### Status changes
+
+- **LZ-017** enters the spec at `:proved` with evidence type
+  `lean-proved`. Second lazarus entry at this tier
+  (alongside LZ-016 outlier-detection).
+- Counts: 16 / 1 / 15 / 0 / 0 / 0 / 0 → **17 / 2 / 15 / 0 /
+  0 / 0 / 0**.
+
+### Honest framing
+
+Structural-skeleton convention applies. The proof targets
+the abstract metric (the `deltaCount` numerator); the
+Python `_liveness_delta` normalizes by length and applies
+the `LIVENESS_DELTA_MIN` threshold — those two steps are
+shape-preserving and don't affect the metric properties.
+LZ-013 covers the Python implementation via
+`test/test_liveness_check.py`; LZ-017 layers on with the
+mathematical proof.
+
+Equal-length precondition: theorems carrying the same-length
+hypothesis (symmetry, zero-iff-eq) make this explicit. The
+function is total in Lean (returns 0 on length-mismatch
+cases) but the metric properties only apply to the
+equal-length subset. The Python implementation returns
+`None` on length mismatch and the caller fails open —
+that's an operational concern outside the metric content.
+
+### Iteration notes
+
+Three v4.29.1 API frictions during writing:
+1. `simp [h, h.symm]` in the symmetry proof looped at max
+   recursion depth — gave simp both `hd = hd'` and
+   `hd' = hd` as rewrite rules, creating an infinite
+   pingpong. Replaced with explicit `rw [if_neg h, if_neg h']`
+   for the unequal branch and `rw [h]` (auto-rfls) for the
+   equal branch.
+2. `simp` after `rw [h]` reported "no goals to be solved"
+   — rw auto-rfl'd the equality. Dropped the trailing simp.
+3. `cases heq` / `List.head_eq_of_cons_eq` /
+   `List.tail_eq_of_cons_eq` API uncertainties in
+   `deltaCount_zero_iff_eq` — rewrote as a direct
+   `by_cases` on head equality with `exfalso` for the
+   unequal branch.
+
+Build time after fixes: ~190ms for Liveness.lean.
+
 ## v0.1.12 — 2026-05-11 — first `:proved` entry (LZ-016, lean-proved)
 
 Lazarus gains a hermetic Lean4 track at `src/lean4/` and ships

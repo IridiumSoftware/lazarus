@@ -24,3 +24,7 @@ package «lazarus-lean» where
 @[default_target]
 lean_lib «Outliers» where
   srcDir := "."
+
+@[default_target]
+lean_lib «Liveness» where
+  srcDir := "."

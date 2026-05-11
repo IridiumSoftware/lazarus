@@ -703,6 +703,59 @@ what's CI-protected.
 
 ---
 
+## v0.1.13 (2026-05-11) — LZ-017 :proved (liveness metric properties)
+
+Second `:proved` entry. The byte-diff metric underlying
+LZ-013's `_liveness_delta` Python helper is proved as an
+abstract metric in `src/lean4/Liveness.lean`. Four canonical
+metric properties.
+
+### LZ-017 — liveness-metric-abstract-properties
+- Key: byte-diff metric proved as a discrete Hamming-style metric
+- Logic tier: Operational
+- Description: The Python helper `_liveness_delta(bytes_a,
+  bytes_b)` (LZ-013, :tested) computes the fraction of byte
+  positions where two equal-length sequences differ. This
+  entry proves the abstract metric properties of the
+  numerator (the diff count) — the normalization to a
+  fraction and the threshold check live one layer up and
+  don't affect the metric's mathematical structure. Four
+  theorems proved hermetically:
+  - `deltaCount_self` — `delta(a, a) = 0`. A sequence
+    compared with itself has zero diffs.
+  - `deltaCount_symm` — `delta(a, b) = delta(b, a)` under
+    the equal-length precondition. Symmetry of the metric.
+  - `deltaCount_le_length` — `delta(a, b) ≤ |a|`. The diff
+    count is bounded by the sequence length (corollary: the
+    normalized delta is bounded by 1.0).
+  - `deltaCount_zero_iff_eq` — `delta(a, b) = 0 ↔ a = b`
+    under the equal-length precondition. The metric is
+    discriminating: zero distance exactly characterizes
+    equality.
+  Model: byte sequences as `List Nat`, metric returns `Nat`
+  (unnormalized diff count). Total function: returns 0 on
+  length-mismatch cases (which are out of scope for the
+  metric properties — the Python implementation returns
+  `None` and the caller fails open). Theorems carry the
+  same-length hypothesis where needed (symmetry, zero-iff-eq).
+- Evidence type: lean-proved
+- Status: :proved
+- Source: `src/lean4/Liveness.lean` (~100 lines, 4 theorems).
+- Test/Proof: `src/lean4/Liveness.lean`. Build with
+  `cd src/lean4 && lake build`. Exits non-zero on any proof
+  failure.
+- Notes: Structural-skeleton convention applies — the proof
+  targets the abstract metric, not the Python implementation
+  byte-for-byte. The Python `_liveness_delta` matches by
+  inspection (recursive byte comparison over equal-length
+  bytes; returns `diffs / len` rather than `diffs` alone,
+  but the metric properties are preserved under that
+  normalization). LZ-013 covers the Python via
+  `test_liveness_check.py`; LZ-017 layers on with the
+  mathematical proof.
+
+---
+
 ## v0.1.12 (2026-05-11) — LZ-016 :proved via Lean (first proof)
 
 First `:proved` entry in lazarus. Adds a hermetic Lean4 track
@@ -775,9 +828,10 @@ has runnable evidence.
 
 ## Counts (post-v0.1.11)
 
-- Total: 16
-- `:proved`: 1 — LZ-016 (outlier-detection abstract algorithm,
-  lean-proved hermetically)
+- Total: 17
+- `:proved`: 2 — LZ-016 (outlier-detection algorithm) +
+  LZ-017 (liveness metric properties), both lean-proved
+  hermetically in `src/lean4/`
 - `:tested`: 15 — LZ-001..LZ-015, every entry backed by a
   runnable test
 - `:verified`: 0
