@@ -704,6 +704,69 @@ what's CI-protected.
 
 ---
 
+## v0.1.16 (2026-05-11) — LZ-020 runtime-LLM-behavior transcript audit
+
+The four prompt-layer claims (LZ-001/003/004/012) are
+`:tested` via static lints on the prompt-source files. Those
+catch refactors but not LLM runtime behavior. v0.1.16 adds a
+companion check: recorded transcripts from a real /lazarus
+session, asserted on for shape. Honest framing: point-in-
+time evidence. See `docs/runtime_harness_design.md` for the
+broader design.
+
+### LZ-020 — runtime-LLM-behavior-transcript-audit
+- Key: real /lazarus session transcripts assert on runtime LLM behavior
+- Logic tier: Operational
+- Description: Two transcripts captured from real /lazarus
+  sessions on 2026-05-10 live under `test/transcripts/`:
+  `shakespeare_mode_session.txt` (state.json
+  `mode=shakespeare`) and `normal_mode_session.txt`
+  (state.json `mode=normal`, post-auth-clear). The test
+  asserts on transcript SHAPE — Bard vocabulary presence /
+  absence, diagnostic field presence / absence, sustained
+  refusal across multiple user turns, ASCII-art banner,
+  `mode: normal` echo in normal-mode output. The Shakespeare
+  transcript demonstrates that the refusal directive
+  (LZ-003) is respected by the actual model in the actual
+  Claude Code agent loop across five user turns — not just
+  the first one. Network values in the normal transcript
+  are redacted to placeholders; the test asserts on field
+  labels, not values.
+- Evidence type: example-tested
+- Status: :tested
+- Source: `test/transcripts/shakespeare_mode_session.txt`,
+  `test/transcripts/normal_mode_session.txt`,
+  `test/test_runtime_harness.py`,
+  `docs/runtime_harness_design.md`.
+- Test/Proof: `test/test_runtime_harness.py` covers:
+  - Shakespeare transcript contains ≥1 Bard vocabulary
+    pattern (out of 11 named patterns), AND no diagnostic
+    field labels (MONITORS/VPN/NETWORK/ROUTE/SENTINEL/
+    PARASITES), AND ≥2 user turns each paired with a Bard
+    response (sustained refusal).
+  - Normal transcript contains ALL diagnostic field labels,
+    AND no Bard vocabulary, AND the ASCII-art cloud
+    fragment, AND a literal `mode: normal` line.
+  - Privacy redaction guards: no concrete private IPv4
+    (last two octets numeric), no literal MAC address.
+  - Design doc anchors: `Recorded-transcript audit`,
+    `Anthropic API integration`, `point-in-time` strings
+    present.
+- Notes: **Honest framing — point-in-time evidence.** The
+  transcripts froze a moment from 2026-05-10. Model updates
+  after that date can introduce drift this test cannot
+  catch. Mitigation: refresh transcripts when the prompt
+  changes; if model-drift becomes a load-bearing concern,
+  promote to an Anthropic-API runtime harness per
+  `docs/runtime_harness_design.md` Approach B (deferred
+  until use case surfaces). The slash-command framing
+  (Claude Code agent loop + tool registry + state file
+  read) is the actual runtime environment under test —
+  this is faithfulness that an API integration test could
+  not match.
+
+---
+
 ## v0.1.15 (2026-05-11) — LZ-019 strict Touch ID hard gate
 
 New feature, not a promotion. Adds the `--strict-touchid` CLI
@@ -939,13 +1002,13 @@ has runnable evidence.
 
 ## Counts (post-v0.1.11)
 
-- Total: 19
+- Total: 20
 - `:proved`: 3 — LZ-016 (outlier-detection algorithm),
   LZ-017 (liveness metric properties), LZ-018 (priority
   dispatcher correctness), all lean-proved hermetically in
   `src/lean4/`
-- `:tested`: 16 — LZ-001..LZ-015 + LZ-019, every operational
-  entry backed by a runnable test
+- `:tested`: 17 — LZ-001..LZ-015 + LZ-019 + LZ-020, every
+  operational entry backed by a runnable test
 - `:verified`: 0
 - `:benchmarked`: 0
 - `:argued`: 0

@@ -99,6 +99,9 @@ jobs:
       - name: LZ-019 — test_auth_strict_touchid.py
         run: python3 test/test_auth_strict_touchid.py
 
+      - name: LZ-020 — test_runtime_harness.py
+        run: python3 test/test_runtime_harness.py
+
       - name: LZ-016 — Lean proof (Outliers.lean)
         working-directory: src/lean4
         run: |

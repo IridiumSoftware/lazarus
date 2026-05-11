@@ -1,11 +1,11 @@
 # Dashboard — Lazarus
 
-Last updated: 2026-05-11 (post-v0.1.15 — `--strict-touchid` hard-gate flag landed as LZ-019).
+Last updated: 2026-05-11 (post-v0.1.16 — runtime-LLM-behavior transcript audit landed as LZ-020).
 
 ## Status summary
 
-- Spec: 19 LZ-NNN entries in `LAZARUS_SPEC.md`.
-- Counts: **19 / 3 / 16 / 0 / 0 / 0 / 0** (total / proved /
+- Spec: 20 LZ-NNN entries in `LAZARUS_SPEC.md`.
+- Counts: **20 / 3 / 17 / 0 / 0 / 0 / 0** (total / proved /
   tested / verified / benchmarked / argued / open).
   Three `:proved` entries (LZ-016 outliers, LZ-017 liveness
   metric, LZ-018 classification dispatcher) via hermetic
@@ -30,6 +30,7 @@ Last updated: 2026-05-11 (post-v0.1.15 — `--strict-touchid` hard-gate flag lan
   - `src/lean4/Liveness.lean` (LZ-017, lean-proved, 4 theorems)
   - `src/lean4/Classify.lean` (LZ-018, lean-proved, 6 theorems)
   - `test/test_auth_strict_touchid.py` (LZ-019)
+  - `test/test_runtime_harness.py` + `test/transcripts/` (LZ-020)
 - CI: `.github/workflows/test.yml` runs the full test suite
   on `macos-latest` on every push. Outstanding:
   `actions/checkout@v4` Node.js 20 deprecation (deadline
@@ -53,15 +54,11 @@ new claims, not existing-claim promotions.
    and deferred; opportunistic mode (default) covers the
    hardware-less case.
 
-3. **Runtime LLM-behavior harness** — the LZ-001 / LZ-003 /
-   LZ-004 / LZ-012 prompt-contract tests catch refactors
-   that weaken the prompt, but not LLM models that ignore
-   the prompt. A model-in-the-loop integration test
-   (Claude API call + state-file fixtures + response
-   assertions) would close the runtime gap. Non-
-   deterministic, billable, slow — held until/unless the
-   prompt-contract layer demonstrates inadequacy in
-   practice.
+3. **Runtime LLM-behavior harness** — partially addressed
+   in v0.1.16 (LZ-020 transcript audit, point-in-time
+   evidence). The Anthropic-API integration test (approach
+   B in `docs/runtime_harness_design.md`) is held until
+   model-drift becomes a concrete failure mode.
 
 4. **LZ-002 calibration fixture set** — covered as a
    future-work open question (face-data identifiability
@@ -103,6 +100,18 @@ new claims, not existing-claim promotions.
 
 ## Recently completed
 
+- 2026-05-11 — v0.1.16: **LZ-020 runtime-LLM-behavior
+  transcript audit**. `test/transcripts/` carries two real
+  /lazarus session captures (Shakespeare-mode + normal-
+  mode, network values redacted) from 2026-05-10. New test
+  `test_runtime_harness.py` asserts on transcript SHAPE:
+  Bard vocabulary presence/absence, diagnostic field
+  presence/absence, sustained refusal across 5 user turns,
+  privacy-redaction guard. Plus `docs/runtime_harness_
+  design.md` covering the architectural options (transcript
+  / API integration / probabilistic suite) and the
+  recommended staged path. Counts: 19 / 3 / 16 / 0 / 0 / 0
+  / 0 → **20 / 3 / 17 / 0 / 0 / 0 / 0**.
 - 2026-05-11 — v0.1.15: **`--strict-touchid` hard-gate
   flag (LZ-019)**. New CLI flag on `face_sentinel.py --auth`;
   when set, any non-"ok" Touch ID outcome exits non-zero

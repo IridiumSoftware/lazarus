@@ -1,5 +1,85 @@
 # Changelog — Lazarus
 
+## v0.1.16 — 2026-05-11 — runtime-LLM-behavior transcript audit (LZ-020)
+
+First runtime evidence for the prompt-layer claims
+(LZ-001/003/004/012). Real /lazarus session transcripts
+captured 2026-05-10, asserted on for shape. Plus a design
+doc covering the broader architectural options.
+
+### Added
+
+- `docs/runtime_harness_design.md` — design doc covering
+  three approaches (recorded-transcript audit, Anthropic-
+  API integration, probabilistic property suite) with
+  tradeoffs, the API-vs-Claude-Code-context asymmetry, and
+  a staged recommendation (transcript stub now; API
+  integration deferred until model-drift becomes a
+  load-bearing concern).
+- `test/transcripts/shakespeare_mode_session.txt` — real
+  /lazarus invocation with `mode=shakespeare` captured
+  2026-05-10. Five user turns; every LAZARUS reply is in
+  Bard mode (sustained refusal directive holds in practice).
+- `test/transcripts/normal_mode_session.txt` — normal-mode
+  invocation post-auth-clear. Network values redacted to
+  placeholders for the public repo; the test asserts on
+  field labels (MONITORS/VPN/NETWORK/ROUTE/SENTINEL/
+  PARASITES), not values.
+- `test/test_runtime_harness.py` — eight-block test:
+  1. Shakespeare transcript: ≥1 Bard vocabulary pattern
+     (from 11 named patterns) AND no diagnostic field
+     labels.
+  2. Sustained refusal: ≥2 user turns each paired with a
+     Bard response.
+  3. Normal transcript: ALL six diagnostic field labels
+     present AND no Bard vocabulary.
+  4. Normal transcript carries the ASCII-art cloud and the
+     literal `mode: normal` line.
+  5. Privacy redaction guard: no concrete private IPv4
+     (last two octets numeric), no literal MAC address.
+  6. Design doc anchors: `Recorded-transcript audit`,
+     `Anthropic API integration`, `point-in-time`.
+- `.github/workflows/test.yml` — new CI step
+  `LZ-020 — test_runtime_harness.py`.
+
+### Status changes
+
+- **LZ-020** enters the spec at `:tested` with evidence
+  type `example-tested`.
+- Counts: 19 / 3 / 16 / 0 / 0 / 0 / 0 → **20 / 3 / 17 / 0 /
+  0 / 0 / 0**.
+
+### Honest framing
+
+This is *point-in-time* evidence — the transcripts froze a
+specific runtime behavior from 2026-05-10. Model updates
+after that date can introduce drift this test will not
+catch. The mitigation is to refresh the transcripts when
+the prompt changes. The escalation path (if model-drift
+becomes a load-bearing concern) is the Anthropic-API
+integration test outlined as Approach B in the design doc.
+
+The slash-command framing — Claude Code agent loop +
+tool registry + state file read — is the actual runtime
+environment the transcripts captured. An API integration
+test (`messages.create`) reproduces the prompt-loading but
+not the agent loop or tool dispatcher in their
+lazarus-specific configuration. The transcript approach is
+therefore the more faithful evidence even with the
+point-in-time caveat.
+
+### Iteration note
+
+The Shakespeare transcript fixture contains a `#` comment
+block describing what the test should check; that block
+mentioned the diagnostic field names ("no MONITORS, VPN,
+NETWORK fields"), which the initial test flagged as
+forbidden-substring-present false positives. Fixed by
+adding a `load_transcript_content()` helper that strips
+`#` comment lines before assertion. Real transcript content
+(USER/LAZARUS turns + the literal status block in normal
+mode) passes assertions cleanly.
+
 ## v0.1.15 — 2026-05-11 — `--strict-touchid` hard-gate (LZ-019)
 
 New operational feature, not a promotion. Adds the

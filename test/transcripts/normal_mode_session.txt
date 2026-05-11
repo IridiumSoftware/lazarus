@@ -1,0 +1,43 @@
+# /lazarus session — Normal mode (state.json mode=normal)
+#
+# Captured: 2026-05-10
+# Owner: Aaron Green
+# Source: actual /lazarus invocation after face_sentinel --auth
+# cleared Shakespeare mode (commit 0d14a1c session).
+#
+# Network values redacted to placeholders (private LAN, MAC, VPN
+# relay) since lazarus is a public repo. The TEST asserts on the
+# SHAPE of the output (presence of status field labels) and the
+# ABSENCE of Shakespeare vocabulary — not on the specific values.
+#
+# ─── BEGIN TRANSCRIPT ───────────────────────────────────────────
+
+[USER]: /lazarus
+
+[LAZARUS]:    ~~~~~
+  ~~   ~~
+ ~ o   o ~
+ ~   ~   ~
+  ~     ~
+   ~~~~~
+  ~~   ~~
+
+MONITORS   monitor: off  honeypot: off
+VPN        Connected  <RELAY>  QR: on
+NETWORK    en0  <PRIVATE-LAN-IP>  MAC: randomized
+ROUTE      via <VPN-TUNNEL> (Mullvad)
+LAN        N neighbors
+SENTINEL   stopped  auth: yes  mode: normal
+PARASITES  intact
+
+Welcome back. Monitors and sentinel-watch all dark — say the word
+and I wake them.
+
+# ─── END TRANSCRIPT ─────────────────────────────────────────────
+#
+# Note for the test harness:
+#   - Standard diagnostic output emitted.
+#   - ASCII-art cloud + 7-field status block + one observation.
+#   - No Bard vocabulary (no "thou", "doth", "thee", quote phrases).
+#   - Network values redacted; assertions check field LABELS, not
+#     values.
