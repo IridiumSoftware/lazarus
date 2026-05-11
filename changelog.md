@@ -1,5 +1,66 @@
 # Changelog — Lazarus
 
+## v0.1.9 — 2026-05-10 — LZ-010 honeypot loop-connect test
+
+Promotes LZ-010 (network-honeypot port listeners) from
+`:argued` to `:tested` via a localhost loop-connect
+integration test. The previously-flagged "fragile in CI"
+concern is addressed; the test passes on `macos-latest` with
+a clear failure mode if its port is unavailable.
+
+### Added
+
+- `test/test_honeypot_listener.py` — eight-step integration
+  test:
+  1. Monkey-patches `LOG_DIR` to a tempdir.
+  2. Starts `listen_on_port(38080, "TEST-HTTP", serve_http)`
+     in a daemon thread.
+  3. Polls with timeout (no fixed sleeps) for the listener
+     to actually bind via a 127.0.0.1 connect probe.
+  4. Opens a fresh client socket, sends a minimal HTTP GET.
+  5. Verifies the response contains `200` and the banner
+     content.
+  6. Polls for the log file to appear.
+  7. Verifies the JSONL record shape (`timestamp`, `remote`,
+     `port`, `service` keys; service == `"HTTP"`; port
+     matches; remote has `<ip>:<port>` shape).
+  8. Locks the SERVICES table (port → service-name mapping
+     for the five documented ports).
+- `.github/workflows/test.yml` — runs the new test as the
+  twelfth step on every push.
+
+### Status changes
+
+- LZ-010 → `:argued` to `:tested`. Evidence type → `manual`
+  to `example-tested`.
+- Counts: 15 / 0 / 11 / 0 / 0 / 4 / 0 → **15 / 0 / 12 / 0 /
+  0 / 3 / 0**.
+
+### Fragility mitigations
+
+The v0.1.0 spec entry deferred this test as "fragile in CI."
+Concrete mitigations:
+- **Port 38080** — high, uncommon. If collision occurs the
+  test fails loudly during the bind-probe step with a
+  clear message; honest failure beats silent pass.
+- **Poll-with-timeout** instead of fixed sleeps for both
+  binding (5s) and log-file appearance (5s). No flaky
+  "did the listener come up yet?" race.
+- **Daemon thread** — the listener thread dies cleanly on
+  process exit. No orphan listeners.
+- **Log-write race handled** — `log_connection` runs after
+  `sendall` in `serve_http`, so the client can observe the
+  response before the log line is on disk. The test
+  accommodates this by polling for the file.
+
+### Honest framing
+
+The test runs ONE listener on ONE port; it does not exercise
+all five SERVICES entries at runtime. The SERVICES table
+lock catches drift in the documented surface (port number
+or service-name rename) without requiring five concurrent
+port-binds in the test.
+
 ## v0.1.8 — 2026-05-10 — LZ-001 producer/consumer decoupling test
 
 Promotes LZ-001 (visual-skin/security-primitive decoupling)

@@ -312,14 +312,33 @@ Tier 1 forensic camera/mic event logger. Twelve LZ-NNN entries.
   others bind unprivileged. Each listener runs on its own
   daemon thread; per-connection handlers are also daemon
   threads with 5s socket timeout.
-- Evidence type: manual
-- Status: :argued
+- Evidence type: example-tested
+- Status: :tested
 - Source: `network_honeypot.py`.
-- Notes: Promotion to `:tested` requires a localhost
-  loop-connect test (open socket to 127.0.0.1:8080, expect a
-  200 response with the banner, assert a JSONL log line was
-  appended). Held at `:argued` because port-binding tests are
-  fragile in CI; deferred to a follow-up session.
+- Test/Proof: `test/test_honeypot_listener.py` runs a
+  loop-connect integration test:
+  1. Monkey-patches `LOG_DIR` to a tempdir.
+  2. Starts `listen_on_port(38080, "TEST-HTTP", serve_http)`
+     in a daemon thread.
+  3. Polls (poll-with-timeout, no fixed sleeps) for the
+     listener to actually bind via a 127.0.0.1 connect probe.
+  4. Opens a fresh client socket, sends a minimal HTTP GET.
+  5. Verifies the response contains `200` and the banner
+     content (`BANNER_CONTENT`).
+  6. Polls for the log file to appear.
+  7. Verifies the JSONL record shape (`timestamp`, `remote`,
+     `port`, `service` keys; service == `"HTTP"`; port
+     matches; remote has the `<ip>:<port>` shape).
+  8. Locks the SERVICES table (port → service name mapping)
+     to catch silent drift in the documented surface.
+- Notes: Uses port 38080 (high, uncommon) to minimize
+  CI-runner collision risk. If the port IS in use the test
+  fails loudly with a clear message during the bind-probe
+  step — the failure mode is honest, not silent-pass. Daemon
+  thread cleanup is automatic on process exit. Log-write
+  race (log_connection runs AFTER sendall, so client may
+  observe response before log is on disk) handled by polling
+  for the file with a 5s timeout.
 
 ### LZ-011 — oversight-tier1-forensic-logging
 - Key: every camera/mic event appended as a JSONL record
@@ -575,15 +594,27 @@ mode-value-vocabulary contract.
 
 ---
 
-## Counts (post-v0.1.8)
+## v0.1.9 (2026-05-10) — LZ-010 honeypot loop-connect test
+
+No new LZ-NNN entry. LZ-010 (network-honeypot port listeners)
+promotes from `:argued` to `:tested` via a localhost
+loop-connect integration test on port 38080 with the HTTP
+handler. The previously-flagged "fragile in CI" concern is
+addressed by using a high uncommon port + poll-with-timeout
+for both binding and log-file appearance + daemon-thread
+cleanup.
+
+---
+
+## Counts (post-v0.1.9)
 
 - Total: 15
 - `:proved`: 0
-- `:tested`: 11 (LZ-001, LZ-002, LZ-005, LZ-006, LZ-007, LZ-008,
-  LZ-009, LZ-011, LZ-013, LZ-014, LZ-015)
+- `:tested`: 12 (LZ-001, LZ-002, LZ-005, LZ-006, LZ-007, LZ-008,
+  LZ-009, LZ-010, LZ-011, LZ-013, LZ-014, LZ-015)
 - `:verified`: 0
 - `:benchmarked`: 0
-- `:argued`: 4 (LZ-003, LZ-004, LZ-010, LZ-012)
+- `:argued`: 3 (LZ-003, LZ-004, LZ-012)
 - `:open`: 0
 
 Promotion queue (highest-leverage, ordered by ease):

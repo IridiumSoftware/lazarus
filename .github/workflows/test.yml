@@ -1,6 +1,6 @@
 # Lazarus CI — runs the test suite on macos-latest. Apple Vision
 # is the face-comparison backend; Linux / Windows are out of
-# scope per README §Limitations. As of v0.1.8, eleven LZ-NNN
+# scope per README §Limitations. As of v0.1.9, twelve LZ-NNN
 # entries are :tested and exercised here:
 #
 #   LZ-001 (visual-skin/security decoupling)    → test_visual_skin_decoupling.py
@@ -10,6 +10,7 @@
 #   LZ-007 (watch-loop state transitions)       → test_watch_state_transitions.py
 #   LZ-008 (--peek JSON output shape)           → test_peek_output.py
 #   LZ-009 (network-monitor classification)     → test_network_monitor_classify.py
+#   LZ-010 (network-honeypot port listeners)    → test_honeypot_listener.py
 #   LZ-011 (oversight Tier 1 forensic logger)   → test_oversight_action.sh
 #   LZ-013 (anti-spoof liveness probe)          → test_liveness_check.py
 #   LZ-014 (leave-one-out pool quality scoring) → test_prune_logic.py
@@ -79,3 +80,6 @@ jobs:
 
       - name: LZ-001 — test_visual_skin_decoupling.py
         run: python3 test/test_visual_skin_decoupling.py
+
+      - name: LZ-010 — test_honeypot_listener.py
+        run: python3 test/test_honeypot_listener.py

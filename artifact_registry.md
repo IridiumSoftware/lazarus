@@ -1,12 +1,12 @@
 # artifact_registry.md — Lazarus
 
-Version: 0.1.8 (LZ-001 promoted from :argued to :tested via
-producer/consumer decoupling test on 2026-05-10; same-day
-arc covers v0.1.0 first formal spec through v0.1.8.
-Fifteen LZ-NNN spec entries; eleven backed by runnable
-tests. The remaining four `:argued` are prompt-layer LLM-
-behavior claims (LZ-003/004/012) and the honeypot loop-
-connect (LZ-010). Counts: 15 / 0 / 11 / 0 / 0 / 4 / 0.)
+Version: 0.1.9 (LZ-010 promoted from :argued to :tested via
+honeypot loop-connect test on 2026-05-10; same-day arc
+covers v0.1.0 first formal spec through v0.1.9. Fifteen
+LZ-NNN spec entries; twelve backed by runnable tests. The
+remaining three `:argued` are all prompt-layer LLM-behavior
+claims (LZ-003/004/012). Counts: 15 / 0 / 12 / 0 / 0 / 3 /
+0.)
 
 ## Coverage rule
 
@@ -43,7 +43,7 @@ contain every Test/Proof and Source path listed.
 | LZ-007 | watch-loop state transitions | Operational | example-tested | test/test_watch_state_transitions.py (8 branches + 2 early-return paths via module-patching) | face_sentinel.py check_once() | :tested |
 | LZ-008 | --peek JSON output shape | Boundary | example-tested | test/test_peek_output.py (5 branches via FACE_COMPARE_STUB env-var + monkey-patched capture_full) | face_sentinel.py peek() | :tested |
 | LZ-009 | network-monitor classification | Operational | example-tested | test/test_network_monitor_classify.py | network_monitor.py classify() + AI_PROCESSES + KNOWN_GOOD + SYSTEM_PREFIXES | :tested |
-| LZ-010 | network-honeypot port listeners | Operational | manual | LAZARUS_SPEC.md LZ-010 + README.md §What it does | network_honeypot.py | :argued |
+| LZ-010 | network-honeypot port listeners | Operational | example-tested | test/test_honeypot_listener.py (loop-connect on 127.0.0.1:38080: bind + HTTP GET + 200 response + banner content + JSONL log record shape + SERVICES table lock) | network_honeypot.py | :tested |
 | LZ-011 | oversight Tier 1 forensic logging | Operational | example-tested | test/test_oversight_action.sh | oversight_action.sh | :tested |
 | LZ-012 | companion read-only discipline | Boundary | manual | lazarus.md §What you do NOT do + LAZARUS_SPEC.md LZ-012 | lazarus.md | :argued |
 | LZ-013 | anti-spoof liveness probe | Operational | example-tested | test/test_liveness_check.py + docs/lazarus_liveness_v0_1_2_companion.md (manual evidence for the IO-bound wrapper) | face_sentinel.py _liveness_delta() + liveness_check() + check_once() is_match branch + LIVENESS_DELTA_MIN/LIVENESS_GAP_SECONDS constants | :tested |
@@ -54,14 +54,14 @@ contain every Test/Proof and Source path listed.
 
 - Total: 15
 - `:proved`: 0
-- `:tested`: 11 (LZ-001, LZ-002, LZ-005, LZ-006, LZ-007, LZ-008,
-  LZ-009, LZ-011, LZ-013, LZ-014, LZ-015)
+- `:tested`: 12 (LZ-001, LZ-002, LZ-005, LZ-006, LZ-007, LZ-008,
+  LZ-009, LZ-010, LZ-011, LZ-013, LZ-014, LZ-015)
 - `:verified`: 0
 - `:benchmarked`: 0
-- `:argued`: 4 (LZ-003, LZ-004, LZ-010, LZ-012)
+- `:argued`: 3 (LZ-003, LZ-004, LZ-012)
 - `:open`: 0
 
-## Cross-audit A1–A6 self-check (post-v0.1.8)
+## Cross-audit A1–A6 self-check (post-v0.1.9)
 
 - **A1 — Coverage.** Every LZ-ID in `LAZARUS_SPEC.md` has a row
   here. ✓ (15 of 15).
@@ -71,7 +71,7 @@ contain every Test/Proof and Source path listed.
   "visual-skin/security-primitive decoupling" → registry
   "visual-skin/security decoupling"); LZ-ID is the canonical
   link. ✓.
-- **A3 — Evidence exists.** All 11 `:tested` entries cite
+- **A3 — Evidence exists.** All 12 `:tested` entries cite
   runnable artifacts under `test/`:
   - LZ-001 → `test/test_visual_skin_decoupling.py`
   - LZ-002 → `test/test_distance_band_thresholds.py`
@@ -80,6 +80,7 @@ contain every Test/Proof and Source path listed.
   - LZ-007 → `test/test_watch_state_transitions.py`
   - LZ-008 → `test/test_peek_output.py`
   - LZ-009 → `test/test_network_monitor_classify.py`
+  - LZ-010 → `test/test_honeypot_listener.py`
   - LZ-011 → `test/test_oversight_action.sh`
   - LZ-013 → `test/test_liveness_check.py` +
     `docs/lazarus_liveness_v0_1_2_companion.md`
@@ -87,17 +88,18 @@ contain every Test/Proof and Source path listed.
     `docs/lazarus_prune_v0_1_3_companion.md`
   - LZ-015 → `test/test_touchid_check.py` +
     `docs/lazarus_touchid_v0_1_4_companion.md`
-  The four `:argued` entries cite manual evidence in spec /
+  The three `:argued` entries cite manual evidence in spec /
   companion / README. The `:open` count is zero.
-- **A4 — Status honesty.** Eleven `:tested` entries carry
-  `example-tested`. Four `:argued` entries carry `manual` or
-  `example-tested` (LZ-004 has an in-session demonstration
-  but no CI artifact yet). No `:open` entries remain. No
-  entry has a status its evidence type cannot support.
-- **A5 — Stale counts.** Counts above (15 / 0 / 11 / 0 / 0 /
-  4 / 0) match `LAZARUS_SPEC.md` final-section counts and
+- **A4 — Status honesty.** Twelve `:tested` entries carry
+  `example-tested`. Three `:argued` entries carry `manual`
+  or `example-tested` (LZ-004 has an in-session
+  demonstration but no CI artifact yet). No `:open` entries
+  remain. No entry has a status its evidence type cannot
+  support.
+- **A5 — Stale counts.** Counts above (15 / 0 / 12 / 0 / 0 /
+  3 / 0) match `LAZARUS_SPEC.md` final-section counts and
   `dashboard.md` summary.
-- **A6 — Test sync.** All 11 `:tested` entries are exercised
+- **A6 — Test sync.** All 12 `:tested` entries are exercised
   by tests under `test/` that run on `macos-latest` via
   `.github/workflows/test.yml` on every push. Locally:
   `bash test/test_oversight_action.sh`,
@@ -110,7 +112,8 @@ contain every Test/Proof and Source path listed.
   `python3 test/test_watch_state_transitions.py`,
   `bash test/test_no_networking_imports.sh`,
   `python3 test/test_distance_band_thresholds.py`,
-  `python3 test/test_visual_skin_decoupling.py`.
+  `python3 test/test_visual_skin_decoupling.py`,
+  `python3 test/test_honeypot_listener.py`.
 
 ## Dependencies on other Triad-Deployment spec entries
 

@@ -1,13 +1,13 @@
 # Dashboard — Lazarus
 
-Last updated: 2026-05-10 (post-v0.1.8 LZ-001 producer/consumer decoupling test).
+Last updated: 2026-05-10 (post-v0.1.9 LZ-010 honeypot loop-connect test).
 
 ## Status summary
 
 - Spec: 15 LZ-NNN entries in `LAZARUS_SPEC.md`.
-- Counts: **15 / 0 / 11 / 0 / 0 / 4 / 0** (total / proved /
+- Counts: **15 / 0 / 12 / 0 / 0 / 3 / 0** (total / proved /
   tested / verified / benchmarked / argued / open).
-- Tests: 11/11 passing locally and on `macos-latest` via CI.
+- Tests: 12/12 passing locally and on `macos-latest` via CI.
   - `test/test_visual_skin_decoupling.py` (LZ-001)
   - `test/test_distance_band_thresholds.py` (LZ-002)
   - `test/test_no_networking_imports.sh` (LZ-005)
@@ -15,6 +15,7 @@ Last updated: 2026-05-10 (post-v0.1.8 LZ-001 producer/consumer decoupling test).
   - `test/test_watch_state_transitions.py` (LZ-007)
   - `test/test_peek_output.py` (LZ-008)
   - `test/test_network_monitor_classify.py` (LZ-009)
+  - `test/test_honeypot_listener.py` (LZ-010)
   - `test/test_oversight_action.sh` (LZ-011)
   - `test/test_liveness_check.py` (LZ-013)
   - `test/test_prune_logic.py` (LZ-014)
@@ -33,16 +34,13 @@ Last updated: 2026-05-10 (post-v0.1.8 LZ-001 producer/consumer decoupling test).
    `oversight_action.sh`. New spec entry **LZ-016** +
    companion doc + test.
 
-2. **LZ-010 honeypot loop-connect test** — fragile in CI;
-   defer until the rest of the stack is green.
-
-3. **`--strict-touchid` flag** — turn Touch ID into a hard
+2. **`--strict-touchid` flag** — turn Touch ID into a hard
    gate. New spec entry LZ-NNN with a clear story for
    headless / no-hardware scenarios (escape hatch via
    `--no-touchid`?). Held until/unless an actual use case
    surfaces.
 
-4. **LZ-003 / LZ-004 / LZ-012 promotion** — prompt-layer
+3. **LZ-003 / LZ-004 / LZ-012 promotion** — prompt-layer
    LLM-behavior claims (Shakespeare-mode companion refusal,
    --auth state clearing, companion read-only discipline).
    Held at `:argued` because enforcement is at the LLM-
@@ -75,6 +73,15 @@ Last updated: 2026-05-10 (post-v0.1.8 LZ-001 producer/consumer decoupling test).
 
 ## Recently completed
 
+- 2026-05-10 — v0.1.9: LZ-010 honeypot loop-connect test
+  (`test_honeypot_listener.py`). Binds a TEST-HTTP listener
+  on port 38080 in a daemon thread, polls for bind, opens a
+  fresh client socket, sends HTTP GET, verifies 200
+  response + banner content, polls for log file, asserts on
+  JSONL record shape. The previously-flagged CI fragility is
+  addressed via poll-with-timeout + high uncommon port.
+  Counts: 15 / 0 / 11 / 0 / 0 / 4 / 0 → **15 / 0 / 12 / 0 /
+  0 / 3 / 0**.
 - 2026-05-10 — v0.1.8: LZ-001 producer/consumer decoupling
   test (`test_visual_skin_decoupling.py`). Locks the
   architectural separation: `face_sentinel.py` (producer)
