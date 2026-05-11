@@ -1,5 +1,52 @@
 # Changelog — Lazarus
 
+## v0.1.7 — 2026-05-10 — LZ-002 band-consistency test
+
+Promotes LZ-002 (face-match distance bands) from `:argued`
+to `:tested` via a Python test that locks threshold values
+and band ordering across Python (`face_sentinel.py`) and
+Swift (`face_compare.swift`).
+
+### Added
+
+- `test/test_distance_band_thresholds.py` — five layers of
+  consistency check:
+  1. Python constants hold expected values (MATCH=18.0,
+     UNCERTAIN=25.0, LOCK=35.0).
+  2. Band ordering: MATCH < UNCERTAIN < LOCK.
+  3. Cross-language consistency: `face_compare.swift`
+     contains the literal strings `< 18.0`, `< 25.0`, and
+     `>= 18.0`, derived from the Python constants via
+     f-string formatting. Catches the silent threshold-
+     drift failure mode where someone updates one file
+     without the other.
+  4. Swift `cmdMatch` comment block documents the same
+     bands (12-18 likely match, 18-25 uncertain, > 25
+     different person).
+  5. Python constant declarations carry their original
+     inline calibration comments.
+- `.github/workflows/test.yml` — runs the threshold test
+  on every push as the tenth step.
+
+### Status changes
+
+- LZ-002 → `:argued` to `:tested`. Evidence type → `manual`
+  to `example-tested`.
+- Counts: 15 / 0 / 9 / 0 / 0 / 6 / 0 → **15 / 0 / 10 / 0 /
+  0 / 5 / 0**.
+
+### Honest framing
+
+The test covers the *consistency* surface (no drift across
+files, band ordering preserved, documentation in sync). It
+does NOT validate the empirical calibration of the 18/25/35
+thresholds against real face distances. That requires a
+fixture set of (image, expected band) pairs, which carries
+either an identifiability problem (real faces) or
+licensing / sourcing burden (PD portraits, AI-generated
+synthetics). The calibration gap is tracked as a
+future-work open question in `dashboard.md`.
+
 ## v0.1.6 — 2026-05-10 — LZ-005 grep-lint
 
 Promotes LZ-005 (apple-vision-local-only) from `:argued` to

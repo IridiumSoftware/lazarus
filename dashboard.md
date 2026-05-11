@@ -1,13 +1,14 @@
 # Dashboard — Lazarus
 
-Last updated: 2026-05-10 (post-v0.1.6 LZ-005 grep-lint).
+Last updated: 2026-05-10 (post-v0.1.7 LZ-002 band-consistency test).
 
 ## Status summary
 
 - Spec: 15 LZ-NNN entries in `LAZARUS_SPEC.md`.
-- Counts: **15 / 0 / 9 / 0 / 0 / 6 / 0** (total / proved /
+- Counts: **15 / 0 / 10 / 0 / 0 / 5 / 0** (total / proved /
   tested / verified / benchmarked / argued / open).
-- Tests: 9/9 passing locally and on `macos-latest` via CI.
+- Tests: 10/10 passing locally and on `macos-latest` via CI.
+  - `test/test_distance_band_thresholds.py` (LZ-002)
   - `test/test_no_networking_imports.sh` (LZ-005)
   - `test/test_reference_bounds.py` (LZ-006)
   - `test/test_watch_state_transitions.py` (LZ-007)
@@ -26,35 +27,38 @@ Last updated: 2026-05-10 (post-v0.1.6 LZ-005 grep-lint).
 
 ## Priority stack (highest leverage first)
 
-1. **LZ-002 fixture set** — small set of (image, expected
-   band) JPEGs for the distance-band claim. Requires care
-   to not commit identifiable face data; consider synthetic
-   / public-domain reference images. Promotes LZ-002 to
-   `:tested`.
-
-2. **OverSight Tier 2** — auto-lockdown on non-allowlisted
+1. **OverSight Tier 2** — auto-lockdown on non-allowlisted
    camera/mic activation. Documented inline in
    `oversight_action.sh`. New spec entry **LZ-016** +
    companion doc + test.
 
-3. **LZ-010 honeypot loop-connect test** — fragile in CI;
+2. **LZ-010 honeypot loop-connect test** — fragile in CI;
    defer until the rest of the stack is green.
 
-4. **`--strict-touchid` flag** — turn Touch ID into a hard
+3. **`--strict-touchid` flag** — turn Touch ID into a hard
    gate. New spec entry LZ-NNN with a clear story for
    headless / no-hardware scenarios (escape hatch via
    `--no-touchid`?). Held until/unless an actual use case
    surfaces.
 
-5. **LZ-001 / LZ-003 / LZ-012 promotion** — prompt-layer
-   claims (visual-skin/security decoupling, Shakespeare-mode
-   companion refusal, companion read-only discipline). Held
-   at `:argued` because enforcement is at the LLM-prompt
+4. **LZ-001 / LZ-003 / LZ-004 / LZ-012 promotion** —
+   prompt-layer claims (visual-skin/security decoupling,
+   Shakespeare-mode companion refusal, --auth state
+   clearing, companion read-only discipline). Held at
+   `:argued` because enforcement is at the LLM-prompt
    layer; promotion to `:tested` would need a
    transcript-level audit harness. Long-tail.
 
 ## Open questions
 
+- **LZ-002 calibration gap.** The v0.1.7 consistency test
+  locks threshold values across files but does not validate
+  the empirical calibration (18/25/35 against real face
+  distances). Closing this requires committing fixture
+  images, which carries the face-data identifiability problem
+  (real faces) or license/sourcing burden (PD historical
+  portraits, AI-generated synthetics). Held until a clean
+  fixture source emerges.
 - Cross-deployment dependency planning. LavaLamp's heartbeat
   channel (LL-039) could augment Lazarus auth ("Lazarus
   re-auth requires LavaLamp daemon liveness within N seconds")
@@ -70,6 +74,15 @@ Last updated: 2026-05-10 (post-v0.1.6 LZ-005 grep-lint).
 
 ## Recently completed
 
+- 2026-05-10 — v0.1.7: LZ-002 band-consistency test
+  (`test_distance_band_thresholds.py`). Locks threshold
+  values (MATCH=18.0, UNCERTAIN=25.0, LOCK=35.0), band
+  ordering, Python↔Swift cross-language literal parity, and
+  the calibration comment-block documentation. Honest
+  framing: covers consistency, not empirical calibration
+  against real faces — the latter held as future-work
+  open question. Counts: 15 / 0 / 9 / 0 / 0 / 6 / 0 →
+  **15 / 0 / 10 / 0 / 0 / 5 / 0**.
 - 2026-05-10 — v0.1.6: LZ-005 grep-lint
   (`test_no_networking_imports.sh`). Greps `face_compare.swift`
   and `face_sentinel.py` for networking-symbol substrings on

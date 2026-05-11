@@ -1,8 +1,9 @@
 # Lazarus CI — runs the test suite on macos-latest. Apple Vision
 # is the face-comparison backend; Linux / Windows are out of
-# scope per README §Limitations. As of v0.1.6, nine LZ-NNN
+# scope per README §Limitations. As of v0.1.7, ten LZ-NNN
 # entries are :tested and exercised here:
 #
+#   LZ-002 (face-match distance bands)          → test_distance_band_thresholds.py
 #   LZ-005 (apple-vision local-only)            → test_no_networking_imports.sh
 #   LZ-006 (reference-storage bounded)          → test_reference_bounds.py
 #   LZ-007 (watch-loop state transitions)       → test_watch_state_transitions.py
@@ -71,3 +72,6 @@ jobs:
 
       - name: LZ-005 — test_no_networking_imports.sh
         run: bash test/test_no_networking_imports.sh
+
+      - name: LZ-002 — test_distance_band_thresholds.py
+        run: python3 test/test_distance_band_thresholds.py

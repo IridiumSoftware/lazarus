@@ -1,11 +1,12 @@
 # artifact_registry.md — Lazarus
 
-Version: 0.1.6 (LZ-005 promoted from :argued to :tested via
-grep-lint on 2026-05-10; same-day arc covers v0.1.0 first
-formal spec through v0.1.6 grep-lint. Fifteen LZ-NNN spec
-entries; nine backed by runnable tests including the Apple
-Vision local-only enforcement. Counts: 15 / 0 / 9 / 0 / 0 /
-6 / 0.)
+Version: 0.1.7 (LZ-002 promoted from :argued to :tested via
+threshold-band consistency test on 2026-05-10; same-day arc
+covers v0.1.0 first formal spec through v0.1.7 band-
+consistency. Fifteen LZ-NNN spec entries; ten backed by
+runnable tests. The remaining five `:argued` are prompt-
+layer claims (LZ-001/003/004/012) and the honeypot loop-
+connect (LZ-010). Counts: 15 / 0 / 10 / 0 / 0 / 5 / 0.)
 
 ## Coverage rule
 
@@ -34,7 +35,7 @@ contain every Test/Proof and Source path listed.
 | LZ-ID | Key | Logic tier | Evidence type | Test/Proof file | Source file | Status |
 |---|---|---|---|---|---|---|
 | LZ-001 | visual-skin/security decoupling | Boundary | manual | LAZARUS_SPEC.md LZ-001 + lazarus.md §Customization | face_sentinel.py (state machine) + lazarus.md (companion prompt) | :argued |
-| LZ-002 | face-match distance bands | Operational | manual | LAZARUS_SPEC.md LZ-002 (calibration notes) | face_compare.swift (cmdMatch thresholds) + face_sentinel.py (MATCH/UNCERTAIN/LOCK_THRESHOLD) | :argued |
+| LZ-002 | face-match distance bands | Operational | example-tested | test/test_distance_band_thresholds.py (consistency surface: Python constants + band ordering + Swift literal parity + comment-block doc lock) | face_compare.swift (cmdMatch thresholds) + face_sentinel.py (MATCH/UNCERTAIN/LOCK_THRESHOLD constants) | :tested |
 | LZ-003 | shakespeare-mode companion refusal | Operational | manual | lazarus.md §Shakespeare mode + LAZARUS_SPEC.md LZ-003 | lazarus.md (companion prompt) + face_sentinel.py (mode field in state.json) | :argued |
 | LZ-004 | --auth clears shakespeare | Operational | example-tested | docs/lazarus_v0_1_0_companion.md §3.1 (in-session demo) | face_sentinel.py auth() lines 188–205 | :argued |
 | LZ-005 | apple-vision local-only | Boundary | example-tested | test/test_no_networking_imports.sh (grep-lint on every CI push + non-trivial-size guard) | face_compare.swift + face_sentinel.py (no networking imports) | :tested |
@@ -53,14 +54,14 @@ contain every Test/Proof and Source path listed.
 
 - Total: 15
 - `:proved`: 0
-- `:tested`: 9 (LZ-005, LZ-006, LZ-007, LZ-008, LZ-009, LZ-011,
-  LZ-013, LZ-014, LZ-015)
+- `:tested`: 10 (LZ-002, LZ-005, LZ-006, LZ-007, LZ-008, LZ-009,
+  LZ-011, LZ-013, LZ-014, LZ-015)
 - `:verified`: 0
 - `:benchmarked`: 0
-- `:argued`: 6 (LZ-001, LZ-002, LZ-003, LZ-004, LZ-010, LZ-012)
+- `:argued`: 5 (LZ-001, LZ-003, LZ-004, LZ-010, LZ-012)
 - `:open`: 0
 
-## Cross-audit A1–A6 self-check (post-v0.1.6)
+## Cross-audit A1–A6 self-check (post-v0.1.7)
 
 - **A1 — Coverage.** Every LZ-ID in `LAZARUS_SPEC.md` has a row
   here. ✓ (15 of 15).
@@ -70,8 +71,9 @@ contain every Test/Proof and Source path listed.
   "visual-skin/security-primitive decoupling" → registry
   "visual-skin/security decoupling"); LZ-ID is the canonical
   link. ✓.
-- **A3 — Evidence exists.** All 9 `:tested` entries cite
+- **A3 — Evidence exists.** All 10 `:tested` entries cite
   runnable artifacts under `test/`:
+  - LZ-002 → `test/test_distance_band_thresholds.py`
   - LZ-005 → `test/test_no_networking_imports.sh`
   - LZ-006 → `test/test_reference_bounds.py`
   - LZ-007 → `test/test_watch_state_transitions.py`
@@ -84,18 +86,18 @@ contain every Test/Proof and Source path listed.
     `docs/lazarus_prune_v0_1_3_companion.md`
   - LZ-015 → `test/test_touchid_check.py` +
     `docs/lazarus_touchid_v0_1_4_companion.md`
-  The six `:argued` entries cite manual evidence in spec /
+  The five `:argued` entries cite manual evidence in spec /
   companion / README. The `:open` count is zero.
-- **A4 — Status honesty.** Nine `:tested` entries carry
-  `example-tested`. Six `:argued` entries carry `manual` or
+- **A4 — Status honesty.** Ten `:tested` entries carry
+  `example-tested`. Five `:argued` entries carry `manual` or
   `example-tested` (LZ-004 has an in-session demonstration
   but no CI artifact yet). No `:open` entries remain. No
   entry has a status its evidence type cannot support.
-- **A5 — Stale counts.** Counts above (15 / 0 / 9 / 0 / 0 / 6 /
-  0) match `LAZARUS_SPEC.md` final-section counts and
+- **A5 — Stale counts.** Counts above (15 / 0 / 10 / 0 / 0 /
+  5 / 0) match `LAZARUS_SPEC.md` final-section counts and
   `dashboard.md` summary.
-- **A6 — Test sync.** All 9 `:tested` entries are exercised by
-  tests under `test/` that run on `macos-latest` via
+- **A6 — Test sync.** All 10 `:tested` entries are exercised
+  by tests under `test/` that run on `macos-latest` via
   `.github/workflows/test.yml` on every push. Locally:
   `bash test/test_oversight_action.sh`,
   `python3 test/test_network_monitor_classify.py`,
@@ -105,7 +107,8 @@ contain every Test/Proof and Source path listed.
   `python3 test/test_reference_bounds.py`,
   `python3 test/test_peek_output.py`,
   `python3 test/test_watch_state_transitions.py`,
-  `bash test/test_no_networking_imports.sh`.
+  `bash test/test_no_networking_imports.sh`,
+  `python3 test/test_distance_band_thresholds.py`.
 
 ## Dependencies on other Triad-Deployment spec entries
 

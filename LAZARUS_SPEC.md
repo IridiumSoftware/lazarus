@@ -48,15 +48,38 @@ Tier 1 forensic camera/mic event logger. Twelve LZ-NNN entries.
   - `> 35.0` → hard mismatch (Shakespeare mode + screen lock)
   The thresholds are duplicated between `face_compare.swift`
   (which decides `match` / `uncertain`) and `face_sentinel.py`
-  (which decides `lock`). Drift between the two would be a bug.
-- Evidence type: manual
-- Status: :argued
-- Source: `face_compare.swift` (`isMatch`/`uncertain`),
+  (which carries all three named constants and decides `lock`).
+  Drift between the two would be a bug; a CI consistency test
+  enforces parity.
+- Evidence type: example-tested
+- Status: :tested
+- Source: `face_compare.swift` (`isMatch`/`uncertain` literals),
   `face_sentinel.py` (`MATCH_THRESHOLD`, `UNCERTAIN_THRESHOLD`,
-  `LOCK_THRESHOLD`).
-- Notes: Calibrated against the original developer's reference
-  set; not formally derived. Promotion to `:tested` requires a
-  fixture set of (image, expected band) pairs run in CI.
+  `LOCK_THRESHOLD` constants + their inline calibration
+  comments).
+- Test/Proof: `test/test_distance_band_thresholds.py` covers
+  the consistency surface in five layers:
+  1. Python constants hold the expected values
+     (18.0 / 25.0 / 35.0).
+  2. Band ordering `MATCH < UNCERTAIN < LOCK` holds.
+  3. The Swift source literally contains `< 18.0`, `< 25.0`,
+     and `>= 18.0`, derived from the Python constants via
+     f-string formatting — drift in either file trips the
+     test.
+  4. The Swift `cmdMatch` comment block documents the same
+     bands (12-18 likely match, 18-25 uncertain, > 25
+     different person).
+  5. The Python constant declarations carry their original
+     inline calibration comments (catches refactor that
+     strips the doc).
+- Notes: Honest framing — the test covers the *consistency*
+  surface (no cross-language drift, band-ordering preserved)
+  but NOT the empirical calibration of those values against
+  real faces. Promotion of the calibration claim itself to
+  `:tested` would require a fixture set of (image, expected
+  band) pairs run in CI, which carries the face-data
+  identifiability problem. The calibration gap is tracked
+  as future work in `dashboard.md` open questions.
 
 ### LZ-003 — shakespeare-mode-as-companion-refusal
 - Key: mode=="shakespeare" causes /lazarus to refuse normal diagnostics
@@ -492,15 +515,28 @@ empty / stub-replaced source file.
 
 ---
 
-## Counts (post-v0.1.6)
+## v0.1.7 (2026-05-10) — LZ-002 consistency promotion
+
+No new LZ-NNN entry. LZ-002 (face-match distance bands)
+promotes from `:argued` to `:tested` via a Python test that
+locks the threshold values across `face_sentinel.py` and
+`face_compare.swift`, the band-ordering invariant
+(`MATCH < UNCERTAIN < LOCK`), and the calibration comment
+documentation. Honest framing: this covers the *consistency*
+surface, not the empirical calibration against real faces.
+The calibration gap stays as a future-work open question.
+
+---
+
+## Counts (post-v0.1.7)
 
 - Total: 15
 - `:proved`: 0
-- `:tested`: 9 (LZ-005, LZ-006, LZ-007, LZ-008, LZ-009, LZ-011,
-  LZ-013, LZ-014, LZ-015)
+- `:tested`: 10 (LZ-002, LZ-005, LZ-006, LZ-007, LZ-008, LZ-009,
+  LZ-011, LZ-013, LZ-014, LZ-015)
 - `:verified`: 0
 - `:benchmarked`: 0
-- `:argued`: 6 (LZ-001, LZ-002, LZ-003, LZ-004, LZ-010, LZ-012)
+- `:argued`: 5 (LZ-001, LZ-003, LZ-004, LZ-010, LZ-012)
 - `:open`: 0
 
 Promotion queue (highest-leverage, ordered by ease):
