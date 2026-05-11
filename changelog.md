@@ -1,5 +1,48 @@
 # Changelog — Lazarus
 
+## v0.1.6 — 2026-05-10 — LZ-005 grep-lint
+
+Promotes LZ-005 (apple-vision-local-only) from `:argued` to
+`:tested` via a CI grep-lint that enforces the no-networking
+claim on every push.
+
+### Added
+
+- `test/test_no_networking_imports.sh` — greps
+  `face_compare.swift` for Swift networking symbols
+  (`URLSession`, `URLProtocol`, `NSURLConnection`,
+  `import Network`, `NWConnection`, `NWListener`,
+  `CFNetwork`) and `face_sentinel.py` for Python networking
+  imports (`import socket`, `from socket`, `import urllib`,
+  `from urllib`, `import requests`, `from requests`,
+  `import http.`, `from http`, `urlopen`). Plus a size
+  guard so the negative test doesn't silently pass on an
+  empty / stub-replaced source file (face_compare.swift ≥
+  50 lines, face_sentinel.py ≥ 200 lines).
+- `.github/workflows/test.yml` — runs the lint on every
+  push as the ninth test step.
+
+### Status changes
+
+- LZ-005 → `:argued` to `:tested`. Evidence type → `manual`
+  to `example-tested`.
+- Counts: 15 / 0 / 8 / 0 / 0 / 7 / 0 → **15 / 0 / 9 / 0 /
+  0 / 6 / 0**.
+
+### Honest framing
+
+The lint is a source-text regression check, not a runtime
+security guarantee. A determined adversary who obfuscates,
+minifies, or dynamically dispatches networking calls could
+bypass it. The defensive value is catching accidental
+introduction of network dependencies during refactoring —
+which is the realistic threat model for a single-developer
+project.
+
+Promotion to a runtime guarantee would require sandboxing or
+network-namespace isolation (Linux only) or sandbox-exec
+on macOS. Held as future work.
+
 ## v0.1.5 — 2026-05-10 — `:open` count reaches zero
 
 Three test files promote the three remaining `:open` spec

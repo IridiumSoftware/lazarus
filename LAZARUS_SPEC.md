@@ -111,16 +111,29 @@ Tier 1 forensic camera/mic event logger. Twelve LZ-NNN entries.
   `~/.face_sentinel/reference/` as `.fpdata` (binary feature
   print) + `.json` (metadata) + `.jpg` (low-res cached source).
   `face_compare.swift` makes no network calls; `face_sentinel.py`
-  makes no network calls. Confirmed by inspection.
-- Evidence type: manual
-- Status: :argued
-- Source: `face_compare.swift` (no `URLSession`, no `Network`
-  imports), `face_sentinel.py` (only subprocess calls to
-  `imagesnap` / `sips` / `face_compare` / `pmset` /
-  `osascript`).
-- Notes: Promotion to `:tested` requires a CI lint that grep-
-  fails on `URLSession` / `Network.framework` / `urllib` /
-  `requests` / `socket` in the face-comparison source files.
+  makes no network calls. Enforced by a CI grep-lint on the two
+  source files for networking-symbol substrings (see Test/Proof).
+- Evidence type: example-tested
+- Status: :tested
+- Source: `face_compare.swift` (no `URLSession` / `URLProtocol`
+  / `NSURLConnection` / `import Network` / `NWConnection` /
+  `NWListener` / `CFNetwork`), `face_sentinel.py` (no
+  `import socket` / `from socket` / `import urllib` /
+  `from urllib` / `import requests` / `from requests` /
+  `import http.` / `from http` / `urlopen`).
+- Test/Proof: `test/test_no_networking_imports.sh` runs the
+  full lint on every CI push. Plus a guard that asserts the
+  files are non-trivially-sized (face_compare.swift ≥ 50
+  lines, face_sentinel.py ≥ 200 lines) so the negative test
+  doesn't silently pass on an empty/stub-replaced file.
+- Notes: Honest framing — the lint is a source-text regression
+  check, not a runtime security guarantee. A determined
+  adversary who obfuscates, minifies, or dynamically dispatches
+  networking calls could bypass it. The defensive value is
+  catching accidental introduction of network dependencies
+  during refactoring. Promotion to a runtime guarantee would
+  require sandboxing / network-namespace isolation, which is
+  out of scope for the v0.1 release.
 
 ### LZ-006 — reference-storage-bounded
 - Key: <=50 references, ~30KB each, oldest pruned
@@ -466,15 +479,28 @@ least manual evidence (`:argued`) or runnable evidence
 
 ---
 
-## Counts (post-v0.1.5)
+## v0.1.6 (2026-05-10) — LZ-005 grep-lint
+
+No new LZ-NNN entry. LZ-005 (apple-vision-local-only) promotes
+from `:argued` to `:tested` via a shell-script grep-lint that
+runs on every CI push against `face_compare.swift` and
+`face_sentinel.py`. The lint fails on networking-symbol
+substrings (Swift: `URLSession`, `import Network`, etc.;
+Python: `import socket`, `urllib`, `requests`, etc.). Plus a
+size guard so the negative test doesn't silently pass on an
+empty / stub-replaced source file.
+
+---
+
+## Counts (post-v0.1.6)
 
 - Total: 15
 - `:proved`: 0
-- `:tested`: 8 (LZ-006, LZ-007, LZ-008, LZ-009, LZ-011, LZ-013,
-  LZ-014, LZ-015)
+- `:tested`: 9 (LZ-005, LZ-006, LZ-007, LZ-008, LZ-009, LZ-011,
+  LZ-013, LZ-014, LZ-015)
 - `:verified`: 0
 - `:benchmarked`: 0
-- `:argued`: 7 (LZ-001, LZ-002, LZ-003, LZ-004, LZ-005, LZ-010, LZ-012)
+- `:argued`: 6 (LZ-001, LZ-002, LZ-003, LZ-004, LZ-010, LZ-012)
 - `:open`: 0
 
 Promotion queue (highest-leverage, ordered by ease):

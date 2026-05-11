@@ -1,13 +1,14 @@
 # Dashboard — Lazarus
 
-Last updated: 2026-05-10 (post-v0.1.5 :open count reaches zero).
+Last updated: 2026-05-10 (post-v0.1.6 LZ-005 grep-lint).
 
 ## Status summary
 
 - Spec: 15 LZ-NNN entries in `LAZARUS_SPEC.md`.
-- Counts: **15 / 0 / 8 / 0 / 0 / 7 / 0** (total / proved /
+- Counts: **15 / 0 / 9 / 0 / 0 / 6 / 0** (total / proved /
   tested / verified / benchmarked / argued / open).
-- Tests: 8/8 passing locally and on `macos-latest` via CI.
+- Tests: 9/9 passing locally and on `macos-latest` via CI.
+  - `test/test_no_networking_imports.sh` (LZ-005)
   - `test/test_reference_bounds.py` (LZ-006)
   - `test/test_watch_state_transitions.py` (LZ-007)
   - `test/test_peek_output.py` (LZ-008)
@@ -25,31 +26,32 @@ Last updated: 2026-05-10 (post-v0.1.5 :open count reaches zero).
 
 ## Priority stack (highest leverage first)
 
-1. **LZ-005 grep-lint** — CI step that grep-fails on
-   networking imports (`URLSession`, `Network`, `urllib`,
-   `requests`, `socket`) in `face_compare.swift` /
-   `face_sentinel.py`. Promotes LZ-005 to `:tested`. ~10
-   minutes; folds into `.github/workflows/test.yml`.
-
-2. **LZ-002 fixture set** — small set of (image, expected
+1. **LZ-002 fixture set** — small set of (image, expected
    band) JPEGs for the distance-band claim. Requires care
    to not commit identifiable face data; consider synthetic
    / public-domain reference images. Promotes LZ-002 to
    `:tested`.
 
-3. **OverSight Tier 2** — auto-lockdown on non-allowlisted
+2. **OverSight Tier 2** — auto-lockdown on non-allowlisted
    camera/mic activation. Documented inline in
    `oversight_action.sh`. New spec entry **LZ-016** +
    companion doc + test.
 
-4. **LZ-010 honeypot loop-connect test** — fragile in CI;
+3. **LZ-010 honeypot loop-connect test** — fragile in CI;
    defer until the rest of the stack is green.
 
-5. **`--strict-touchid` flag** — turn Touch ID into a hard
+4. **`--strict-touchid` flag** — turn Touch ID into a hard
    gate. New spec entry LZ-NNN with a clear story for
    headless / no-hardware scenarios (escape hatch via
    `--no-touchid`?). Held until/unless an actual use case
    surfaces.
+
+5. **LZ-001 / LZ-003 / LZ-012 promotion** — prompt-layer
+   claims (visual-skin/security decoupling, Shakespeare-mode
+   companion refusal, companion read-only discipline). Held
+   at `:argued` because enforcement is at the LLM-prompt
+   layer; promotion to `:tested` would need a
+   transcript-level audit harness. Long-tail.
 
 ## Open questions
 
@@ -68,6 +70,12 @@ Last updated: 2026-05-10 (post-v0.1.5 :open count reaches zero).
 
 ## Recently completed
 
+- 2026-05-10 — v0.1.6: LZ-005 grep-lint
+  (`test_no_networking_imports.sh`). Greps `face_compare.swift`
+  and `face_sentinel.py` for networking-symbol substrings on
+  every CI push; size guard prevents silent pass on empty
+  files. Promotes LZ-005 to `:tested`. Counts: 15 / 0 / 8 / 0
+  / 0 / 7 / 0 → **15 / 0 / 9 / 0 / 0 / 6 / 0**.
 - 2026-05-10 — v0.1.5: LZ-006 / LZ-007 / LZ-008 promoted from
   `:open` to `:tested`. Three new test files
   (`test_reference_bounds.py`, `test_watch_state_transitions.py`,
