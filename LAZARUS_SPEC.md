@@ -408,12 +408,13 @@ Tier 1 forensic camera/mic event logger. Twelve LZ-NNN entries.
   `~/.face_sentinel/oversight_events.jsonl` with timestamp
   (UTC), device, event, pid, activeCount, executable
   (`ps -o comm=`), and full command (`ps -o command=`). Tier 1
-  is forensic only — no active response. Tier 2 (auto-lockdown
-  on non-allowlisted activation) is documented inline as the
-  next layer.
+  is forensic-only — no active response. **Tier 2** (allowlist
+  + state-flip on non-allowlisted activation) shipped at
+  v0.1.17 as **LZ-021** and layers on top of this Tier 1
+  logging — Tier 1's behavior is unchanged.
 - Evidence type: example-tested
 - Status: :tested
-- Source: `oversight_action.sh`.
+- Source: `oversight_action.sh` (Tier 1 JSONL append block).
 - Test/Proof: `test/test_oversight_action.sh`.
 
 ### LZ-012 — companion-read-only-discipline
@@ -701,6 +702,78 @@ producer-side mode-flip semantics. Same pattern as LZ-001:
 the runtime claim (LLM-behavior) remains a prompt-layer
 guarantee enforced by review; the *contract* the LLM reads is
 what's CI-protected.
+
+---
+
+## v0.1.17 (2026-05-11) — LZ-021 OverSight Tier 2 (allowlist + state-flip)
+
+`oversight_action.sh` gains Tier 2: on a non-allowlisted
+camera/mic activation, the script writes `state.json` with
+`mode="shakespeare"` + `lockout_reason="oversight_unallowed"`
+and appends an `oversight_tier2_alert` event to
+`sentinel.log`. The next `/lazarus` invocation reads the
+flipped state and shifts into refusal mode. Tier 1 logging
+behavior (LZ-011) is unchanged.
+
+### LZ-021 — oversight-tier2-allowlist-state-flip
+- Key: non-allowlisted camera/mic activation → state.mode=shakespeare + tier2_alert
+- Logic tier: Operational
+- Description: After the Tier 1 JSONL append (LZ-011),
+  `oversight_action.sh` checks if the activating process
+  is allowlisted. The allowlist is the union of:
+  - **Built-in default**: `imagesnap`, `python3`, `Python`,
+    `FaceTime`, `zoom.us`, `Photo Booth`, `Photos`,
+    `Safari`, `coreaudiod`, `VTDecoderXPCService`,
+    `AppleCameraAssistant`, `screencaptureui`.
+  - **User additions**: optional
+    `~/.face_sentinel/oversight_allowlist.txt` (one
+    executable basename per line; `#` comments and blank
+    lines ignored).
+  On a non-allowlisted **on-event**: inline Python writes
+  `state.json` with `mode="shakespeare"`,
+  `authenticated=false`, `lockout_time=<now>`,
+  `lockout_reason="oversight_unallowed"`,
+  `oversight_alert_executable=<basename>`,
+  `oversight_alert_pid=<pid>`,
+  `oversight_alert_device=<camera|microphone>`. Plus
+  appends a `{"event": "oversight_tier2_alert", ...}`
+  record to `sentinel.log` matching the face_sentinel
+  daemon's JSONL log format.
+  **Off-events never trigger Tier 2** — only on-events
+  represent activation.
+- Evidence type: example-tested
+- Status: :tested
+- Source: `oversight_action.sh` Tier 2 block (allowlist
+  membership check + inline Python state-mutation).
+- Test/Proof: `test/test_oversight_tier2.sh` covers 6
+  subtests:
+  1. on-event + non-allowlisted exec (`bash` via `$$`)
+     → Tier 2 fires (state.json has shakespeare + alert
+     fields; sentinel.log has tier2_alert).
+  2. on-event + user-allowlisted exec → no Tier 2 (state
+     unchanged, no alert).
+  3. off-event + non-allowlisted exec → no Tier 2 (off
+     events are bookkeeping).
+  4. `# bash` comment line in allowlist does NOT
+     allowlist bash → Tier 2 fires.
+  5. blank lines in allowlist are ignored → Tier 2 fires.
+  6. default allowlist contains `python3` (verified via a
+     live `python3` background process).
+- Notes: **Tier 2b — screen lock via `pmset
+  displaysleepnow` on Tier 2 alerts — is deliberately NOT
+  shipped here.** Screen-lock-on-unallowlisted is an
+  aggressive response that could disrupt legitimate but
+  unanticipated workflows (a newly installed video tool, a
+  WebRTC site on a different browser, a screen recorder).
+  Tier 2a (state-flip only) gives the companion enough
+  signal to refuse without taking the user's screen down.
+  Tier 2b is documented as future work, gated on an opt-in
+  flag (e.g. `oversight_action.sh` reads
+  `~/.face_sentinel/oversight_lockscreen` as a sentinel
+  file). Honest framing: Tier 2a raises the bar by
+  forcing the user to re-authenticate before /lazarus
+  resumes normal work, but does not interrupt active
+  use. Tier 2b is one config-file-touch away when needed.
 
 ---
 
@@ -1002,13 +1075,13 @@ has runnable evidence.
 
 ## Counts (post-v0.1.11)
 
-- Total: 20
+- Total: 21
 - `:proved`: 3 — LZ-016 (outlier-detection algorithm),
   LZ-017 (liveness metric properties), LZ-018 (priority
   dispatcher correctness), all lean-proved hermetically in
   `src/lean4/`
-- `:tested`: 17 — LZ-001..LZ-015 + LZ-019 + LZ-020, every
-  operational entry backed by a runnable test
+- `:tested`: 18 — LZ-001..LZ-015 + LZ-019 + LZ-020 + LZ-021,
+  every operational entry backed by a runnable test
 - `:verified`: 0
 - `:benchmarked`: 0
 - `:argued`: 0

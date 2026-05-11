@@ -1,10 +1,10 @@
 # artifact_registry.md — Lazarus
 
-Version: 0.1.16 (LZ-020 — runtime-LLM-behavior transcript
-audit — added 2026-05-11; recorded-transcript stub for the
-prompt-layer claims plus a design doc covering the broader
-runtime-harness architecture. Counts: 20 / 3 / 17 / 0 / 0 /
-0 / 0.)
+Version: 0.1.17 (LZ-021 — OverSight Tier 2 allowlist +
+state-flip — added 2026-05-11; `oversight_action.sh` gains
+non-allowlisted activation → mode=shakespeare semantics
+on top of LZ-011's Tier 1 logging. Tier 2b screen-lock
+deferred. Counts: 21 / 3 / 18 / 0 / 0 / 0 / 0.)
 
 ## Coverage rule
 
@@ -52,23 +52,25 @@ contain every Test/Proof and Source path listed.
 | LZ-018 | classification dispatcher priority | Operational | lean-proved | src/lean4/Classify.lean (6 theorems: 4 priority cases + exhaustive + disjoint) — built hermetically via `lake build` | src/lean4/Classify.lean (abstract priority dispatcher) layered on network_monitor.py classify (LZ-009, Python implementation) | :proved |
 | LZ-019 | strict Touch ID hard-gate | Operational | example-tested | test/test_auth_strict_touchid.py (5 branches: strict×3 outcomes + non-strict×2 outcomes + default-parameter lock via inspect.signature) | face_sentinel.py auth() Step 1 strict branch + argparse `--strict-touchid` flag + CLI dispatch | :tested |
 | LZ-020 | runtime-LLM-behavior transcript audit | Operational | example-tested | test/test_runtime_harness.py + test/transcripts/shakespeare_mode_session.txt + test/transcripts/normal_mode_session.txt + docs/runtime_harness_design.md (point-in-time recorded transcripts; assertions on shape, sustained refusal, privacy redaction) | test/transcripts/ (real /lazarus session captures, network values redacted) | :tested |
+| LZ-021 | OverSight Tier 2 allowlist + state-flip | Operational | example-tested | test/test_oversight_tier2.sh (6 subtests: non-allowlisted on→trigger, allowlisted on→no trigger, off-event→no trigger, # comment ignored, blank lines ignored, default-allowlist python3) | oversight_action.sh Tier 2 block (allowlist check + inline Python state-mutation + sentinel.log alert append) | :tested |
 
 ## Counts
 
-- Total: 20
+- Total: 21
 - `:proved`: 3 (LZ-016 outliers + LZ-017 liveness metric +
   LZ-018 classification dispatcher, all lean-proved
   hermetically)
-- `:tested`: 17 — LZ-001 through LZ-015 + LZ-019 + LZ-020
+- `:tested`: 18 — LZ-001 through LZ-015 + LZ-019 + LZ-020 +
+  LZ-021
 - `:verified`: 0
 - `:benchmarked`: 0
 - `:argued`: 0
 - `:open`: 0
 
-## Cross-audit A1–A6 self-check (post-v0.1.16)
+## Cross-audit A1–A6 self-check (post-v0.1.17)
 
 - **A1 — Coverage.** Every LZ-ID in `LAZARUS_SPEC.md` has a row
-  here. ✓ (20 of 20).
+  here. ✓ (21 of 21).
 - **A2 — Logic & Status parity.** Spec → registry Logic tier and
   Status fields match exactly. Key column compresses spec keys
   for table readability (e.g. spec
@@ -108,16 +110,19 @@ contain every Test/Proof and Source path listed.
     `test/transcripts/` (real /lazarus session captures with
     network values redacted) +
     `docs/runtime_harness_design.md` (broader architecture)
+  - LZ-021 → `test/test_oversight_tier2.sh` (6 subtests
+    covering allowlist branches, off-event no-trigger,
+    comment/blank line edge cases, default-allowlist
+    membership verification)
   No `:argued` or `:open` entries remain.
-- **A4 — Status honesty.** All 17 `:tested` entries carry
+- **A4 — Status honesty.** All 18 `:tested` entries carry
   `example-tested`; LZ-016, LZ-017, and LZ-018 carry
   `lean-proved` matching their `:proved` status. LZ-020's
-  spec entry carries the explicit point-in-time caveat
-  marking the transcript audit as honest evidence for
-  "this DID work in a real session," not "this will work
-  in every future session." No `:argued` or `:open`
+  spec entry carries the explicit point-in-time caveat;
+  LZ-021's spec entry explicitly defers Tier 2b (screen
+  lock) as opt-in future work. No `:argued` or `:open`
   entries remain.
-- **A5 — Stale counts.** Counts above (20 / 3 / 17 / 0 / 0 /
+- **A5 — Stale counts.** Counts above (21 / 3 / 18 / 0 / 0 /
   0 / 0) match `LAZARUS_SPEC.md` final-section counts and
   `dashboard.md` summary.
 - **A6 — Test sync.** All 15 `:tested` entries are exercised

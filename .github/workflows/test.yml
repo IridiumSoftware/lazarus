@@ -102,6 +102,9 @@ jobs:
       - name: LZ-020 — test_runtime_harness.py
         run: python3 test/test_runtime_harness.py
 
+      - name: LZ-021 — test_oversight_tier2.sh
+        run: bash test/test_oversight_tier2.sh
+
       - name: LZ-016 — Lean proof (Outliers.lean)
         working-directory: src/lean4
         run: |

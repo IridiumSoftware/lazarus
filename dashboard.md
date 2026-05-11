@@ -1,11 +1,11 @@
 # Dashboard — Lazarus
 
-Last updated: 2026-05-11 (post-v0.1.16 — runtime-LLM-behavior transcript audit landed as LZ-020).
+Last updated: 2026-05-11 (post-v0.1.17 — OverSight Tier 2 allowlist + state-flip landed as LZ-021).
 
 ## Status summary
 
-- Spec: 20 LZ-NNN entries in `LAZARUS_SPEC.md`.
-- Counts: **20 / 3 / 17 / 0 / 0 / 0 / 0** (total / proved /
+- Spec: 21 LZ-NNN entries in `LAZARUS_SPEC.md`.
+- Counts: **21 / 3 / 18 / 0 / 0 / 0 / 0** (total / proved /
   tested / verified / benchmarked / argued / open).
   Three `:proved` entries (LZ-016 outliers, LZ-017 liveness
   metric, LZ-018 classification dispatcher) via hermetic
@@ -31,6 +31,7 @@ Last updated: 2026-05-11 (post-v0.1.16 — runtime-LLM-behavior transcript audit
   - `src/lean4/Classify.lean` (LZ-018, lean-proved, 6 theorems)
   - `test/test_auth_strict_touchid.py` (LZ-019)
   - `test/test_runtime_harness.py` + `test/transcripts/` (LZ-020)
+  - `test/test_oversight_tier2.sh` (LZ-021)
 - CI: `.github/workflows/test.yml` runs the full test suite
   on `macos-latest` on every push. Outstanding:
   `actions/checkout@v4` Node.js 20 deprecation (deadline
@@ -44,10 +45,10 @@ The 15-entry spec is fully test-covered as of v0.1.11. The
 remaining priority items are forward work — new features and
 new claims, not existing-claim promotions.
 
-1. **OverSight Tier 2** — auto-lockdown on non-allowlisted
-   camera/mic activation. Documented inline in
-   `oversight_action.sh`. New spec entry **LZ-016** +
-   companion doc + test.
+1. ~~OverSight Tier 2~~ — shipped at v0.1.17 as LZ-021
+   (allowlist + state-flip). **Tier 2b** (screen lock via
+   `pmset` on Tier 2 alert) remains as opt-in future work
+   if disruptive-response semantics are wanted.
 
 2. ~~`--strict-touchid` flag~~ — shipped at v0.1.15 as
    LZ-019. The `--no-touchid` escape hatch was considered
@@ -100,6 +101,17 @@ new claims, not existing-claim promotions.
 
 ## Recently completed
 
+- 2026-05-11 — v0.1.17: **LZ-021 OverSight Tier 2**
+  (allowlist + state-flip). `oversight_action.sh` gains a
+  built-in + user-file allowlist; on non-allowlisted
+  on-events writes `state.json` with `mode=shakespeare` +
+  `lockout_reason="oversight_unallowed"` and appends an
+  `oversight_tier2_alert` event to `sentinel.log`.
+  Off-events stay Tier 1-only. Tier 2b (screen lock)
+  explicitly deferred. New test covers 6 subtests including
+  comment/blank-line edge cases. Counts:
+  20 / 3 / 17 / 0 / 0 / 0 / 0 → **21 / 3 / 18 / 0 / 0 / 0 /
+  0**.
 - 2026-05-11 — v0.1.16: **LZ-020 runtime-LLM-behavior
   transcript audit**. `test/transcripts/` carries two real
   /lazarus session captures (Shakespeare-mode + normal-

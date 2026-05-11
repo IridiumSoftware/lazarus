@@ -1,5 +1,77 @@
 # Changelog — Lazarus
 
+## v0.1.17 — 2026-05-11 — OverSight Tier 2 allowlist + state-flip (LZ-021)
+
+The OverSight integration gains its second tier: on non-
+allowlisted camera/mic activation, the script writes
+`state.json` with `mode=shakespeare` and emits an
+`oversight_tier2_alert` event. The next `/lazarus`
+invocation reads the flipped state and shifts into refusal
+mode. Tier 1 logging (LZ-011) is unchanged.
+
+### Added
+
+- `oversight_action.sh` Tier 2 block:
+  - **Built-in allowlist** of 12 default executables
+    (imagesnap, python3, Python, FaceTime, zoom.us,
+    Photo Booth, Photos, Safari, coreaudiod,
+    VTDecoderXPCService, AppleCameraAssistant,
+    screencaptureui).
+  - **User allowlist** at
+    `~/.face_sentinel/oversight_allowlist.txt` (one
+    executable basename per line; `#` comments and blank
+    lines ignored).
+  - **On-event + non-allowlisted exec** → inline Python
+    writes `state.json` with `mode=shakespeare`,
+    `authenticated=false`, `lockout_time=<now>`,
+    `lockout_reason="oversight_unallowed"`, plus
+    `oversight_alert_executable`,
+    `oversight_alert_pid`, `oversight_alert_device`
+    fields. AND appends `oversight_tier2_alert` to
+    `sentinel.log`.
+  - **Off-events never trigger Tier 2** — they're
+    bookkeeping, not activation.
+- `test/test_oversight_tier2.sh` — 6 subtests:
+  1. on-event + non-allowlisted (bash via $$) →
+     Tier 2 fires.
+  2. on-event + allowlisted via user file →
+     no Tier 2.
+  3. off-event + non-allowlisted →
+     no Tier 2.
+  4. `# bash` comment line does NOT allowlist bash →
+     Tier 2 fires.
+  5. Blank-line-only allowlist file →
+     no allowlisting → Tier 2 fires.
+  6. Default allowlist contains `python3` (verified via a
+     live `python3` background process).
+- `.github/workflows/test.yml` — new CI step
+  `LZ-021 — test_oversight_tier2.sh`.
+
+### Status changes
+
+- **LZ-021** enters the spec at `:tested` with evidence
+  type `example-tested`.
+- **LZ-011** description amended: notes that Tier 2 landed
+  at v0.1.17 as LZ-021, and that Tier 1's behavior is
+  unchanged. Status / evidence remain.
+- Counts: 20 / 3 / 17 / 0 / 0 / 0 / 0 → **21 / 3 / 18 / 0 /
+  0 / 0 / 0**.
+
+### Tier 2b deferred (honest framing)
+
+`pmset displaysleepnow` to physically lock the screen on
+Tier 2 alert is deliberately NOT shipped. Screen-lock-on-
+unallowlisted is aggressive enough to risk disrupting
+legitimate but unanticipated workflows (a freshly installed
+video tool, WebRTC on a different browser, a screen
+recorder). Tier 2a (state-flip only) signals the companion
+to refuse without taking the user's screen down — the
+softer move. Tier 2b is documented as future work; the
+proposed shape is an opt-in sentinel file (e.g.
+`~/.face_sentinel/oversight_lockscreen`) that
+`oversight_action.sh` checks before invoking `pmset`. One
+config-file-touch when needed.
+
 ## v0.1.16 — 2026-05-11 — runtime-LLM-behavior transcript audit (LZ-020)
 
 First runtime evidence for the prompt-layer claims
