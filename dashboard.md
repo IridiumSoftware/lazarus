@@ -54,21 +54,27 @@ Reordered 2026-05-11 after Brian Crabtree's external Triad
 review surfaced break-glass / lockout-risk as the
 highest-impact gap in the current shipping surface.
 
-1. **v0.1.21 follow-up: ship LZ-027 implementation.**
-   `face_sentinel.py` `recover()` + `--recover` flag + the
-   `test/test_recovery.py` test file + the
-   `LZ-027 — test_recovery.py` CI step are on disk locally
-   but uncommitted at the v0.1.20 spec cut. The v0.1.21
-   commit lands them so CI can exercise the spec'd
-   `:tested` status.
+1. **Remaining TCE joint-closure promotions** — three
+   `:argued` entries from the TCE Discovery.Triadic pass
+   still need joint integration tests:
+   - **LZ-022 network-exfiltration** — scripted scenario
+     exercising LZ-005 ∧ LZ-010 ∧ LZ-019.
+   - **LZ-024 face-reference Lean scaffold** — reference-pool
+     integration test asserting LZ-016 outlier properties on
+     the operational pruning path (potential `:proved`
+     promotion path parallel to LZ-026 if a
+     `face_reference_correctness` theorem fits cleanly).
+   - **LZ-025 liveness Lean scaffold** — watch-loop
+     integration test asserting LZ-017 metric properties on
+     the operational data path (same potential `:proved`
+     promotion shape).
 
-2. **LZ-022..LZ-026 joint integration tests.** Each
-   `:argued` joint-closure entry has a documented
-   promotion path in its `Notes:` field. LZ-026 (the
-   directional 3-cycle over the Lean-proved trio) is the
-   cleanest `:proved` target since the Lean modules
-   already exist — needs a `composed_correctness` theorem
-   in `src/lean4/`.
+2. **Lean expansion** on the existing `:tested` entries.
+   Now that the cross-module `composed_correctness`
+   pattern is established (LZ-026 / Composed.lean), the
+   next candidates are LZ-006 prune-bounded list invariant,
+   LZ-007 watch-loop state-machine, LZ-013 byte-diff
+   inequalities — each ~30-50 lines of Lean.
 
 3. **`LAZARUS_RECOVERY_SPEC.md` + Lazarus.jl absorption
    decision.** Brian's review framed a forward Julia
@@ -79,14 +85,7 @@ highest-impact gap in the current shipping surface.
    (C) extend LavaLamp. Spec-doc work blocked until the
    architectural call is made.
 
-4. **Lean expansion** — more proofs on the `:tested`
-   entries that admit formalization. Natural next
-   candidates: LZ-006 prune-bounded list invariant,
-   LZ-007 watch-loop state-machine, LZ-013 byte-diff
-   inequalities. Each ~30-50 lines of Lean given the
-   existing `src/lean4/` infrastructure.
-
-5. **TPM/SEP binding (deferred — PharOS dependency).**
+4. **TPM/SEP binding (deferred — PharOS dependency).**
    The substrate-binding portion of the proposed Lazarus.jl
    needs hardware-root-of-trust patterns to land in PharOS
    first (v0.0.7 roadmap). Hold until that pattern
@@ -134,6 +133,22 @@ highest-impact gap in the current shipping surface.
 
 ## Recently completed
 
+- 2026-05-11 — v0.1.21: **first two TCE joint-closure
+  promotions — LZ-023 → `:tested` + LZ-026 → `:proved`.**
+  (1) `test/test_prompt_contract_joint_closure.py` (8
+  sections exercising the LZ-001 ∧ LZ-003 ∧ LZ-012
+  conjunction — first joint-closure entry to land an
+  integration test). (2) `src/lean4/Composed.lean` (4
+  hermetic Lean 4 theorems chaining
+  `Lazarus.Liveness.deltaCount_self` (LZ-017) + an inline
+  outlier-zero lemma from `Lazarus.Outliers.isOutlier`
+  (LZ-016) + `Lazarus.Classify.classify_system_priority`
+  (LZ-018) into `composed_correctness` — the FIRST
+  `:proved`-status entry derived from a TCE finding
+  across the entire Triad). Also: registry catch-up rows
+  for LZ-022/024/025/026/027 + A1–A6 refresh. Counts:
+  27 / 3 / 19 / 0 / 0 / 5 / 0 → **27 / 4 / 20 / 0 / 0 /
+  3 / 0**.
 - 2026-05-11 — v0.1.20: **TCE joint-closures (LZ-022..LZ-026)
   + break-glass recovery (LZ-027).** Two arcs merged into one
   spec commit. (1) The third per-deployment TCE

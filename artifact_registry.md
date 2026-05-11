@@ -1,12 +1,16 @@
 # artifact_registry.md — Lazarus
 
-Version: 0.1.21 (LZ-023 — prompt-contract joint-closure
-promoted to `:tested` via `test/test_prompt_contract_joint_closure.py`,
-first of the five TCE Discovery.Triadic joint-closure entries
-to land an integration test. Catch-up rows added for LZ-022,
-LZ-024, LZ-025, LZ-026 (remaining `:argued`) and LZ-027
-(break-glass recovery, `:tested` since v0.1.19). Counts:
-27 / 3 / 20 / 0 / 0 / 4 / 0.)
+Version: 0.1.21 (two TCE joint-closure promotions land
+simultaneously: **LZ-023 → `:tested`** via
+`test/test_prompt_contract_joint_closure.py` (8-section
+conjunctive test); **LZ-026 → `:proved`** via
+`src/lean4/Composed.lean` (4 hermetic Lean 4 theorems
+including `composed_correctness` chaining lemmas from all
+three previously-separate Lean-proved modules — the FIRST
+`:proved`-status entry derived from a TCE finding across the
+entire Triad). Catch-up rows also added for LZ-022, LZ-024,
+LZ-025 (remaining `:argued`) and LZ-027 (`:tested` since
+v0.1.19). Counts: 27 / 4 / 20 / 0 / 0 / 3 / 0.)
 
 ## Coverage rule
 
@@ -59,23 +63,21 @@ contain every Test/Proof and Source path listed.
 | LZ-023 | prompt-contract joint closure | Boundary | example-tested | test/test_prompt_contract_joint_closure.py (8 sections: component-tests-as-conjunction + both contract sections coexist + section-local extraction + mode-vocab unified + no cross-section permissive bleed + no producer write-directive leak + LZ-012 cross-references LZ-001/LZ-003 + LZ-023 entry names all three components) | LAZARUS_SPEC.md LZ-001 + LZ-003 + LZ-012 entries; face_sentinel.py (producer) + lazarus.md (consumer: §Shakespeare mode + §What you do NOT do) | :tested |
 | LZ-024 | face-reference lean-scaffold joint closure | Operational | manual | LAZARUS_SPEC.md LZ-024 entry (TCE pass; STRICT HIGH-band [LZ-006, LZ-014, LZ-016] at score 9.50, sd=2 tested+tested+proved; proof-scaffold-meets-implementation cluster on face-reference axis) — promotion to :tested requires reference-pool integration test asserting conformance with LZ-016 abstract properties on operational data path | LAZARUS_SPEC.md LZ-006 + LZ-014 + LZ-016 entries; face_sentinel.py prune (LZ-006/LZ-014) + src/lean4/Outliers.lean (LZ-016) | :argued |
 | LZ-025 | liveness lean-scaffold joint closure | Operational | manual | LAZARUS_SPEC.md LZ-025 entry (TCE pass; STRICT HIGH-band [LZ-007, LZ-013, LZ-017] at score 9.50, sd=2; proof-scaffold-meets-implementation cluster on liveness axis, parallel to LZ-024) — promotion to :tested requires watch-loop integration test asserting conformance with LZ-017 abstract properties on operational data path | LAZARUS_SPEC.md LZ-007 + LZ-013 + LZ-017 entries; face_sentinel.py check_once / liveness_check (LZ-007/LZ-013) + src/lean4/Liveness.lean (LZ-017) | :argued |
-| LZ-026 | categorical triadic closure of lean-proved trio | Boundary | manual | LAZARUS_SPEC.md LZ-026 entry (TCE pass; the only directional 3-cycle in the Lazarus mention graph: LZ-016 → LZ-018 → LZ-017 → LZ-016; first-of-its-kind across all three Triad-deployment TCE passes — LavaLamp 44 entries: 0 cycles, PharOS 10 entries: 0, Lazarus 19 entries: 1) — promotion to :proved requires `composed_correctness` theorem in src/lean4/ formalising the 3-cycle compositional structure | LAZARUS_SPEC.md LZ-016 + LZ-017 + LZ-018 entries; src/lean4/Outliers.lean + Liveness.lean + Classify.lean | :argued |
+| LZ-026 | categorical triadic closure of lean-proved trio | Boundary | lean-proved | src/lean4/Composed.lean (4 hermetic Lean 4 theorems: zero_not_outlier + zero_notin_outliers + self_match_yields_zero_distance + composed_correctness — the last chains Liveness.deltaCount_self (LZ-017) + an inline outlier-zero lemma from Outliers.isOutlier (LZ-016) + Classify.classify_system_priority (LZ-018) into an end-to-end pipeline assertion; cannot be proved without invoking lemmas from each of the three previously-separate Lean-proved modules) — built hermetically via `lake build` (9 jobs, zero `sorry`) | src/lean4/Composed.lean layered on src/lean4/Outliers.lean (LZ-016) + src/lean4/Liveness.lean (LZ-017) + src/lean4/Classify.lean (LZ-018) | :proved |
 | LZ-027 | break-glass recovery (--recover with Touch ID + recovery-token) | Operational | example-tested | test/test_recovery.py (7 branches: Touch ID succeeds; no method available; token supplied + no saved; token mismatch; good token; whitespace-padded token; already-normal pre-state with Touch ID — plus 2 locks: default-parameter via inspect.signature + RECOVERY_TOKEN_FILE path lock against BASE_DIR / "recovery_token.txt") | face_sentinel.py recover() + _read_recovery_token() + RECOVERY_TOKEN_FILE constant + argparse `--recover` + `--token` flags + CLI dispatch | :tested |
 
 ## Counts
 
 - Total: 27
-- `:proved`: 3 (LZ-016 outliers + LZ-017 liveness metric +
-  LZ-018 classification dispatcher, all lean-proved
-  hermetically)
+- `:proved`: 4 (LZ-016 outliers + LZ-017 liveness metric +
+  LZ-018 classification dispatcher + LZ-026 composed-
+  correctness 3-cycle, all lean-proved hermetically)
 - `:tested`: 20 — LZ-001 through LZ-015 + LZ-019 + LZ-020 +
   LZ-021 + LZ-023 + LZ-027
 - `:verified`: 0
 - `:benchmarked`: 0
-- `:argued`: 4 — LZ-022, LZ-024, LZ-025, LZ-026 (TCE
-  Discovery.Triadic joint-closure entries awaiting joint
-  integration tests; LZ-026's path is to `:proved` via a
-  `composed_correctness` Lean theorem)
+- `:argued`: 3 — LZ-022, LZ-024, LZ-025 (TCE Discovery.Triadic
+  joint-closure entries awaiting joint integration tests)
 - `:open`: 0
 
 ## Cross-audit A1–A6 self-check (post-v0.1.21)
@@ -91,7 +93,7 @@ contain every Test/Proof and Source path listed.
   "visual-skin/security decoupling"); LZ-ID is the canonical
   link. ✓.
 - **A3 — Evidence exists.** All 20 `:tested` entries cite
-  runnable artifacts under `test/` (plus three `:proved` Lean
+  runnable artifacts under `test/` (plus four `:proved` Lean
   entries cite `src/lean4/`):
   - LZ-001 → `test/test_visual_skin_decoupling.py`
   - LZ-002 → `test/test_distance_band_thresholds.py`
@@ -121,24 +123,30 @@ contain every Test/Proof and Source path listed.
   - **LZ-023 → `test/test_prompt_contract_joint_closure.py`**
     (8 sections exercising the LZ-001 ∧ LZ-003 ∧ LZ-012
     conjunction)
+  - **LZ-026 → `src/lean4/Composed.lean`** (4 theorems
+    chaining lemmas from Outliers + Liveness + Classify into
+    `composed_correctness`)
   - **LZ-027 → `test/test_recovery.py`** (7 branches + 2
     locks; ships in v0.1.19's bundled commit)
-  The four `:argued` entries (LZ-022, LZ-024, LZ-025, LZ-026)
-  cite the TCE Discovery.Triadic pass companion in
+  The three remaining `:argued` entries (LZ-022, LZ-024,
+  LZ-025) cite the TCE Discovery.Triadic pass companion in
   triadic-coordination-engine commit 3fcccf3.
 - **A4 — Status honesty.** All 20 `:tested` entries carry
-  `example-tested`; LZ-016, LZ-017, LZ-018 carry `lean-proved`
-  matching `:proved`; LZ-022/024/025/026 carry `manual`
-  matching `:argued` (joint-closure structural arguments from
-  the TCE pass — explicit promotion paths documented per
-  entry). LZ-020 carries the point-in-time caveat; LZ-021
-  defers Tier 2b screen-lock as opt-in future work; LZ-027
-  acknowledges the Touch-ID-hardware-fail-AND-no-token gap
-  rather than pretending it's solved; LZ-023's promotion is
-  honestly framed as a static joint test, not a runtime
-  LLM-behavior test.
-- **A5 — Stale counts.** Counts above (27 / 3 / 20 / 0 / 0 /
-  4 / 0) match `LAZARUS_SPEC.md` final-section counts and
+  `example-tested`; LZ-016, LZ-017, LZ-018, LZ-026 carry
+  `lean-proved` matching `:proved`; LZ-022/024/025 carry
+  `manual` matching `:argued` (joint-closure structural
+  arguments from the TCE pass — explicit promotion paths
+  documented per entry). LZ-020 carries the point-in-time
+  caveat; LZ-021 defers Tier 2b screen-lock as opt-in future
+  work; LZ-027 acknowledges the Touch-ID-hardware-fail-AND-
+  no-token gap rather than pretending it's solved; LZ-023's
+  promotion is honestly framed as a static joint test, not a
+  runtime LLM-behavior test; LZ-026's `composed_correctness`
+  is honest about chaining existing per-module lemmas — it
+  doesn't add new mathematical content, only formalises the
+  cross-module composition at the Lean level.
+- **A5 — Stale counts.** Counts above (27 / 4 / 20 / 0 / 0 /
+  3 / 0) match `LAZARUS_SPEC.md` final-section counts and
   `dashboard.md` summary.
 - **A6 — Test sync.** All 20 `:tested` entries are exercised
   by tests under `test/` that run on `macos-latest` via
