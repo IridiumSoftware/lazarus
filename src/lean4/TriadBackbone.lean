@@ -18,32 +18,43 @@
 -- imports from `pharos-lean` — the same module that backs
 -- PharOS spec entry PH-004.
 --
--- The LavaLamp leg (LL-002 visual-security decoupling) and
--- the Lazarus leg (LZ-012 companion-read-only-discipline) are
--- both prompt-contract / static-lint claims in their home
--- repos rather than Lean-formal claims at present. This file
--- models them with abstract finite-output types whose
--- cardinality matches their operational surface:
+-- As of v0.1.26, ALL THREE LEGS ARE CONCRETELY IMPORTED. The
+-- LavaLamp leg uses `LavaLamp.LL002Visual.VisualOutput` from
+-- the `lavalamp-hermetic` Lake git dep (LavaLamp commit
+-- `1a2534f`); the Lazarus leg uses
+-- `Lazarus.CompanionDiscipline.LlmOutput` from a sibling
+-- module in this repo. Prior v0.1.24/v0.1.25 versions
+-- modelled the LavaLamp and Lazarus legs as local abstract
+-- finite-output types. The composition theorem's shape is
+-- unchanged — the cardinality bound 2 × 3 × 2 = 12 still
+-- holds — but each leg is now backed by its home-repo
+-- canonical formalisation rather than a Lazarus-local model.
 --
---   - LL-002: `VisualOutput` — 2 states (locked / unlocked).
---     LavaLamp's UI returns a Bool, never a distance.
---   - LZ-012: `LlmOutput` — 3 states (observe / flag / watch).
---     The `/lazarus` companion's read-only discipline restricts
---     its surface to these three verbs per `lazarus.md` §"You
---     observe. You flag. You watch." Never returns a distance-
---     to-threshold or substantive value.
+--   - LL-002: `LavaLamp.LL002Visual.VisualOutput` — 2 states
+--     (`locked` / `unlocked`). LavaLamp's hermetic Lean tree
+--     ships this as the canonical concrete formalisation of
+--     LL-002's type-level cardinality surface.
+--   - LZ-012: `Lazarus.CompanionDiscipline.LlmOutput` — 3
+--     states (`observe` / `flag` / `watch`). Sibling module
+--     in this repo formalises lazarus.md §"You observe. You
+--     flag. You watch." at the type level.
+--   - PH-004: `PharOS.Membrane.MembraneOutput` — 2 states
+--     (`allow` / `deny`). Unchanged from v0.1.24; imported
+--     from `pharos-lean` at PharOS commit `e3eaee1`.
 --
--- Honest framing. The abstract finite-cardinality framing is
--- the strongest claim that survives at the type level: a
--- finite-cardinality output cannot encode a real-valued
--- distance (ℝ has uncountable cardinality; 12 elements have
--- exactly 12). The cross-repo PharOS leg comes with its OWN
--- Lean proof (`membrane_one_bit_channel`), which we lift into
--- the composition. The LavaLamp + Lazarus legs are MODELLED
--- here; their concrete implementations satisfy the abstract
--- type-cardinality bound by inspection (LL-002 static-lint +
--- LZ-012 six-prohibition lint already lock that operational
--- surface).
+-- Honest framing. The composition theorem
+-- `no_oracle_triad_backbone` proves the joint Triad observer
+-- surface has at most 2 × 3 × 2 = 12 inhabitants — the
+-- formal counterpart of "no real-valued distance can be
+-- encoded in the joint output." All three legs are now
+-- backed by their home-repo Lean-proved type definitions, so
+-- the composition is a genuine cross-repo formal-build edge
+-- rather than a Lazarus-local model. Each leg's broader
+-- decoupling claim (LL-002's no-security-primitive-leakage,
+-- LZ-012's no-write discipline, PH-004's substrate-binding)
+-- remains covered by its own home-repo evidence at its own
+-- entry tier (`:tested` for LL-002 / LZ-012,
+-- `:proved` for PH-004).
 --
 -- The composition theorem `no_oracle_triad_backbone` proves
 -- that the joint Triad output type — a triple
@@ -56,52 +67,38 @@
 -- cross-repo Lean build.
 
 import Membrane
+import LL002Visual
+import CompanionDiscipline
 
 namespace Lazarus.TriadBackbone
 
 open PharOS.Membrane
+open LavaLamp.LL002Visual
+open Lazarus.CompanionDiscipline
 
--- ── LavaLamp leg: VisualOutput (LL-002 visual-security decoupling) ──
+-- ── LavaLamp + Lazarus legs are now concrete cross-repo imports ──
+--
+-- VisualOutput is imported from the lavalamp-hermetic package
+-- (LavaLamp commit `1a2534f`); LlmOutput is imported from the
+-- sibling CompanionDiscipline module in this repo. Their
+-- finite-channel theorems are exposed by those home-repo
+-- modules; we re-export them below as the LL-002 / LZ-012
+-- legs of the composition for readability.
 
-/-- LavaLamp's user-facing UI output. LL-002 establishes that
-    the visual layer returns one of two states — locked or
-    unlocked — never a distance-to-threshold, never a residue
-    value, never a timing fingerprint. The 2-constructor
-    inductive is the structural counterpart of the LL-002
-    `:tested` static-lint claim. -/
-inductive VisualOutput
-  | locked
-  | unlocked
-  deriving DecidableEq, Repr
+/-- LavaLamp leg's 1-bit channel — re-exported from
+    `LavaLamp.LL002Visual.visual_one_bit_channel`. Concrete
+    cross-repo formalisation of LL-002. -/
+theorem visual_one_bit_channel' (v : VisualOutput) :
+    v ∈ ([VisualOutput.locked, VisualOutput.unlocked] : List VisualOutput) :=
+  visual_one_bit_channel v
 
-/-- LavaLamp leg's 1-bit channel: every VisualOutput value is
-    one of {locked, unlocked}. Structural type-level
-    counterpart of LL-002's source-text claim. -/
-theorem visual_one_bit_channel (v : VisualOutput) :
-    v ∈ ([VisualOutput.locked, VisualOutput.unlocked] : List VisualOutput) := by
-  cases v <;> simp
-
--- ── Lazarus leg: LlmOutput (LZ-012 companion-read-only-discipline) ──
-
-/-- The `/lazarus` LLM-companion output. LZ-012 establishes
-    that the companion's surface returns one of three verbs —
-    observe / flag / watch — per `lazarus.md` §"You observe.
-    You flag. You watch." It never returns a distance answer,
-    never executes a substantive action, never writes. The
-    3-constructor inductive is the structural counterpart of
-    the LZ-012 `:tested` prompt-contract claim. -/
-inductive LlmOutput
-  | observe
-  | flag
-  | watch
-  deriving DecidableEq, Repr
-
-/-- Lazarus leg's finite channel: every LlmOutput value is one
-    of {observe, flag, watch}. Structural type-level
-    counterpart of LZ-012's six-prohibition lint. -/
-theorem llm_finite_channel (l : LlmOutput) :
-    l ∈ ([LlmOutput.observe, LlmOutput.flag, LlmOutput.watch] : List LlmOutput) := by
-  cases l <;> simp
+/-- Lazarus leg's finite channel — re-exported from
+    `Lazarus.CompanionDiscipline.llm_finite_channel`. Concrete
+    sibling-module formalisation of LZ-012. -/
+theorem llm_finite_channel' (l : LlmOutput) :
+    l ∈ ([LlmOutput.observe, LlmOutput.flag, LlmOutput.watch]
+         : List LlmOutput) :=
+  llm_finite_channel l
 
 -- ── PharOS leg: lifted from imported Membrane.lean ──────────────────
 

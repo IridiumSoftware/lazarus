@@ -1,5 +1,84 @@
 # Changelog — Lazarus
 
+## v0.1.26 — 2026-05-12 — LZ-028 composition upgraded to concrete cross-repo imports for ALL THREE legs
+
+Closes the v0.1.24 follow-up promise: "if LavaLamp later
+lands a Lean formalisation of LL-002 and Lazarus lands one
+for LZ-012, the abstract `VisualOutput` / `LlmOutput` types
+can be swapped for the concrete imports without invalidating
+the composition theorem." This release lands both concrete
+formalisations and swaps the TriadBackbone composition to
+use them.
+
+### Two new Lean modules (one per repo)
+
+**Lazarus repo** — `src/lean4/CompanionDiscipline.lean`:
+concrete LZ-012 type-level formalisation. Three theorems on
+a 3-constructor `LlmOutput {observe, flag, watch}`
+(`llm_finite_channel`, `llm_output_cardinality`,
+`llm_exhaustive`). Layered companion to the existing Python
+static-lint; LZ-012 status unchanged.
+
+**LavaLamp repo** — `src/lean4-hermetic/LL002Visual.lean`
+(shipped at LavaLamp commit `1a2534f`): concrete LL-002
+type-level formalisation. Three theorems on a 2-constructor
+`VisualOutput {locked, unlocked}`. Lives in a NEW
+`src/lean4-hermetic/` sibling Lake package (no Mathlib) so
+cross-repo consumers can import it without dragging
+LavaLamp's Mathlib transitive build. LL-002 status
+unchanged.
+
+### TriadBackbone.lean upgraded
+
+`src/lean4/lakefile.lean` now declares two cross-repo Lake
+git dependencies — `pharos-lean` (PharOS `e3eaee1`,
+unchanged) and `lavalamp-hermetic` (LavaLamp `1a2534f`,
+new). `TriadBackbone.lean` imports all three concrete leg
+types (`Membrane`, `LL002Visual`, `CompanionDiscipline`),
+removes the locally-defined abstract `VisualOutput` /
+`LlmOutput` inductives, and re-exports the finite-channel
+theorems under primed names. Composition theorem
+`no_oracle_triad_backbone` is unchanged in shape — joint
+Triad output is still a 12-element finite type (2 × 3 × 2).
+
+`lake build` returns **21 jobs** (was 17 pre-v0.1.26;
++4 cover the new CompanionDiscipline + LL002Visual builds
+across two repos) with zero `sorry`.
+
+### Honest framing
+
+v0.1.24 had a hybrid composition (PharOS concretely
+imported, LavaLamp + Lazarus modelled as Lazarus-local
+abstract types). v0.1.26 does the swap exactly per the
+honesty caveat the v0.1.24 entry registered. The composition
+is now a genuine cross-repo formal-build edge for all three
+legs.
+
+LZ-012 + LL-002 stay `:tested`. The Lean modules cover the
+type-cardinality slice of each individual claim, not the
+broader source-textual discipline. The Triad now has three
+hermetic Lean packages — `pharos-lean`, `lavalamp-hermetic`,
+`lazarus-lean` — composing across two cross-repo Lake git
+deps.
+
+### Counts
+
+**29 / 7 / 21 / 0 / 0 / 1 / 0** unchanged from v0.1.25.
+v0.1.26 is purely an evidence-quality upgrade of LZ-028's
+existing `:proved` status.
+
+### What's next
+
+- Mirror promotions for LL-046 + PH-014: each could now
+  import `Lazarus.TriadBackbone` via Lake git dep on this
+  Lazarus repo and ship the same composition theorem from
+  their own perspective.
+- LZ-029 lean-stack-triad-backbone → `:proved`: now that
+  `lavalamp-hermetic` exists, LL-006 could potentially
+  migrate there if a hermetic formalisation is feasible.
+
+---
+
 ## v0.1.25 — 2026-05-12 — LZ-029 lean-stack-triad-backbone (cross-Triad mirror entry)
 
 Second cross-deployment joint-closure entry in Lazarus's

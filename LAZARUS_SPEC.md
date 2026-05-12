@@ -459,6 +459,20 @@ Tier 1 forensic camera/mic event logger. Twelve LZ-NNN entries.
   not a runtime LLM-behavior test. A hard gate would require
   sandboxing the model's tool surface (file-write disabled at
   the harness level), which is out of scope for v0.1.
+- **Lean layered companion added (2026-05-12, v0.1.26):**
+  `src/lean4/CompanionDiscipline.lean` formalises the
+  type-level cardinality of the LLM-companion's
+  externally-observable output. Three theorems on a
+  3-constructor inductive `LlmOutput {observe, flag, watch}`:
+  `llm_finite_channel` (every inhabitant is in the 3-element
+  list), `llm_output_cardinality` (cardinality = 3 by `rfl`),
+  `llm_exhaustive` (no fourth constructor). Layered companion
+  to `test/test_companion_readonly_discipline.py` (the source
+  of truth for the broader read-only-discipline claim);
+  imported by `TriadBackbone.lean` (LZ-028) as the Lazarus
+  leg of the cross-Triad No-Oracle Backbone composition.
+  LZ-012 status remains `:tested` — the Lean module is a
+  layered companion, not a replacement.
 
 ---
 
@@ -1628,26 +1642,35 @@ that was previously zero-edges from Lazarus.
   cross-repo formal-build edge (Lazarus's `lake-manifest.json`
   now pins PharOS commit `e3eaee1` as a build-time dep).
 
-  Honest framing. The PharOS leg is CONCRETELY IMPORTED
-  via Lake git dep — `PharOS.Membrane.membrane_one_bit_channel`
-  was already `:proved` at PharOS v0.0.12 and is brought
-  into Lazarus's build unchanged. The LavaLamp and
-  Lazarus legs are MODELLED in `TriadBackbone.lean` as
-  abstract finite-output types whose cardinality matches
-  the operational surface their concrete claims describe
-  (LL-002 `:tested` static-lint; LZ-012 `:tested`
-  six-prohibition + observe/flag/watch anchor). The
-  abstract type-cardinality bound is what survives at
-  the Lean level — it's the strongest joint claim
-  expressible without LL-002 + LZ-012 getting their own
-  per-leg Lean formalisations (separate future-work
-  items; promotion path documented in those entries'
-  notes). If LavaLamp later lands a Lean formalisation
-  of LL-002 and Lazarus lands one for LZ-012, the
-  abstract `VisualOutput` / `LlmOutput` types can be
-  swapped for the concrete imports without invalidating
-  the composition theorem — the cardinality bound
-  composes uniformly across any finite-output legs.
+  Honest framing. v0.1.24 imported the PharOS leg
+  concretely (via Lake git dep) but modelled the LavaLamp
+  and Lazarus legs as abstract finite-output types because
+  their concrete formalisations did not yet exist. **v0.1.26
+  upgrades all three legs to concrete cross-repo imports:**
+  the LavaLamp leg now imports `LavaLamp.LL002Visual.VisualOutput`
+  from a NEW hermetic sibling Lake package
+  `lavalamp-hermetic` (LavaLamp commit `1a2534f`); the
+  Lazarus leg imports `Lazarus.CompanionDiscipline.LlmOutput`
+  from a sibling module in this repo's Lean tree. The
+  composition theorem is unchanged in shape (cardinality
+  bound 2 × 3 × 2 = 12 still holds), but each leg is now
+  backed by its home-repo canonical Lean formalisation —
+  the cross-repo Lean proof is now genuine for all three
+  legs, not just PharOS. `lake build` now returns 21 jobs
+  (was 17 pre-v0.1.26) covering both PharOS Membrane +
+  LavaLamp LL002Visual + Lazarus CompanionDiscipline +
+  TriadBackbone.
+
+  Each leg's broader claim is still covered by its own
+  home-repo evidence at its own entry tier (LL-002
+  `:tested` static-lint covers the visual-decoupling
+  claim broadly; LZ-012 `:tested` six-prohibition lint
+  covers the read-only-discipline broadly; PH-004
+  `:proved` Lean covers membrane Bool-only). The
+  TriadBackbone composition is the type-cardinality slice
+  of the joint claim; each leg's Lean module is the
+  type-cardinality slice of the corresponding individual
+  claim.
 
 ---
 
@@ -1750,7 +1773,7 @@ that was previously zero-edges from Lazarus.
 
 ---
 
-## Counts (post-v0.1.25)
+## Counts (post-v0.1.26)
 
 - Total: 29
 - `:proved`: 7 — LZ-016 (outlier-detection algorithm),

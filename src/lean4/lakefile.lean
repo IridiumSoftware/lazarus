@@ -32,6 +32,17 @@ package «lazarus-lean» where
 require «pharos-lean» from git
   "https://github.com/IridiumSoftware/pharos.git" @ "e3eaee1" / "src/lean4"
 
+-- Cross-repo dependency on LavaLamp's hermetic Lean tree.
+-- The main LavaLamp Lean tree at `src/lean4/` carries Mathlib
+-- (LL-006 / LL-019 / LL-020 / LL-021 round-3 theorems); the
+-- hermetic sibling at `src/lean4-hermetic/` is a separate Lake
+-- package with no Mathlib dep. TriadBackbone imports
+-- `LavaLamp.LL002Visual` from this hermetic sibling — the
+-- LL-002 visual-security-decoupling type-level surface —
+-- without dragging Mathlib into Lazarus's build.
+require «lavalamp-hermetic» from git
+  "https://github.com/IridiumSoftware/lavalamp.git" @ "1a2534f" / "src/lean4-hermetic"
+
 @[default_target]
 lean_lib «Outliers» where
   srcDir := "."
@@ -70,6 +81,16 @@ lean_lib «FaceReferencePool» where
 -- threshold semantics. Depends on Liveness.
 @[default_target]
 lean_lib «LivenessJoint» where
+  srcDir := "."
+
+-- LZ-012 companion-read-only-discipline — concrete Lean
+-- formalisation of the type-level finite-output surface (the
+-- `observe / flag / watch` enum from `lazarus.md`). Layered
+-- companion to LZ-012's existing :tested static-lint evidence.
+-- Imported by TriadBackbone (LZ-028) as the Lazarus leg of
+-- the cross-Triad No-Oracle Backbone composition.
+@[default_target]
+lean_lib «CompanionDiscipline» where
   srcDir := "."
 
 -- LZ-028 no-oracle-triad-backbone — cross-repo composition.

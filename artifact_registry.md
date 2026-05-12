@@ -1,22 +1,25 @@
 # artifact_registry.md — Lazarus
 
-Version: 0.1.24 (**LZ-028 no-oracle-triad-backbone promoted
-to `:proved` via cross-repo Lean composition** — the FIRST
-cross-repo Lean proof in any Triad deployment. New
-`src/lean4/TriadBackbone.lean` imports `PharOS.Membrane`
-through a Lake git dependency pinning PharOS commit
-`e3eaee1` (v0.0.12) — the build fetches PharOS's hermetic
-Lean tree, brings `MembraneOutput` + `membrane_one_bit_channel`
-into scope, and composes with locally-defined abstract
-`VisualOutput` (LL-002 leg, 2-state) and `LlmOutput` (LZ-012
-leg, 3-state) into a single composition theorem
-`no_oracle_triad_backbone` proving the joint Triad output
-has at most 2 × 3 × 2 = 12 inhabitants (cardinality bound
-rules out distance-information encoding). `lake build`
-fetches pharos-lean, builds 17 jobs with zero `sorry`. The
-`:argued` count reaches zero — **all joint-closure entries
-(TCE intra-deployment LZ-022..LZ-026 + cross-Triad LZ-028)
-are promoted.** Counts: 28 / 7 / 21 / 0 / 0 / 0 / 0.)
+Version: 0.1.26 (**LZ-028 no-oracle-triad-backbone
+composition upgraded to use concrete cross-repo imports for
+ALL THREE legs** — previously (v0.1.24-v0.1.25) only the
+PharOS leg was concretely imported while LavaLamp + Lazarus
+legs were modelled as local abstract finite-output types.
+v0.1.26 adds: (a) `src/lean4/CompanionDiscipline.lean`
+(Lazarus repo) — concrete LZ-012 formalisation
+(`LlmOutput {observe, flag, watch}` + theorems); (b) new
+Lake git dep on `lavalamp-hermetic` (LavaLamp commit
+`1a2534f`) which ships `LL002Visual.lean` — concrete LL-002
+formalisation (`VisualOutput {locked, unlocked}` + theorems);
+(c) updated `TriadBackbone.lean` imports both concrete
+types, swaps the local abstract definitions, and re-exports
+the finite-channel theorems. The composition theorem
+`no_oracle_triad_backbone` is unchanged in shape; each leg
+is now backed by its home-repo canonical formalisation.
+LZ-012 + LL-002 status remain `:tested` — the Lean modules
+are layered companions, not replacements. `lake build`
+returns 21 jobs (was 17) with zero `sorry`. Counts unchanged
+at 29 / 7 / 21 / 0 / 0 / 1 / 0.)
 
 ## Coverage rule
 
@@ -55,7 +58,7 @@ contain every Test/Proof and Source path listed.
 | LZ-009 | network-monitor classification | Operational | example-tested | test/test_network_monitor_classify.py | network_monitor.py classify() + AI_PROCESSES + KNOWN_GOOD + SYSTEM_PREFIXES | :tested |
 | LZ-010 | network-honeypot port listeners | Operational | example-tested | test/test_honeypot_listener.py (loop-connect on 127.0.0.1:38080: bind + HTTP GET + 200 response + banner content + JSONL log record shape + SERVICES table lock) | network_honeypot.py | :tested |
 | LZ-011 | oversight Tier 1 forensic logging | Operational | example-tested | test/test_oversight_action.sh | oversight_action.sh | :tested |
-| LZ-012 | companion read-only discipline | Boundary | example-tested | test/test_companion_readonly_discipline.py (6-prohibition + observe/flag/watch + counter-positive permissive-language scan + README discipline phrasing lock) | lazarus.md §What you do NOT do + README.md top-of-file discipline phrasing | :tested |
+| LZ-012 | companion read-only discipline | Boundary | example-tested | test/test_companion_readonly_discipline.py (6-prohibition + observe/flag/watch + counter-positive permissive-language scan + README discipline phrasing lock) + src/lean4/CompanionDiscipline.lean (Lean layered companion at v0.1.26: 3 theorems on a 3-constructor `LlmOutput {observe, flag, watch}` — llm_finite_channel, llm_output_cardinality, llm_exhaustive; imported by TriadBackbone.lean as the Lazarus leg of the cross-Triad No-Oracle Backbone composition) | lazarus.md §What you do NOT do + README.md top-of-file discipline phrasing | :tested |
 | LZ-013 | anti-spoof liveness probe | Operational | example-tested | test/test_liveness_check.py + docs/lazarus_liveness_v0_1_2_companion.md (manual evidence for the IO-bound wrapper) | face_sentinel.py _liveness_delta() + liveness_check() + check_once() is_match branch + LIVENESS_DELTA_MIN/LIVENESS_GAP_SECONDS constants | :tested |
 | LZ-014 | reference-pool leave-one-out pruning | Operational | example-tested | test/test_prune_logic.py + docs/lazarus_prune_v0_1_3_companion.md (manual evidence for the IO-bound _prune_score_one) | face_sentinel.py _outliers_from_scores() + _prune_score_one() + prune_cmd() + PRUNE_OUTLIER_MULTIPLIER constant | :tested |
 | LZ-015 | Touch ID opportunistic pre-face gate | Operational | example-tested | test/test_touchid_check.py + docs/lazarus_touchid_v0_1_4_companion.md (manual evidence for real bioutil invocation) | face_sentinel.py _touchid_check() + auth() Step 1 block | :tested |
@@ -71,7 +74,7 @@ contain every Test/Proof and Source path listed.
 | LZ-025 | liveness lean-scaffold joint closure | Operational | lean-proved | src/lean4/LivenessJoint.lean (3 hermetic Lean 4 theorems: liveness_static_photo_fails forward composition — byte-identical captures yield deltaCount = 0 < threshold, justifying LZ-007's mode-flip-to-shakespeare branch; liveness_pass_implies_motion converse — threshold-passing implies the captures are not byte-identical; liveness_equivalence — full LZ-017 deltaCount_zero_iff_eq characterisation of the LZ-013 anti-spoof decision under equal-length precondition) — built hermetically via `lake build` (13 jobs, zero `sorry`) | src/lean4/LivenessJoint.lean layered on src/lean4/Liveness.lean (LZ-017); face_sentinel.py check_once() is_match branch (LZ-007) + _liveness_delta()/liveness_check()/LIVENESS_DELTA_MIN (LZ-013) | :proved |
 | LZ-026 | categorical triadic closure of lean-proved trio | Boundary | lean-proved | src/lean4/Composed.lean (4 hermetic Lean 4 theorems: zero_not_outlier + zero_notin_outliers + self_match_yields_zero_distance + composed_correctness — the last chains Liveness.deltaCount_self (LZ-017) + an inline outlier-zero lemma from Outliers.isOutlier (LZ-016) + Classify.classify_system_priority (LZ-018) into an end-to-end pipeline assertion; cannot be proved without invoking lemmas from each of the three previously-separate Lean-proved modules) — built hermetically via `lake build` (9 jobs, zero `sorry`) | src/lean4/Composed.lean layered on src/lean4/Outliers.lean (LZ-016) + src/lean4/Liveness.lean (LZ-017) + src/lean4/Classify.lean (LZ-018) | :proved |
 | LZ-027 | break-glass recovery (--recover with Touch ID + recovery-token) | Operational | example-tested | test/test_recovery.py (7 branches: Touch ID succeeds; no method available; token supplied + no saved; token mismatch; good token; whitespace-padded token; already-normal pre-state with Touch ID — plus 2 locks: default-parameter via inspect.signature + RECOVERY_TOKEN_FILE path lock against BASE_DIR / "recovery_token.txt") | face_sentinel.py recover() + _read_recovery_token() + RECOVERY_TOKEN_FILE constant + argparse `--recover` + `--token` flags + CLI dispatch | :tested |
-| LZ-028 | no-oracle-triad-backbone | Boundary | lean-proved | src/lean4/TriadBackbone.lean (cross-repo Lean composition: 3 theorems + 1 enumeration def + 1 cardinality witness. `visual_one_bit_channel` (LavaLamp LL-002 leg as 2-state VisualOutput); `llm_finite_channel` (Lazarus LZ-012 leg as 3-state LlmOutput); `pharos_one_bit_channel` (PharOS PH-004 leg lifted from imported `PharOS.Membrane.membrane_one_bit_channel`); `triadOutputs` 12-element enumeration; `no_oracle_triad_backbone` composition theorem proves every joint Triad output is in the 12-element finite list — cardinality bound is the formal counterpart of "no real-valued distance can be encoded in the joint output." Lake fetches pharos-lean at PharOS commit e3eaee1 via git dep at build time; `lake build` returns 17 jobs with zero `sorry`) | src/lean4/TriadBackbone.lean (Lazarus repo) + pharos-lean/Membrane.lean (PharOS repo, fetched via Lake git dep pinning commit `e3eaee1`); LAZARUS_SPEC.md LZ-012 + LAVALAMP_SPEC.md LL-002 + PHAROS_SPEC.md PH-004 entries; TCE companion docs/triad_discovery_companion.md (triadic-coordination-engine commit a9ddfea) | :proved |
+| LZ-028 | no-oracle-triad-backbone | Boundary | lean-proved | src/lean4/TriadBackbone.lean — cross-repo Lean composition. As of v0.1.26, ALL THREE legs are concretely imported (was: only PharOS pre-v0.1.26). LavaLamp leg: `import LL002Visual` from `lavalamp-hermetic` Lake git dep at LavaLamp commit `1a2534f`. Lazarus leg: `import CompanionDiscipline` from sibling module in this repo (concrete LZ-012 formalisation). PharOS leg: `import Membrane` from `pharos-lean` Lake git dep at PharOS commit `e3eaee1` (unchanged from v0.1.24). Composition theorem `no_oracle_triad_backbone` proves every joint Triad output is in the 12-element finite list (cardinality 2 × 3 × 2 — formal counterpart of "no real-valued distance can be encoded in the joint output"). `lake build` returns 21 jobs (was 17 pre-v0.1.26) with zero `sorry`. | src/lean4/TriadBackbone.lean (Lazarus repo) + lavalamp-hermetic/LL002Visual.lean (LavaLamp repo, fetched via Lake git dep pinning commit `1a2534f`) + pharos-lean/Membrane.lean (PharOS repo, fetched via Lake git dep pinning commit `e3eaee1`); LAZARUS_SPEC.md LZ-012 + LAVALAMP_SPEC.md LL-002 + PHAROS_SPEC.md PH-004 entries; TCE companion docs/triad_discovery_companion.md (triadic-coordination-engine commit a9ddfea) | :proved |
 | LZ-029 | lean-stack-triad-backbone | Boundary | manual | LAZARUS_SPEC.md LZ-029 entry (TCE Discovery.Triadic cross-Triad pass at engine v0.2.12 commit `a9ddfea` surfaced [LL-006, PH-004, LZ-026] at score 20.50 — the only cross-Triad triple where every leg is already Lean-proved; second cross-deployment joint-closure entry in Lazarus; mirror entries at LavaLamp LL-047 + PharOS PH-015) — no joint Lean composition yet; umbrella mechanism is the LZ-028 cross-repo Lake-dep pattern extended with a second git dep on LavaLamp at a pinned commit | LAZARUS_SPEC.md LZ-026 entry (this deployment's leg — composed-correctness 3-cycle via src/lean4/Composed.lean); LAVALAMP_SPEC.md LL-006 entry (detection-probability bound via src/lean4/LavaLamp/Theorems.lean); PHAROS_SPEC.md PH-004 entry (membrane Bool-only via src/lean4/Membrane.lean); TCE companion docs/triad_discovery_companion.md | :argued |
 
 ## Counts
@@ -96,7 +99,7 @@ contain every Test/Proof and Source path listed.
   extended with a second git dep on LavaLamp.
 - `:open`: 0
 
-## Cross-audit A1–A6 self-check (post-v0.1.24)
+## Cross-audit A1–A6 self-check (post-v0.1.26)
 
 - **A1 — Coverage.** Every LZ-ID in `LAZARUS_SPEC.md` has a row
   here. ✓ (28 of 28).

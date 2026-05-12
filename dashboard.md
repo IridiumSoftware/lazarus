@@ -1,6 +1,6 @@
 # Dashboard — Lazarus
 
-Last updated: 2026-05-12 (post-v0.1.25 — **LZ-029 lean-stack-triad-backbone lands as second cross-Triad joint-closure entry.** TCE Discovery.Triadic cross-Triad pass at engine v0.2.12 (commit `a9ddfea`) surfaced `[LL-006, PH-004, LZ-026]` at score 20.50 — the **formal-verification backbone** of the Triad and the only cross-Triad triple where every leg is already `:proved` via a Lean theorem. LZ-029 records Lazarus's leg (LZ-026 composed-correctness 3-cycle) with citations to LavaLamp LL-006 (detection-probability bound) + PharOS PH-004 (membrane Bool-only). Mirror entries at LavaLamp LL-047 + PharOS PH-015. Status `:argued`, Boundary tier. Promotion to `:proved` requires extending the v0.1.24 cross-repo Lake-dep umbrella with a second git dep on LavaLamp at a pinned commit; outstanding obstacle is the Mathlib transitive dep from LavaLamp's track (~2500-job compile vs current ~30s). All three legs are concretely Lean-proved, so no abstraction is needed (in contrast to LZ-028 where LL-002 + LZ-012 are modelled as abstract finite-output types). Counts: 28/7/21/0/0/0/0 → **29/7/21/0/0/1/0**. Predecessor v0.1.24 — **LZ-028 no-oracle-triad-backbone → `:proved` via the FIRST cross-repo Lean proof in the Triad.** New `src/lean4/TriadBackbone.lean` imports `PharOS.Membrane` through a Lake git dependency pinning PharOS commit `e3eaee1` (v0.0.12) — the build fetches PharOS's hermetic Lean tree, brings `MembraneOutput` + `membrane_one_bit_channel` into scope, and composes with locally-defined abstract `VisualOutput` (LL-002 leg, 2-state) + `LlmOutput` (LZ-012 leg, 3-state) into the composition theorem `no_oracle_triad_backbone`. The joint Triad output is a 12-element finite type (2 × 3 × 2) — cardinality bound is the formal counterpart of "no real-valued distance can be encoded in the joint output." `lake build` returns 17 jobs with zero `sorry`. **`:argued` reaches zero.** All joint-closure entries (TCE intra-deployment LZ-022..LZ-026 + cross-Triad LZ-028) are now promoted. Counts shift: 28/6/21/0/0/1/0 → **28/7/21/0/0/0/0**.).
+Last updated: 2026-05-12 (post-v0.1.26 — **LZ-028 cross-Triad composition upgraded to use concrete imports for ALL THREE legs.** Adds `src/lean4/CompanionDiscipline.lean` (concrete LZ-012 formalisation: 3-constructor `LlmOutput {observe, flag, watch}` + theorems) and a new Lake git dep on `lavalamp-hermetic` (LavaLamp commit `1a2534f`) which ships `LL002Visual.lean` (concrete LL-002 formalisation: 2-constructor `VisualOutput {locked, unlocked}` + theorems). `TriadBackbone.lean` swaps the previously-local abstract `VisualOutput` / `LlmOutput` definitions for these concrete cross-repo imports — the `no_oracle_triad_backbone` composition theorem is unchanged in shape but each leg is now backed by its home-repo canonical Lean formalisation. LZ-012 + LL-002 stay `:tested` (Lean modules are layered companions, not replacements). `lake build` returns **21 jobs** (was 17) with zero `sorry`. The Triad now has three hermetic Lean packages — `pharos-lean`, `lavalamp-hermetic`, `lazarus-lean` — composing across two cross-repo Lake git deps. Counts unchanged at **29/7/21/0/0/1/0**. Predecessor v0.1.25 — LZ-029 lean-stack-triad-backbone lands as second cross-Triad joint-closure entry. TCE Discovery.Triadic cross-Triad pass at engine v0.2.12 (commit `a9ddfea`) surfaced `[LL-006, PH-004, LZ-026]` at score 20.50 — the **formal-verification backbone** of the Triad and the only cross-Triad triple where every leg is already `:proved` via a Lean theorem. LZ-029 records Lazarus's leg (LZ-026 composed-correctness 3-cycle) with citations to LavaLamp LL-006 (detection-probability bound) + PharOS PH-004 (membrane Bool-only). Mirror entries at LavaLamp LL-047 + PharOS PH-015. Status `:argued`, Boundary tier. Promotion to `:proved` requires extending the v0.1.24 cross-repo Lake-dep umbrella with a second git dep on LavaLamp at a pinned commit; outstanding obstacle is the Mathlib transitive dep from LavaLamp's track (~2500-job compile vs current ~30s). All three legs are concretely Lean-proved, so no abstraction is needed (in contrast to LZ-028 where LL-002 + LZ-012 are modelled as abstract finite-output types). Counts: 28/7/21/0/0/0/0 → **29/7/21/0/0/1/0**. Predecessor v0.1.24 — **LZ-028 no-oracle-triad-backbone → `:proved` via the FIRST cross-repo Lean proof in the Triad.** New `src/lean4/TriadBackbone.lean` imports `PharOS.Membrane` through a Lake git dependency pinning PharOS commit `e3eaee1` (v0.0.12) — the build fetches PharOS's hermetic Lean tree, brings `MembraneOutput` + `membrane_one_bit_channel` into scope, and composes with locally-defined abstract `VisualOutput` (LL-002 leg, 2-state) + `LlmOutput` (LZ-012 leg, 3-state) into the composition theorem `no_oracle_triad_backbone`. The joint Triad output is a 12-element finite type (2 × 3 × 2) — cardinality bound is the formal counterpart of "no real-valued distance can be encoded in the joint output." `lake build` returns 17 jobs with zero `sorry`. **`:argued` reaches zero.** All joint-closure entries (TCE intra-deployment LZ-022..LZ-026 + cross-Triad LZ-028) are now promoted. Counts shift: 28/6/21/0/0/1/0 → **28/7/21/0/0/0/0**.).
 
 ## Status summary
 
@@ -58,7 +58,8 @@ Last updated: 2026-05-12 (post-v0.1.25 — **LZ-029 lean-stack-triad-backbone la
   - `src/lean4/LivenessJoint.lean` (LZ-025, lean-proved, 3 theorems)
   - `src/lean4/Composed.lean` (LZ-026, lean-proved, 4 theorems)
   - `test/test_recovery.py` (LZ-027)
-  - `src/lean4/TriadBackbone.lean` (LZ-028, lean-proved, cross-repo via Lake git dep on pharos-lean@e3eaee1)
+  - `src/lean4/CompanionDiscipline.lean` (LZ-012 layered Lean companion, 3 theorems on `LlmOutput {observe, flag, watch}`)
+  - `src/lean4/TriadBackbone.lean` (LZ-028, lean-proved, cross-repo via Lake git deps on pharos-lean@e3eaee1 + lavalamp-hermetic@1a2534f)
 - CI: `.github/workflows/test.yml` runs the full test suite
   on `macos-latest` on every push. Outstanding:
   `actions/checkout@v4` Node.js 20 deprecation (deadline
@@ -151,6 +152,32 @@ highest-impact gap in the current shipping surface.
 
 ## Recently completed
 
+- 2026-05-12 — v0.1.26: **LZ-028 cross-Triad composition
+  upgraded to concrete imports for all three legs.** Closes
+  the v0.1.24 follow-up promise ("if LavaLamp later lands a
+  Lean formalisation of LL-002 and Lazarus lands one for
+  LZ-012, the abstract types can be swapped for concrete
+  imports without invalidating the composition theorem")
+  in one session. New `src/lean4/CompanionDiscipline.lean`
+  (Lazarus repo) — 3 theorems on a 3-constructor
+  `LlmOutput {observe, flag, watch}` formalising LZ-012's
+  type-level cardinality. New Lake git dep on
+  `lavalamp-hermetic` (LavaLamp commit `1a2534f`) which
+  introduces a hermetic sibling Lean package to LavaLamp's
+  Mathlib-using `src/lean4/` track — ships
+  `LL002Visual.lean` with 3 theorems on a 2-constructor
+  `VisualOutput {locked, unlocked}` formalising LL-002's
+  type-level cardinality. `TriadBackbone.lean` swaps the
+  previously-local abstract definitions for these concrete
+  cross-repo imports; the `no_oracle_triad_backbone`
+  composition theorem is unchanged in shape (cardinality
+  2 × 3 × 2 = 12) but each leg is now backed by its
+  home-repo canonical formalisation. `lake build` returns
+  **21 jobs** (was 17 pre-v0.1.26; +4 cover the new
+  CompanionDiscipline + LL002Visual builds across two
+  repos) with zero `sorry`. LZ-012 + LL-002 stay `:tested`;
+  the Lean modules are layered companions. Counts
+  unchanged at 29 / 7 / 21 / 0 / 0 / 1 / 0.
 - 2026-05-12 — v0.1.24: **LZ-028 no-oracle-triad-backbone
   → `:proved` via the FIRST cross-repo Lean proof in any
   Triad deployment.** New `src/lean4/TriadBackbone.lean`
