@@ -1,5 +1,52 @@
 # Changelog — Lazarus
 
+## v0.1.27 — 2026-05-12 — LZ-030 defense-in-depth-triad-backbone (cross-Triad mirror entry)
+
+Third cross-deployment joint-closure entry in Lazarus's
+spec. TCE Discovery.Triadic cross-Triad pass at engine
+v0.2.12 (commit `a9ddfea`) surfaced `[LL-030, PH-005, LZ-022]`
+at score 20.00 — three V-DEFENSE-IN-DEPTH layers at three
+deployments: substrate (LavaLamp LL-030 sensor-defense
+joint-closure) + OS-membrane (PharOS PH-005 PAM composition
+atop LavaLamp triads) + runtime (Lazarus LZ-022 prevent+
+detect+control exfil triangle).
+
+LZ-030 records Lazarus's leg with citations to LL-030 +
+PH-005. Mirror entries at LavaLamp LL-049 + PharOS PH-017.
+Status `:argued`, Operational tier.
+
+**Promotion path is operational rather than Lean-
+algorithmic** — unlike LZ-028 + LZ-029 which run through
+cross-repo Lake-dep Lean composition, LZ-030 needs a
+cross-Triad runtime integration test exercising substrate
+sensor-defense + OS-membrane composition + runtime exfil
+triangle jointly. The test surface design mirrors LZ-022's
+own `test_network_exfil_joint_closure.py` pattern (prevent
++ detect + control + joint) but spans three deployments.
+Natural home: a new `triad-integration/` test bundle in
+the TCE engine repo.
+
+**PH-005 promotion as side effect.** PH-005 is the
+bottleneck leg in the triple — it's `:argued` while LL-030
+and LZ-022 are `:tested`. The same cross-Triad integration
+test that promotes LZ-030 / LL-049 / PH-017 also promotes
+PH-005 from `:argued` to `:tested` as a side effect.
+
+**Honest framing.** Score 20.00 is the highest-scoring
+cross-Triad triple where all three legs are real
+operational defense entries (LL-030 substrate, PH-005
+OS-membrane, LZ-022 runtime), in contrast to LZ-028 +
+LZ-029 which involve formal/abstract claims. LZ-030 is
+the most directly runtime-testable of the three cross-
+Triad joint-closures in Lazarus.
+
+No new files; spec + registry + changelog + dashboard
+updates only. `lake build` unchanged at 21 jobs zero
+`sorry`.
+
+Counts: 29/7/21/0/0/1/0 → **30/7/21/0/0/2/0** (Total +1,
+`:argued` +1).
+
 ## v0.1.26 — 2026-05-12 — LZ-028 composition upgraded to concrete cross-repo imports for ALL THREE legs
 
 Closes the v0.1.24 follow-up promise: "if LavaLamp later

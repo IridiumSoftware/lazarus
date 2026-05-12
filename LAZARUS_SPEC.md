@@ -1773,9 +1773,117 @@ that was previously zero-edges from Lazarus.
 
 ---
 
-## Counts (post-v0.1.26)
+## v0.1.27 (2026-05-12) — LZ-030 defense-in-depth-triad-backbone (cross-Triad mirror entry)
 
-- Total: 29
+Third cross-deployment joint-closure entry in Lazarus. The
+TCE Discovery.Triadic cross-Triad pass at v0.2.12 (triadic-
+coordination-engine commit `a9ddfea`) surfaced
+`[LL-030, PH-005, LZ-022]` at score 20.00. Mirror entries
+at **LavaLamp LL-049** + **PharOS PH-017**.
+
+### LZ-030 — defense-in-depth-triad-backbone
+- Key: LZ-022 is one leg of the cross-Triad Defense-in-Depth
+  triple — three deployments each enforce V-DEFENSE-IN-DEPTH
+  at their own scale (substrate / OS-membrane / runtime)
+- Logic tier: Operational
+- Description: The TCE Discovery.Triadic cross-Triad pass at
+  v0.2.12 surfaced `[LL-030, PH-005, LZ-022]` at score 20.00
+  — three deployments, three V-DEFENSE-IN-DEPTH layers, one
+  structural claim: **the Triad enforces defense-in-depth at
+  three different scales simultaneously, and the joint
+  defense is stronger than any single layer's.**
+
+  - **Lazarus's leg (LZ-022, this deployment):** network-
+    exfiltration-joint-closure — LZ-005 (apple-vision-local-
+    only prevention) + LZ-010 (network-honeypot detection) +
+    LZ-019 (strict-touchid hard-gate control) form a
+    prevent+detect+control defense triangle against V-NETWORK-
+    EXFIL. `:tested` at v0.1.22 via
+    `test/test_network_exfil_joint_closure.py`. **The
+    runtime-tier layer of the cross-Triad defense.** This is
+    the leg whose integration test demonstrates the
+    promotion pattern that LZ-030 / LL-049 / PH-017 need to
+    replicate at cross-Triad scale.
+  - **LavaLamp's leg (LL-030):** sensor-defense-joint-closure
+    — LL-016 + LL-024 + LL-029 compose into a closed triad
+    jointly defending V-006 (sensor-input poisoning) + V-018
+    (sensor-fusion inversion). `:tested` since LavaLamp
+    v0.0.71. **The substrate-tier layer.**
+  - **PharOS's leg (PH-005):** defense-in-depth-with-LavaLamp
+    — PharOS's PAM/Authz/credprov gate composes with
+    LavaLamp's joint-defense triads as deployment-tier
+    defense-in-depth atop LavaLamp's substrate-tier immune
+    system. `:argued` at PharOS v0.0.1. **The OS-membrane-
+    tier layer.** This is the bottleneck leg in the triple —
+    PH-005 is `:argued` while LL-030 + LZ-022 are `:tested`.
+
+  This entry records Lazarus's contribution to the joint
+  defense-in-depth backbone. The joint claim is the
+  conjunction — defense-in-depth at the substrate tier
+  (LavaLamp's LL-030), at the OS-membrane tier (PharOS's
+  PH-005), and at the runtime tier (Lazarus's LZ-022)
+  simultaneously.
+
+  Cross-deployment references:
+  - **Lazarus LZ-022** (network-exfiltration-joint-closure,
+    this deployment's leg).
+  - **LavaLamp LL-030** (sensor-defense-joint-closure).
+  - **PharOS PH-005** (defense-in-depth-with-LavaLamp).
+
+  Mirror entries: **LavaLamp LL-049** + **PharOS PH-017**.
+
+- Evidence type: manual (TCE Discovery.Triadic pass + cross-
+  deployment structural argument; no joint integration test
+  yet — see Notes)
+- Status: :argued
+- Source: TCE companion `docs/triad_discovery_companion.md`
+  in the triadic-coordination-engine repo (commit `a9ddfea`);
+  LAZARUS_SPEC.md LZ-022 entry; LAVALAMP_SPEC.md LL-030 entry;
+  PHAROS_SPEC.md PH-005 entry.
+- Notes: **Third cross-deployment joint-closure entry in
+  Lazarus** (after LZ-028 no-oracle-triad-backbone at v0.1.23
+  → `:proved` at v0.1.24, and LZ-029 lean-stack-triad-backbone
+  at v0.1.25 `:argued`). Established at v0.1.27 (2026-05-12).
+
+  Promotion path to `:tested` is operational rather than
+  Lean-algorithmic — unlike LZ-028 + LZ-029 whose promotion
+  paths run through the cross-repo Lake-dep Lean umbrella,
+  LZ-030's promotion requires a runtime cross-Triad
+  integration test exercising substrate sensor-defense
+  (LL-030) + OS-membrane composition (PH-005) + runtime
+  exfil triangle (LZ-022) jointly. The test surface design
+  mirrors LZ-022's own `test_network_exfil_joint_closure.py`
+  pattern (prevent + detect + control + joint), but spans
+  three deployments rather than three Lazarus-internal
+  components.
+
+  Natural home: a new `triad-integration/` test bundle in
+  the triadic-coordination-engine repo. Three deployments
+  cannot host this test cleanly in their own repos — each
+  is responsible for its own intra-deployment integration
+  tests; cross-deployment is engine-repo territory.
+
+  **PH-005 promotion as side effect.** Of the three legs in
+  this triple, PH-005 is the bottleneck. Its own
+  `:argued`→`:tested` promotion path is *the same
+  integration test* that promotes LZ-030 / LL-049 / PH-017.
+  Shipping the test promotes PH-005 from `:argued` to
+  `:tested` AND promotes the three mirror joint-closure
+  entries simultaneously.
+
+  Honest framing: score 20.00 is the highest-scoring
+  cross-Triad triple where all three legs are real
+  operational defense entries (LL-030 substrate, PH-005
+  OS-membrane, LZ-022 runtime), as opposed to LZ-028 +
+  LZ-029 which involve formal/abstract claims. LZ-030 is
+  the most directly runtime-testable of the three cross-
+  Triad joint-closures in Lazarus.
+
+---
+
+## Counts (post-v0.1.27)
+
+- Total: 30
 - `:proved`: 7 — LZ-016 (outlier-detection algorithm),
   LZ-017 (liveness metric properties), LZ-018 (priority
   dispatcher correctness), LZ-024 (face_reference_correctness
@@ -1792,12 +1900,18 @@ that was previously zero-edges from Lazarus.
   integration test, after LZ-023 at v0.1.21).
 - `:verified`: 0
 - `:benchmarked`: 0
-- `:argued`: 1 — LZ-029 lean-stack-triad-backbone added at
-  v0.1.25 (second cross-Triad joint-closure entry; mirror
-  entries at LavaLamp LL-047 + PharOS PH-015). Promotion
-  path is the umbrella mechanism already demonstrated by
-  LZ-028 at v0.1.24, extended with a second Lake git dep
-  on LavaLamp.
+- `:argued`: 2 — LZ-029 lean-stack-triad-backbone added at
+  v0.1.25 (second cross-Triad joint-closure; mirror entries
+  at LavaLamp LL-047 + PharOS PH-015; promotion path is the
+  cross-repo Lake-dep umbrella mechanism extended with a
+  second git dep on LavaLamp). LZ-030 defense-in-depth-triad-
+  backbone added at v0.1.27 (third cross-Triad joint-closure
+  via the `[LL-030, PH-005, LZ-022]` triple at score 20.00 —
+  substrate + OS-membrane + runtime V-DEFENSE-IN-DEPTH
+  layers; mirror entries at LavaLamp LL-049 + PharOS PH-017;
+  promotion path is a cross-Triad runtime integration test
+  that also promotes the bottleneck PH-005 leg from
+  `:argued` to `:tested`).
 - `:open`: 0
 
 Promotion queue (highest-leverage, ordered by ease):
