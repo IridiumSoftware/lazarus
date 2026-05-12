@@ -1,21 +1,24 @@
 # Dashboard — Lazarus
 
-Last updated: 2026-05-11 (post-v0.1.21 — **first two TCE joint-closure promotions: LZ-023 → `:tested` + LZ-026 → `:proved`.** (1) LZ-023 prompt-contract-joint-closure lands `test/test_prompt_contract_joint_closure.py` — 8 sections exercising the LZ-001 ∧ LZ-003 ∧ LZ-012 conjunction; first joint-closure entry to land an integration test. (2) LZ-026 categorical-triadic-closure-of-lean-proved-trio lands `src/lean4/Composed.lean` — 4 hermetic Lean 4 theorems including `composed_correctness` which chains `Lazarus.Liveness.deltaCount_self` (LZ-017) + an inline outlier-zero lemma from `Lazarus.Outliers.isOutlier` (LZ-016) + `Lazarus.Classify.classify_system_priority` (LZ-018) into a single end-to-end pipeline assertion. The FIRST `:proved`-status spec entry derived from a TCE Discovery.Triadic finding across the entire Triad (LavaLamp LL-030..LL-038 are all `:tested`; PharOS's TCE pass produced no promotions). The directional 3-cycle finding — the only one across all three per-deployment TCE passes — is now formally anchored. Also: registry catch-up + A1–A6 refresh. Counts shift: 27/3/19/0/0/5/0 → **27/4/20/0/0/3/0**.).
+Last updated: 2026-05-11 (post-v0.1.22 — **LZ-022 network-exfiltration-joint-closure → `:tested`** via `test/test_network_exfil_joint_closure.py`. Second TCE-surfaced joint-closure to land an integration test (after LZ-023 at v0.1.21). The 7-section end-to-end harness exercises the V-NETWORK-EXFIL defense triangle [LZ-005 source-level prevention ∧ LZ-010 runtime detection ∧ LZ-019 runtime control] in a single Python process: independent grep of `face_compare.swift` + `face_sentinel.py` for networking symbols + size-guard; TEST-EXFIL honeypot listener on port 38082 receiving a simulated POST /upload exfil payload + JSONL log record assertion; `auth(strict_touchid=True)` driven with stubbed `_touchid_check → "nonzero"`, hard-exit verified, downstream IO stubbed as control-leg breach detectors. Two `:argued` joint-closure entries remain (LZ-024 face-reference Lean scaffold, LZ-025 liveness Lean scaffold). Counts shift: 27/4/20/0/0/3/0 → **27/4/21/0/0/2/0**.).
 
 ## Status summary
 
 - Spec: 27 LZ-NNN entries in `LAZARUS_SPEC.md`.
-- Counts: **27 / 4 / 20 / 0 / 0 / 3 / 0** (total / proved /
+- Counts: **27 / 4 / 21 / 0 / 0 / 2 / 0** (total / proved /
   tested / verified / benchmarked / argued / open).
   Four `:proved` entries (LZ-016 outliers, LZ-017 liveness
   metric, LZ-018 classification dispatcher, LZ-026
   composed-correctness 3-cycle) via hermetic Lean4 proofs.
-  Three remaining `:argued` joint-closure entries (LZ-022,
-  LZ-024, LZ-025) from the TCE Discovery.Triadic pass —
-  promotion to `:tested` requires joint integration tests.
-  LZ-023 prompt-contract joint closure promoted at v0.1.21
-  (first joint-closure entry to land its integration test).
-  LZ-027 break-glass recovery at `:tested`. `:open` at zero.
+  Two remaining `:argued` joint-closure entries (LZ-024
+  face-reference Lean scaffold, LZ-025 liveness Lean
+  scaffold) from the TCE Discovery.Triadic pass — both are
+  proof-scaffold-meets-implementation clusters parallel to
+  LZ-026's promoted form. LZ-022 (network-exfil triple)
+  promoted at v0.1.22 and LZ-023 (prompt-contract triple)
+  promoted at v0.1.21 — the two highest-score TCE triples
+  are both `:tested` via integration tests. LZ-027
+  break-glass recovery at `:tested`. `:open` at zero.
 - Tests: full suite passes locally and on `macos-latest`
   via CI on every push.
   - `test/test_visual_skin_decoupling.py` (LZ-001)
@@ -39,6 +42,7 @@ Last updated: 2026-05-11 (post-v0.1.21 — **first two TCE joint-closure promoti
   - `test/test_auth_strict_touchid.py` (LZ-019)
   - `test/test_runtime_harness.py` + `test/transcripts/` (LZ-020)
   - `test/test_oversight_tier2.sh` (LZ-021)
+  - `test/test_network_exfil_joint_closure.py` (LZ-022)
   - `test/test_prompt_contract_joint_closure.py` (LZ-023)
   - `test/test_recovery.py` (LZ-027)
 - CI: `.github/workflows/test.yml` runs the full test suite
@@ -54,11 +58,10 @@ Reordered 2026-05-11 after Brian Crabtree's external Triad
 review surfaced break-glass / lockout-risk as the
 highest-impact gap in the current shipping surface.
 
-1. **Remaining TCE joint-closure promotions** — three
+1. **Remaining TCE joint-closure promotions** — two
    `:argued` entries from the TCE Discovery.Triadic pass
-   still need joint integration tests:
-   - **LZ-022 network-exfiltration** — scripted scenario
-     exercising LZ-005 ∧ LZ-010 ∧ LZ-019.
+   still need joint integration tests (LZ-022 promoted at
+   v0.1.22, LZ-023 at v0.1.21, LZ-026 at v0.1.21):
    - **LZ-024 face-reference Lean scaffold** — reference-pool
      integration test asserting LZ-016 outlier properties on
      the operational pruning path (potential `:proved`
@@ -133,6 +136,29 @@ highest-impact gap in the current shipping surface.
 
 ## Recently completed
 
+- 2026-05-11 — v0.1.22: **LZ-022 network-exfiltration-
+  joint-closure → `:tested`** via
+  `test/test_network_exfil_joint_closure.py`. Second
+  TCE-surfaced joint-closure entry to land an integration
+  test (after LZ-023 at v0.1.21). The 7-section harness
+  exercises the V-NETWORK-EXFIL defense triangle in one
+  process: (1) LZ-005/LZ-010/LZ-019 component tests pass
+  in sequence; (2) independent re-grep of
+  `face_compare.swift` for Swift networking symbols +
+  `face_sentinel.py` for Python networking imports with a
+  size-guard against silent stub-replacement;
+  (3) TEST-EXFIL honeypot listener on port 38082 receives
+  a simulated POST /upload exfil payload, JSONL log
+  record asserted; (4) `auth(strict_touchid=True)` driven
+  with stubbed `_touchid_check → "nonzero"`, hard-exit
+  with code 1 verified, downstream IO stubbed as
+  control-leg breach detectors; (5) default opt-in
+  semantics intact via `inspect.signature`; (6) spec-level
+  LZ-022 names all three components + V-NETWORK-EXFIL
+  anchor + prevent/detect/control framing; (7) component
+  entries retain their V-related framing. Counts:
+  27 / 4 / 20 / 0 / 0 / 3 / 0 → **27 / 4 / 21 / 0 / 0 /
+  2 / 0**.
 - 2026-05-11 — v0.1.21: **first two TCE joint-closure
   promotions — LZ-023 → `:tested` + LZ-026 → `:proved`.**
   (1) `test/test_prompt_contract_joint_closure.py` (8

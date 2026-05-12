@@ -1113,21 +1113,53 @@ triadic-coordination-engine repo.
   together close a defense triangle: prevent + detect +
   control. Removing any one weakens the joint claim
   asymmetrically.
-- Evidence type: manual (TCE Discovery.Triadic pass at
-  v0.2.11; structural argument; no integration test that
-  exercises the conjunction yet)
-- Status: :argued
+- Evidence type: example-tested
+- Status: :tested
 - Source: `LAZARUS_SPEC.md` LZ-005 + LZ-010 + LZ-019 entries;
-  TCE companion `docs/lazarus_discovery_companion.md` in the
+  `face_compare.swift` (LZ-005 source surface) +
+  `network_honeypot.py` (LZ-010 detection surface) +
+  `face_sentinel.py auth()` strict-touchid branch (LZ-019
+  control surface); TCE companion in
   triadic-coordination-engine repo
-- Notes: Promotion to `:tested` requires an integration test
-  exercising the three-way conjunction — e.g., scripted
-  scenario where (a) LZ-005's local-only flag is flipped,
-  (b) LZ-010's honeypot detects an outbound attempt,
-  (c) LZ-019's hard-gate denies admit, all in a single
-  end-to-end harness. Per conjunctive-claim discipline, the
-  sum of the three individual `:tested` statuses does not
-  promote the joint claim.
+- Test/Proof: `test/test_network_exfil_joint_closure.py`
+  exercises the three-layer V-NETWORK-EXFIL defense in 7
+  sections: (1) component tests for LZ-005, LZ-010, LZ-019
+  all pass in sequence; (2) LZ-005 source-level prevention
+  re-verified — independent grep of `face_compare.swift`
+  for Swift networking symbols + `face_sentinel.py` for
+  Python networking imports, with size-guard against
+  silent stub-replacement; (3) LZ-010 runtime detection —
+  stand up a TEST-EXFIL honeypot listener on port 38082,
+  send a simulated exfil POST request, assert the
+  detection-trap fires (JSONL log record with service/
+  port/remote fields); (4) LZ-019 runtime control —
+  drive `auth(strict_touchid=True)` with `_touchid_check`
+  stubbed to return `"nonzero"`, assert hard-exit with
+  code 1 before face-match and that downstream IO is
+  never reached (control-leg breach detector); (5)
+  default opt-in semantics intact via `inspect.signature`
+  on `auth()`; (6) spec-level conjunction — LZ-022 entry
+  names all three components + carries the V-NETWORK-
+  EXFIL anchor + retains the prevent/detect/control
+  defense-triangle framing; (7) component entries retain
+  their V-related framing (local/honeypot/strict).
+- Notes: Promoted from `:argued` to `:tested` at v0.1.22
+  (2026-05-11). Second TCE-surfaced joint-closure entry
+  to land an integration test (after LZ-023). The joint
+  test catches defense-layer attrition: a refactor that
+  silently disables one layer (allows a networking import
+  in the Swift binary; removes the SERVICES table or
+  changes the listener bind shape; flips `strict_touchid`
+  default to True breaking LZ-015's fail-open semantics)
+  would change the joint claim's blast radius even if the
+  surviving two layers still pass their component tests.
+  Honest framing: static + dynamic joint test in one
+  harness. Does NOT prove a real exfiltration attempt
+  would be defeated — a determined adversary could
+  obfuscate networking calls (LZ-005 bypass), bind a
+  non-honeypot port (LZ-010 bypass), or disable Touch ID
+  hardware (LZ-019 bypass). Each component's own
+  honest-framing notes carry into the conjunction.
 
 ### LZ-023 — prompt-contract-joint-closure
 - Key: LZ-001 ∧ LZ-003 ∧ LZ-012 form the prompt-contract
@@ -1390,7 +1422,7 @@ intended end-state.
 
 ---
 
-## Counts (post-v0.1.21)
+## Counts (post-v0.1.22)
 
 - Total: 27
 - `:proved`: 4 — LZ-016 (outlier-detection algorithm),
@@ -1401,19 +1433,22 @@ intended end-state.
   `:proved`-status spec entry derived from a TCE
   Discovery.Triadic finding across the entire Triad).
   All lean-proved hermetically in `src/lean4/`.
-- `:tested`: 20 — LZ-001..LZ-015 + LZ-019 + LZ-020 + LZ-021
-  + LZ-023 + LZ-027. LZ-023 promoted at v0.1.21 (first
-  joint-closure entry to land an integration test).
+- `:tested`: 21 — LZ-001..LZ-015 + LZ-019 + LZ-020 + LZ-021
+  + LZ-022 + LZ-023 + LZ-027. LZ-022 promoted at v0.1.22
+  (second TCE-surfaced joint-closure entry to land an
+  integration test, after LZ-023 at v0.1.21).
 - `:verified`: 0
 - `:benchmarked`: 0
-- `:argued`: 3 — LZ-022, LZ-024, LZ-025 (the three remaining
-  TCE Discovery.Triadic joint-closure entries; LZ-026
+- `:argued`: 2 — LZ-024, LZ-025 (the two remaining TCE
+  Discovery.Triadic joint-closure entries — both are
+  proof-scaffold-meets-implementation Lean-scaffold
+  clusters parallel to LZ-026's promoted form; LZ-026
   promoted to `:proved` at v0.1.21 via Composed.lean).
   Per conjunctive-claim discipline, sub-claim evidence
   (each component's individual `:tested`/`:proved` status)
   does not promote the joint claim; promotion to `:tested`
-  requires a joint integration test exercising the
-  conjunction.
+  requires a joint integration test, and promotion to
+  `:proved` requires a new cross-module Lean theorem.
 - `:open`: 0
 
 Promotion queue (highest-leverage, ordered by ease):

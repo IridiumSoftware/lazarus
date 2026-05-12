@@ -111,6 +111,9 @@ jobs:
       - name: LZ-023 — test_prompt_contract_joint_closure.py
         run: python3 test/test_prompt_contract_joint_closure.py
 
+      - name: LZ-022 — test_network_exfil_joint_closure.py
+        run: python3 test/test_network_exfil_joint_closure.py
+
       - name: LZ-016 / LZ-017 / LZ-018 / LZ-026 — Lean proofs (lake build)
         working-directory: src/lean4
         run: |

@@ -1,16 +1,15 @@
 # artifact_registry.md — Lazarus
 
-Version: 0.1.21 (two TCE joint-closure promotions land
-simultaneously: **LZ-023 → `:tested`** via
-`test/test_prompt_contract_joint_closure.py` (8-section
-conjunctive test); **LZ-026 → `:proved`** via
-`src/lean4/Composed.lean` (4 hermetic Lean 4 theorems
-including `composed_correctness` chaining lemmas from all
-three previously-separate Lean-proved modules — the FIRST
-`:proved`-status entry derived from a TCE finding across the
-entire Triad). Catch-up rows also added for LZ-022, LZ-024,
-LZ-025 (remaining `:argued`) and LZ-027 (`:tested` since
-v0.1.19). Counts: 27 / 4 / 20 / 0 / 0 / 3 / 0.)
+Version: 0.1.22 (**LZ-022 network-exfiltration-joint-closure
+promoted to `:tested`** via
+`test/test_network_exfil_joint_closure.py` — a 7-section
+end-to-end harness exercising LZ-005 source-level prevention
++ LZ-010 runtime detection (TEST-EXFIL honeypot on port 38082)
++ LZ-019 runtime control (strict-Touch-ID hard-gate) in a
+single process. Second TCE-surfaced joint-closure entry to
+land an integration test (after v0.1.21's LZ-023). Counts:
+27 / 4 / 21 / 0 / 0 / 2 / 0. Predecessor v0.1.21 landed
+LZ-023 → `:tested` and LZ-026 → `:proved`.)
 
 ## Coverage rule
 
@@ -59,7 +58,7 @@ contain every Test/Proof and Source path listed.
 | LZ-019 | strict Touch ID hard-gate | Operational | example-tested | test/test_auth_strict_touchid.py (5 branches: strict×3 outcomes + non-strict×2 outcomes + default-parameter lock via inspect.signature) | face_sentinel.py auth() Step 1 strict branch + argparse `--strict-touchid` flag + CLI dispatch | :tested |
 | LZ-020 | runtime-LLM-behavior transcript audit | Operational | example-tested | test/test_runtime_harness.py + test/transcripts/shakespeare_mode_session.txt + test/transcripts/normal_mode_session.txt + docs/runtime_harness_design.md (point-in-time recorded transcripts; assertions on shape, sustained refusal, privacy redaction) | test/transcripts/ (real /lazarus session captures, network values redacted) | :tested |
 | LZ-021 | OverSight Tier 2 allowlist + state-flip | Operational | example-tested | test/test_oversight_tier2.sh (6 subtests: non-allowlisted on→trigger, allowlisted on→no trigger, off-event→no trigger, # comment ignored, blank lines ignored, default-allowlist python3) | oversight_action.sh Tier 2 block (allowlist check + inline Python state-mutation + sentinel.log alert append) | :tested |
-| LZ-022 | network-exfiltration joint closure | Operational | manual | LAZARUS_SPEC.md LZ-022 entry (TCE Discovery.Triadic pass at engine v0.2.11; STRICT HIGH-band triple [LZ-005, LZ-010, LZ-019] at score 10.00; V-NETWORK-EXFIL co-defense via prevent + detect + control) — no joint integration test yet | LAZARUS_SPEC.md LZ-005 + LZ-010 + LZ-019 entries; face_compare.swift (LZ-005) + network_honeypot.py (LZ-010) + face_sentinel.py auth() strict-touchid (LZ-019) | :argued |
+| LZ-022 | network-exfiltration joint closure | Operational | example-tested | test/test_network_exfil_joint_closure.py (7 sections: component tests pass as conjunction + LZ-005 independent re-grep of Swift networking symbols + Python networking imports with size-guard + LZ-010 runtime TEST-EXFIL listener on port 38082 with JSONL record assertion + LZ-019 strict_touchid=True hard-exit on stubbed "nonzero" with control-leg breach detector on downstream IO + default opt-in semantics intact via inspect.signature + spec-level conjunction LZ-022 names LZ-005/LZ-010/LZ-019 + V-NETWORK-EXFIL anchor + prevent/detect/control framing + component entries retain local/honeypot/strict V-related framing) | LAZARUS_SPEC.md LZ-005 + LZ-010 + LZ-019 entries; face_compare.swift (LZ-005 source surface) + network_honeypot.py (LZ-010 detection surface) + face_sentinel.py auth() strict-touchid branch (LZ-019 control surface) | :tested |
 | LZ-023 | prompt-contract joint closure | Boundary | example-tested | test/test_prompt_contract_joint_closure.py (8 sections: component-tests-as-conjunction + both contract sections coexist + section-local extraction + mode-vocab unified + no cross-section permissive bleed + no producer write-directive leak + LZ-012 cross-references LZ-001/LZ-003 + LZ-023 entry names all three components) | LAZARUS_SPEC.md LZ-001 + LZ-003 + LZ-012 entries; face_sentinel.py (producer) + lazarus.md (consumer: §Shakespeare mode + §What you do NOT do) | :tested |
 | LZ-024 | face-reference lean-scaffold joint closure | Operational | manual | LAZARUS_SPEC.md LZ-024 entry (TCE pass; STRICT HIGH-band [LZ-006, LZ-014, LZ-016] at score 9.50, sd=2 tested+tested+proved; proof-scaffold-meets-implementation cluster on face-reference axis) — promotion to :tested requires reference-pool integration test asserting conformance with LZ-016 abstract properties on operational data path | LAZARUS_SPEC.md LZ-006 + LZ-014 + LZ-016 entries; face_sentinel.py prune (LZ-006/LZ-014) + src/lean4/Outliers.lean (LZ-016) | :argued |
 | LZ-025 | liveness lean-scaffold joint closure | Operational | manual | LAZARUS_SPEC.md LZ-025 entry (TCE pass; STRICT HIGH-band [LZ-007, LZ-013, LZ-017] at score 9.50, sd=2; proof-scaffold-meets-implementation cluster on liveness axis, parallel to LZ-024) — promotion to :tested requires watch-loop integration test asserting conformance with LZ-017 abstract properties on operational data path | LAZARUS_SPEC.md LZ-007 + LZ-013 + LZ-017 entries; face_sentinel.py check_once / liveness_check (LZ-007/LZ-013) + src/lean4/Liveness.lean (LZ-017) | :argued |
@@ -72,27 +71,27 @@ contain every Test/Proof and Source path listed.
 - `:proved`: 4 (LZ-016 outliers + LZ-017 liveness metric +
   LZ-018 classification dispatcher + LZ-026 composed-
   correctness 3-cycle, all lean-proved hermetically)
-- `:tested`: 20 — LZ-001 through LZ-015 + LZ-019 + LZ-020 +
-  LZ-021 + LZ-023 + LZ-027
+- `:tested`: 21 — LZ-001 through LZ-015 + LZ-019 + LZ-020 +
+  LZ-021 + LZ-022 + LZ-023 + LZ-027
 - `:verified`: 0
 - `:benchmarked`: 0
-- `:argued`: 3 — LZ-022, LZ-024, LZ-025 (TCE Discovery.Triadic
-  joint-closure entries awaiting joint integration tests)
+- `:argued`: 2 — LZ-024, LZ-025 (the two remaining TCE
+  Discovery.Triadic Lean-scaffold joint-closure entries
+  awaiting joint integration tests or cross-module Lean
+  theorems)
 - `:open`: 0
 
-## Cross-audit A1–A6 self-check (post-v0.1.21)
+## Cross-audit A1–A6 self-check (post-v0.1.22)
 
 - **A1 — Coverage.** Every LZ-ID in `LAZARUS_SPEC.md` has a row
-  here. ✓ (27 of 27). Registry was stale through v0.1.18/v0.1.19/
-  v0.1.20 (missing rows for LZ-022..LZ-027); catch-up rows added
-  at v0.1.21 alongside the LZ-023 promotion.
+  here. ✓ (27 of 27).
 - **A2 — Logic & Status parity.** Spec → registry Logic tier and
   Status fields match exactly. Key column compresses spec keys
   for table readability (e.g. spec
   "visual-skin/security-primitive decoupling" → registry
   "visual-skin/security decoupling"); LZ-ID is the canonical
   link. ✓.
-- **A3 — Evidence exists.** All 20 `:tested` entries cite
+- **A3 — Evidence exists.** All 21 `:tested` entries cite
   runnable artifacts under `test/` (plus four `:proved` Lean
   entries cite `src/lean4/`):
   - LZ-001 → `test/test_visual_skin_decoupling.py`
@@ -120,6 +119,11 @@ contain every Test/Proof and Source path listed.
   - LZ-020 → `test/test_runtime_harness.py` +
     `test/transcripts/` + `docs/runtime_harness_design.md`
   - LZ-021 → `test/test_oversight_tier2.sh`
+  - **LZ-022 → `test/test_network_exfil_joint_closure.py`**
+    (7 sections exercising the LZ-005 ∧ LZ-010 ∧ LZ-019
+    V-NETWORK-EXFIL conjunction in one end-to-end harness:
+    source-level grep + runtime honeypot listener +
+    runtime strict-Touch-ID hard-gate)
   - **LZ-023 → `test/test_prompt_contract_joint_closure.py`**
     (8 sections exercising the LZ-001 ∧ LZ-003 ∧ LZ-012
     conjunction)
@@ -128,25 +132,29 @@ contain every Test/Proof and Source path listed.
     `composed_correctness`)
   - **LZ-027 → `test/test_recovery.py`** (7 branches + 2
     locks; ships in v0.1.19's bundled commit)
-  The three remaining `:argued` entries (LZ-022, LZ-024,
-  LZ-025) cite the TCE Discovery.Triadic pass companion in
+  The two remaining `:argued` entries (LZ-024, LZ-025) cite
+  the TCE Discovery.Triadic pass companion in
   triadic-coordination-engine commit 3fcccf3.
-- **A4 — Status honesty.** All 20 `:tested` entries carry
+- **A4 — Status honesty.** All 21 `:tested` entries carry
   `example-tested`; LZ-016, LZ-017, LZ-018, LZ-026 carry
-  `lean-proved` matching `:proved`; LZ-022/024/025 carry
-  `manual` matching `:argued` (joint-closure structural
-  arguments from the TCE pass — explicit promotion paths
-  documented per entry). LZ-020 carries the point-in-time
-  caveat; LZ-021 defers Tier 2b screen-lock as opt-in future
-  work; LZ-027 acknowledges the Touch-ID-hardware-fail-AND-
-  no-token gap rather than pretending it's solved; LZ-023's
-  promotion is honestly framed as a static joint test, not a
-  runtime LLM-behavior test; LZ-026's `composed_correctness`
-  is honest about chaining existing per-module lemmas — it
-  doesn't add new mathematical content, only formalises the
-  cross-module composition at the Lean level.
-- **A5 — Stale counts.** Counts above (27 / 4 / 20 / 0 / 0 /
-  3 / 0) match `LAZARUS_SPEC.md` final-section counts and
+  `lean-proved` matching `:proved`; LZ-024/025 carry `manual`
+  matching `:argued` (joint-closure structural arguments from
+  the TCE pass — explicit promotion paths documented per
+  entry). LZ-020 carries the point-in-time caveat; LZ-021
+  defers Tier 2b screen-lock as opt-in future work; LZ-027
+  acknowledges the Touch-ID-hardware-fail-AND-no-token gap
+  rather than pretending it's solved; LZ-023's promotion is
+  honestly framed as a static joint test, not a runtime
+  LLM-behavior test; LZ-022's promotion is honest about the
+  static + dynamic harness boundary — it does not prove a
+  real exfiltration attempt would be defeated, only that the
+  three defense layers compose under simulation; LZ-026's
+  `composed_correctness` is honest about chaining existing
+  per-module lemmas — it doesn't add new mathematical
+  content, only formalises the cross-module composition at
+  the Lean level.
+- **A5 — Stale counts.** Counts above (27 / 4 / 21 / 0 / 0 /
+  2 / 0) match `LAZARUS_SPEC.md` final-section counts and
   `dashboard.md` summary.
 - **A6 — Test sync.** All 20 `:tested` entries are exercised
   by tests under `test/` that run on `macos-latest` via

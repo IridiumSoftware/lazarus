@@ -1,5 +1,116 @@
 # Changelog — Lazarus
 
+## v0.1.22 — 2026-05-11 — LZ-022 network-exfiltration joint closure → `:tested`
+
+Third TCE Discovery.Triadic joint-closure promotion in three
+versions (v0.1.21 landed LZ-023 → `:tested` and LZ-026 → `:proved`
+in a single commit; v0.1.22 lands LZ-022 → `:tested` here).
+Now four of the five TCE-surfaced joint-closure entries are
+promoted; two `:argued` Lean-scaffold clusters remain (LZ-024,
+LZ-025).
+
+### LZ-022 network-exfiltration-joint-closure → `:tested`
+
+New `test/test_network_exfil_joint_closure.py` — 7-section
+end-to-end harness exercising the LZ-005 ∧ LZ-010 ∧ LZ-019
+V-NETWORK-EXFIL defense triangle (PREVENTION + DETECTION +
+CONTROL) in one Python process:
+
+1. **Component tests as conjunction** — runs
+   `test_no_networking_imports.sh` (LZ-005),
+   `test_honeypot_listener.py` (LZ-010), and
+   `test_auth_strict_touchid.py` (LZ-019) via subprocess;
+   asserts all three pass before proceeding.
+2. **LZ-005 source-level prevention re-verified** —
+   independent re-grep of `face_compare.swift` for Swift
+   networking symbols (URLSession, NWConnection,
+   CFNetwork, etc.) and `face_sentinel.py` for Python
+   networking imports (import socket, urlopen, etc.),
+   with a size-guard against silent stub-replacement.
+   This duplicates LZ-005's grep-lint deliberately —
+   if the .sh test's size guard breaks, the joint test
+   still catches a regression.
+3. **LZ-010 runtime detection** — starts a TEST-EXFIL
+   honeypot listener on port 38082 in a daemon thread,
+   opens a client socket and sends a simulated
+   `POST /upload HTTP/1.0` exfil payload, polls for the
+   JSONL log record, asserts service/port/remote fields.
+4. **LZ-019 runtime control** — drives
+   `auth(strict_touchid=True)` with `_touchid_check`
+   stubbed to return `"nonzero"`; asserts SystemExit(1)
+   before face-match. Downstream IO (`capture_full`,
+   `run_face_compare`, `shrink`) is stubbed to call
+   `fail()` — if auth ever reaches them despite
+   strict+nonzero, the test reports a control-leg
+   breach.
+5. **Default opt-in semantics intact** — locks
+   `auth(strict_touchid=False)` default via
+   `inspect.signature`. A refactor flipping the default
+   to True would break LZ-015's fail-open semantics
+   (hardware-less Macs).
+6. **Spec-level conjunction** — LZ-022 entry names
+   LZ-005, LZ-010, LZ-019; carries the V-NETWORK-EXFIL
+   anchor; retains the prevent/detect/control framing.
+7. **Component entries retain V-related framing** —
+   LZ-005 retains "local" framing; LZ-010 retains
+   "honeypot" framing; LZ-019 retains "strict" framing.
+
+### Honest framing
+
+Static + dynamic joint test in one harness. Catches
+refactors that split the V-NETWORK-EXFIL defense along
+weak seams (silently allowing a networking import,
+removing the honeypot SERVICES table, flipping
+strict_touchid default). Does NOT prove a real
+exfiltration attempt would be defeated — a determined
+adversary could obfuscate networking calls (LZ-005
+bypass), bind a non-honeypot port (LZ-010 bypass), or
+disable Touch ID hardware (LZ-019 bypass). Each
+component's own honest-framing notes carry into the
+conjunction.
+
+### Files changed
+
+- `test/test_network_exfil_joint_closure.py` (new) —
+  7-section LZ-022 joint test, ~330 lines.
+- `LAZARUS_SPEC.md` — LZ-022 status `:argued` → `:tested`;
+  evidence type `manual` → `example-tested`; Test/Proof +
+  Source fields populated; Counts header → (post-v0.1.22);
+  Counts block refreshed.
+- `artifact_registry.md` — LZ-022 row flipped to
+  `:tested` + cites the new test; Counts refreshed
+  (27 / 4 / 21 / 0 / 0 / 2 / 0); A1-A6 self-check
+  updated.
+- `dashboard.md` — last-updated stamp; counts refreshed;
+  tests list extended with the new test; priority stack
+  drops LZ-022 from the remaining-promotions item; new
+  v0.1.22 recently-completed bullet.
+- `.github/workflows/test.yml` — new
+  `LZ-022 — test_network_exfil_joint_closure.py` step.
+- `changelog.md` — this entry.
+
+### Counts
+
+- After v0.1.21: 27 / 4 / 20 / 0 / 0 / 3 / 0
+- After v0.1.22: **27 / 4 / 21 / 0 / 0 / 2 / 0**
+  (:tested +1 LZ-022, :argued −1)
+
+### What's left in the TCE-surfaced `:argued` band
+
+- **LZ-024 face-reference-lean-scaffold-joint-closure** —
+  needs reference-pool integration test asserting LZ-016
+  outlier properties on the operational pruning path.
+  Potential `:proved` promotion path parallel to LZ-026
+  if a `face_reference_correctness` theorem fits cleanly
+  on top of the existing `Outliers.lean` content.
+- **LZ-025 liveness-lean-scaffold-joint-closure** —
+  needs watch-loop integration test asserting LZ-017
+  metric properties on the operational data path.
+  Same potential `:proved` promotion shape (parallel to
+  LZ-026 on the liveness axis).
+
+---
+
 ## v0.1.21 — 2026-05-11 — first two TCE joint-closure promotions: LZ-023 (:tested) + LZ-026 (:proved)
 
 Two of the five TCE Discovery.Triadic joint-closure entries
