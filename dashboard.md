@@ -134,6 +134,32 @@ highest-impact gap in the current shipping surface.
 
 ## Recently completed
 
+- 2026-05-12 — v0.1.23: **LZ-024 + LZ-025 both promoted to
+  `:proved` via two new hermetic Lean 4 modules; LZ-028
+  no-oracle-triad-backbone added at `:argued`.**
+  (1) `src/lean4/FaceReferencePool.lean` — three theorems
+  (`filter_length_le_bound`, `outliers_preserves_bound`,
+  `face_reference_correctness`) prove the LZ-016 outliers
+  filter respects both abstract subset (LZ-016
+  `outliers_subset`) AND the LZ-006 bounded-pool size
+  invariant when applied to LZ-014's pruning workflow.
+  (2) `src/lean4/LivenessJoint.lean` — three theorems
+  (`liveness_static_photo_fails`,
+  `liveness_pass_implies_motion`, `liveness_equivalence`)
+  chain LZ-017's metric properties (`deltaCount_self`,
+  `deltaCount_zero_iff_eq`) with LZ-013's threshold
+  semantics to justify LZ-007's watch-loop routing
+  decisions formally. `lake build` returns 13 jobs with
+  zero `sorry`. **All five TCE Discovery.Triadic intra-
+  deployment joint-closure entries (LZ-022..LZ-026) are
+  now promoted** — three `:tested` (LZ-022/LZ-023) +
+  three `:proved` (LZ-024/LZ-025/LZ-026). Per-deployment
+  TCE arc closes. (3) LZ-028 no-oracle-triad-backbone
+  enters at `:argued` — first cross-deployment joint-
+  closure entry; mirror entries at LavaLamp LL-046 +
+  PharOS PH-014. Counts:
+  27 / 4 / 21 / 0 / 0 / 2 / 0 → **28 / 6 / 21 / 0 / 0 /
+  1 / 0**.
 - 2026-05-11 — v0.1.22: **LZ-022 network-exfiltration-
   joint-closure → `:tested`** via
   `test/test_network_exfil_joint_closure.py`. Second

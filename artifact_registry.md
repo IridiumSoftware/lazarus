@@ -94,10 +94,10 @@ contain every Test/Proof and Source path listed.
   deployments)
 - `:open`: 0
 
-## Cross-audit A1–A6 self-check (post-v0.1.22)
+## Cross-audit A1–A6 self-check (post-v0.1.23)
 
 - **A1 — Coverage.** Every LZ-ID in `LAZARUS_SPEC.md` has a row
-  here. ✓ (27 of 27).
+  here. ✓ (28 of 28).
 - **A2 — Logic & Status parity.** Spec → registry Logic tier and
   Status fields match exactly. Key column compresses spec keys
   for table readability (e.g. spec
@@ -105,7 +105,7 @@ contain every Test/Proof and Source path listed.
   "visual-skin/security decoupling"); LZ-ID is the canonical
   link. ✓.
 - **A3 — Evidence exists.** All 21 `:tested` entries cite
-  runnable artifacts under `test/` (plus four `:proved` Lean
+  runnable artifacts under `test/` (plus six `:proved` Lean
   entries cite `src/lean4/`):
   - LZ-001 → `test/test_visual_skin_decoupling.py`
   - LZ-002 → `test/test_distance_band_thresholds.py`
@@ -140,41 +140,62 @@ contain every Test/Proof and Source path listed.
   - **LZ-023 → `test/test_prompt_contract_joint_closure.py`**
     (8 sections exercising the LZ-001 ∧ LZ-003 ∧ LZ-012
     conjunction)
+  - **LZ-024 → `src/lean4/FaceReferencePool.lean`** (3
+    theorems including `face_reference_correctness` —
+    LZ-016 outliers filter preserves both abstract subset
+    and LZ-006 bounded-pool size invariant)
+  - **LZ-025 → `src/lean4/LivenessJoint.lean`** (3
+    theorems including `liveness_equivalence` — full
+    LZ-017-grounded characterisation of the LZ-013
+    anti-spoof primitive's decision)
   - **LZ-026 → `src/lean4/Composed.lean`** (4 theorems
     chaining lemmas from Outliers + Liveness + Classify into
     `composed_correctness`)
   - **LZ-027 → `test/test_recovery.py`** (7 branches + 2
     locks; ships in v0.1.19's bundled commit)
-  The two remaining `:argued` entries (LZ-024, LZ-025) cite
-  the TCE Discovery.Triadic pass companion in
-  triadic-coordination-engine commit 3fcccf3.
+  The one remaining `:argued` entry (LZ-028
+  no-oracle-triad-backbone, first cross-deployment joint-
+  closure in Lazarus) cites the TCE Discovery.Triadic
+  cross-Triad pass companion in triadic-coordination-engine
+  commit `a9ddfea`; mirror entries at LavaLamp LL-046 +
+  PharOS PH-014.
 - **A4 — Status honesty.** All 21 `:tested` entries carry
-  `example-tested`; LZ-016, LZ-017, LZ-018, LZ-026 carry
-  `lean-proved` matching `:proved`; LZ-024/025 carry `manual`
-  matching `:argued` (joint-closure structural arguments from
-  the TCE pass — explicit promotion paths documented per
-  entry). LZ-020 carries the point-in-time caveat; LZ-021
-  defers Tier 2b screen-lock as opt-in future work; LZ-027
+  `example-tested`; LZ-016, LZ-017, LZ-018, LZ-024, LZ-025,
+  LZ-026 carry `lean-proved` matching `:proved`; LZ-028
+  carries `manual` matching `:argued` (cross-deployment
+  structural argument from the TCE cross-Triad pass —
+  joint integration test would span three deployments).
+  LZ-020 carries the point-in-time caveat; LZ-021 defers
+  Tier 2b screen-lock as opt-in future work; LZ-027
   acknowledges the Touch-ID-hardware-fail-AND-no-token gap
-  rather than pretending it's solved; LZ-023's promotion is
-  honestly framed as a static joint test, not a runtime
-  LLM-behavior test; LZ-022's promotion is honest about the
-  static + dynamic harness boundary — it does not prove a
-  real exfiltration attempt would be defeated, only that the
-  three defense layers compose under simulation; LZ-026's
+  rather than pretending it's solved; LZ-023's promotion
+  is honestly framed as a static joint test, not a runtime
+  LLM-behavior test; LZ-022's promotion is honest about
+  the static + dynamic harness boundary; LZ-024 and LZ-025
+  honestly frame the abstract metric content they prove —
+  LZ-024 does not model the leave-one-out symlink
+  construction, LZ-025 does not model camera I/O or the
+  `sips` BMP downsample (both are operational layers
+  outside the metric content); LZ-026's
   `composed_correctness` is honest about chaining existing
-  per-module lemmas — it doesn't add new mathematical
-  content, only formalises the cross-module composition at
-  the Lean level.
-- **A5 — Stale counts.** Counts above (27 / 4 / 21 / 0 / 0 /
-  2 / 0) match `LAZARUS_SPEC.md` final-section counts and
+  per-module lemmas at the Lean level. The three new
+  v0.1.23 Lean modules (FaceReferencePool, LivenessJoint,
+  Composed-at-v0.1.21) all add **composition theorems**
+  over pre-existing Lean modules — they don't introduce
+  new mathematical content, only formalise the cross-
+  module structure the TCE pass surfaced informally.
+- **A5 — Stale counts.** Counts above (28 / 6 / 21 / 0 / 0 /
+  1 / 0) match `LAZARUS_SPEC.md` final-section counts and
   `dashboard.md` summary.
-- **A6 — Test sync.** All 20 `:tested` entries are exercised
+- **A6 — Test sync.** All 21 `:tested` entries are exercised
   by tests under `test/` that run on `macos-latest` via
-  `.github/workflows/test.yml` on every push. The three
-  `:proved` Lean entries are exercised by `lake build` in the
-  same workflow. Locally each test runs via `python3 test/<file>`
-  or `bash test/<file>`; the Lean build is `cd src/lean4 && lake build`.
+  `.github/workflows/test.yml` on every push. The six
+  `:proved` Lean entries (LZ-016/LZ-017/LZ-018 base modules
+  + LZ-024/LZ-025/LZ-026 composition theorems) are
+  exercised by `lake build` in the same workflow. Locally
+  each test runs via `python3 test/<file>` or
+  `bash test/<file>`; the Lean build is
+  `cd src/lean4 && lake build`.
 
 ## Dependencies on other Triad-Deployment spec entries
 
