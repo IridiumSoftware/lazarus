@@ -1,15 +1,24 @@
 # artifact_registry.md — Lazarus
 
-Version: 0.1.22 (**LZ-022 network-exfiltration-joint-closure
-promoted to `:tested`** via
-`test/test_network_exfil_joint_closure.py` — a 7-section
-end-to-end harness exercising LZ-005 source-level prevention
-+ LZ-010 runtime detection (TEST-EXFIL honeypot on port 38082)
-+ LZ-019 runtime control (strict-Touch-ID hard-gate) in a
-single process. Second TCE-surfaced joint-closure entry to
-land an integration test (after v0.1.21's LZ-023). Counts:
-27 / 4 / 21 / 0 / 0 / 2 / 0. Predecessor v0.1.21 landed
-LZ-023 → `:tested` and LZ-026 → `:proved`.)
+Version: 0.1.23 (**LZ-024 + LZ-025 both promoted to
+`:proved`** via two new hermetic Lean 4 modules. (1)
+`src/lean4/FaceReferencePool.lean` — `face_reference_correctness`
+proves the LZ-016 outliers filter respects both abstract
+subset (LZ-016 `outliers_subset`) AND the LZ-006 bounded-pool
+size invariant when applied to LZ-014's pruning workflow.
+(2) `src/lean4/LivenessJoint.lean` — `liveness_static_photo_fails`
++ `liveness_pass_implies_motion` + `liveness_equivalence`
+chain LZ-017's metric theorems (`deltaCount_self`,
+`deltaCount_zero_iff_eq`) with LZ-013's threshold semantics
+to justify LZ-007's watch-loop routing decisions formally.
+All five TCE Discovery.Triadic intra-deployment joint-closure
+entries (LZ-022..LZ-026) are now promoted — three to `:tested`
+via integration tests (LZ-022/LZ-023) and three to `:proved`
+via cross-module Lean theorems (LZ-024/LZ-025/LZ-026; counts
+total `:proved` 6 since LZ-016/LZ-017/LZ-018 are also
+:proved as base modules). Lazarus is now the most-formal
+deployment in the Triad. Counts:
+28 / 6 / 21 / 0 / 0 / 1 / 0.)
 
 ## Coverage rule
 
@@ -60,25 +69,29 @@ contain every Test/Proof and Source path listed.
 | LZ-021 | OverSight Tier 2 allowlist + state-flip | Operational | example-tested | test/test_oversight_tier2.sh (6 subtests: non-allowlisted on→trigger, allowlisted on→no trigger, off-event→no trigger, # comment ignored, blank lines ignored, default-allowlist python3) | oversight_action.sh Tier 2 block (allowlist check + inline Python state-mutation + sentinel.log alert append) | :tested |
 | LZ-022 | network-exfiltration joint closure | Operational | example-tested | test/test_network_exfil_joint_closure.py (7 sections: component tests pass as conjunction + LZ-005 independent re-grep of Swift networking symbols + Python networking imports with size-guard + LZ-010 runtime TEST-EXFIL listener on port 38082 with JSONL record assertion + LZ-019 strict_touchid=True hard-exit on stubbed "nonzero" with control-leg breach detector on downstream IO + default opt-in semantics intact via inspect.signature + spec-level conjunction LZ-022 names LZ-005/LZ-010/LZ-019 + V-NETWORK-EXFIL anchor + prevent/detect/control framing + component entries retain local/honeypot/strict V-related framing) | LAZARUS_SPEC.md LZ-005 + LZ-010 + LZ-019 entries; face_compare.swift (LZ-005 source surface) + network_honeypot.py (LZ-010 detection surface) + face_sentinel.py auth() strict-touchid branch (LZ-019 control surface) | :tested |
 | LZ-023 | prompt-contract joint closure | Boundary | example-tested | test/test_prompt_contract_joint_closure.py (8 sections: component-tests-as-conjunction + both contract sections coexist + section-local extraction + mode-vocab unified + no cross-section permissive bleed + no producer write-directive leak + LZ-012 cross-references LZ-001/LZ-003 + LZ-023 entry names all three components) | LAZARUS_SPEC.md LZ-001 + LZ-003 + LZ-012 entries; face_sentinel.py (producer) + lazarus.md (consumer: §Shakespeare mode + §What you do NOT do) | :tested |
-| LZ-024 | face-reference lean-scaffold joint closure | Operational | manual | LAZARUS_SPEC.md LZ-024 entry (TCE pass; STRICT HIGH-band [LZ-006, LZ-014, LZ-016] at score 9.50, sd=2 tested+tested+proved; proof-scaffold-meets-implementation cluster on face-reference axis) — promotion to :tested requires reference-pool integration test asserting conformance with LZ-016 abstract properties on operational data path | LAZARUS_SPEC.md LZ-006 + LZ-014 + LZ-016 entries; face_sentinel.py prune (LZ-006/LZ-014) + src/lean4/Outliers.lean (LZ-016) | :argued |
-| LZ-025 | liveness lean-scaffold joint closure | Operational | manual | LAZARUS_SPEC.md LZ-025 entry (TCE pass; STRICT HIGH-band [LZ-007, LZ-013, LZ-017] at score 9.50, sd=2; proof-scaffold-meets-implementation cluster on liveness axis, parallel to LZ-024) — promotion to :tested requires watch-loop integration test asserting conformance with LZ-017 abstract properties on operational data path | LAZARUS_SPEC.md LZ-007 + LZ-013 + LZ-017 entries; face_sentinel.py check_once / liveness_check (LZ-007/LZ-013) + src/lean4/Liveness.lean (LZ-017) | :argued |
+| LZ-024 | face-reference lean-scaffold joint closure | Operational | lean-proved | src/lean4/FaceReferencePool.lean (3 hermetic Lean 4 theorems: filter_length_le_bound bridge lemma; outliers_preserves_bound applied to Outliers.outliers; face_reference_correctness composition theorem proving that applying the LZ-016 outliers filter to a bounded pool yields a result satisfying both LZ-016's outliers_subset AND LZ-006's bounded-pool size invariant — cannot be proved without invoking lemmas from each of the three previously-separate spec entries) — built hermetically via `lake build` (13 jobs, zero `sorry`) | src/lean4/FaceReferencePool.lean layered on src/lean4/Outliers.lean (LZ-016); face_sentinel.py prune_oldest()/MAX_REFERENCES (LZ-006) + _outliers_from_scores()/_prune_score_one() (LZ-014) | :proved |
+| LZ-025 | liveness lean-scaffold joint closure | Operational | lean-proved | src/lean4/LivenessJoint.lean (3 hermetic Lean 4 theorems: liveness_static_photo_fails forward composition — byte-identical captures yield deltaCount = 0 < threshold, justifying LZ-007's mode-flip-to-shakespeare branch; liveness_pass_implies_motion converse — threshold-passing implies the captures are not byte-identical; liveness_equivalence — full LZ-017 deltaCount_zero_iff_eq characterisation of the LZ-013 anti-spoof decision under equal-length precondition) — built hermetically via `lake build` (13 jobs, zero `sorry`) | src/lean4/LivenessJoint.lean layered on src/lean4/Liveness.lean (LZ-017); face_sentinel.py check_once() is_match branch (LZ-007) + _liveness_delta()/liveness_check()/LIVENESS_DELTA_MIN (LZ-013) | :proved |
 | LZ-026 | categorical triadic closure of lean-proved trio | Boundary | lean-proved | src/lean4/Composed.lean (4 hermetic Lean 4 theorems: zero_not_outlier + zero_notin_outliers + self_match_yields_zero_distance + composed_correctness — the last chains Liveness.deltaCount_self (LZ-017) + an inline outlier-zero lemma from Outliers.isOutlier (LZ-016) + Classify.classify_system_priority (LZ-018) into an end-to-end pipeline assertion; cannot be proved without invoking lemmas from each of the three previously-separate Lean-proved modules) — built hermetically via `lake build` (9 jobs, zero `sorry`) | src/lean4/Composed.lean layered on src/lean4/Outliers.lean (LZ-016) + src/lean4/Liveness.lean (LZ-017) + src/lean4/Classify.lean (LZ-018) | :proved |
 | LZ-027 | break-glass recovery (--recover with Touch ID + recovery-token) | Operational | example-tested | test/test_recovery.py (7 branches: Touch ID succeeds; no method available; token supplied + no saved; token mismatch; good token; whitespace-padded token; already-normal pre-state with Touch ID — plus 2 locks: default-parameter via inspect.signature + RECOVERY_TOKEN_FILE path lock against BASE_DIR / "recovery_token.txt") | face_sentinel.py recover() + _read_recovery_token() + RECOVERY_TOKEN_FILE constant + argparse `--recover` + `--token` flags + CLI dispatch | :tested |
+| LZ-028 | no-oracle-triad-backbone | Boundary | manual | LAZARUS_SPEC.md LZ-028 entry (TCE Discovery.Triadic cross-Triad pass at engine v0.2.12 commit a9ddfea surfaced [LL-002, LZ-012, PH-004] as the top-scoring triple at 26.00 across the unified 82-entry Triad corpus; first cross-deployment joint-closure entry in Lazarus; mirror entries at LavaLamp LL-046 + PharOS PH-014) — no cross-Triad integration test yet | LAZARUS_SPEC.md LZ-012 entry (this deployment's leg); LAVALAMP_SPEC.md LL-002 entry (visual-security decoupling); PHAROS_SPEC.md PH-004 entry (membrane Bool-only Lean theorem); TCE companion docs/triad_discovery_companion.md in triadic-coordination-engine repo | :argued |
 
 ## Counts
 
-- Total: 27
-- `:proved`: 4 (LZ-016 outliers + LZ-017 liveness metric +
-  LZ-018 classification dispatcher + LZ-026 composed-
-  correctness 3-cycle, all lean-proved hermetically)
+- Total: 28
+- `:proved`: 6 (LZ-016 outliers + LZ-017 liveness metric +
+  LZ-018 classification dispatcher + LZ-024 face-reference
+  scaffold + LZ-025 liveness scaffold + LZ-026 composed-
+  correctness 3-cycle — all six lean-proved hermetically
+  via `lake build` in `src/lean4/`)
 - `:tested`: 21 — LZ-001 through LZ-015 + LZ-019 + LZ-020 +
   LZ-021 + LZ-022 + LZ-023 + LZ-027
 - `:verified`: 0
 - `:benchmarked`: 0
-- `:argued`: 2 — LZ-024, LZ-025 (the two remaining TCE
-  Discovery.Triadic Lean-scaffold joint-closure entries
-  awaiting joint integration tests or cross-module Lean
-  theorems)
+- `:argued`: 1 — LZ-028 (first cross-deployment joint-
+  closure entry in Lazarus; mirror entries at LL-046 +
+  PH-014; awaits a cross-Triad integration test exercising
+  the No-Oracle Backbone conjunction across all three
+  deployments)
 - `:open`: 0
 
 ## Cross-audit A1–A6 self-check (post-v0.1.22)

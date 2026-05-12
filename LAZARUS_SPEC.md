@@ -1229,17 +1229,51 @@ triadic-coordination-engine repo.
   mentions both LZ-006 and LZ-014; LZ-006 mentions LZ-014;
   together they form a proof-scaffold-meets-implementation
   cluster. V={V-FACE-SPOOF, V-REFERENCE-DRIFT}.
-- Evidence type: manual
-- Status: :argued
-- Source: `LAZARUS_SPEC.md` LZ-006 + LZ-014 + LZ-016 entries;
-  `src/lean4/` for LZ-016's existing Lean theorems;
-  TCE companion
-- Notes: Promotion to `:tested` requires the existing
-  reference-pool integration test to assert conformance with
-  LZ-016's abstract properties explicitly on the operational
-  data path. A Lean-proved upgrade is plausible: add a
-  `compositionLemma` in `src/lean4/` linking LZ-014's spec
-  to LZ-016's abstract properties.
+- Evidence type: lean-proved
+- Status: :proved
+- Source: `src/lean4/FaceReferencePool.lean` (2 supporting
+  lemmas + 1 composition theorem) imported on top of
+  `src/lean4/Outliers.lean` (LZ-016); `face_sentinel.py`
+  `prune_oldest()` + `MAX_REFERENCES` constant (LZ-006
+  bounded-pool invariant) + `_outliers_from_scores()` +
+  `_prune_score_one()` (LZ-014 leave-one-out pruning); TCE
+  companion in triadic-coordination-engine repo
+- Test/Proof: `src/lean4/FaceReferencePool.lean` builds
+  hermetically via `cd src/lean4 && lake build` (~150ms).
+  Three theorems:
+  - `filter_length_le_bound` — bridge lemma. Any boolean
+    filter on a `List α` whose input length is bounded by
+    `N` produces an output of length ≤ `N`. The LZ-006
+    invariant flowing through a filter unchanged.
+  - `outliers_preserves_bound` — applies the bridge lemma
+    to `Outliers.outliers` (which unfolds to
+    `s.filter (isOutlier · m s)`), discharging the
+    bounded-size half of the joint claim.
+  - `face_reference_correctness` — the composition. Under
+    the LZ-006 bound `|s| ≤ N`, applying the LZ-014
+    pruning operation (LZ-016's `outliers m s`) yields a
+    result that (i) is a subset of the original pool
+    (LZ-016's `outliers_subset` discharges this), and
+    (ii) retains the bounded-pool size (bridge lemma
+    discharges this). Both conjuncts together formalise
+    that LZ-014 respects both abstract correctness and
+    LZ-006's bound, which cannot be proved without
+    invoking lemmas from each of the three previously-
+    separate spec entries.
+- Notes: **Promoted from `:argued` to `:proved` at v0.1.23
+  (2026-05-11).** The Lean composition formally encodes the
+  spec-body claim "LZ-006 caps pool size; LZ-014 maintains
+  pool quality by pruning outliers via leave-one-out
+  scoring; LZ-016 is the formal counterpart" as a compiling
+  cross-module proof. Honest framing: the theorem asserts
+  the abstract LZ-016 filter respects both invariants
+  (subset + bound). It does not formally model the LZ-014
+  leave-one-out symlink construction — that is operational
+  infrastructure outside the metric content; the LZ-014
+  algorithm's *shape* is captured by `outliers m s`. The
+  promotion path documented in earlier versions also
+  mentioned a `:tested` integration test; the `:proved`
+  upgrade chosen here is the stronger evidence tier.
 
 ### LZ-025 — liveness-lean-scaffold-joint-closure
 - Key: LZ-007 ∧ LZ-013 ∧ LZ-017 form the liveness Lean-
@@ -1258,17 +1292,54 @@ triadic-coordination-engine repo.
   LZ-013. The three together form the proof-scaffold-meets-
   implementation liveness cluster. V={V-FACE-SPOOF,
   V-LIVENESS}.
-- Evidence type: manual
-- Status: :argued
-- Source: `LAZARUS_SPEC.md` LZ-007 + LZ-013 + LZ-017 entries;
-  `src/lean4/` for LZ-017's Lean theorems; TCE companion
-- Notes: Promotion to `:tested` requires the watch-loop
-  integration test to assert conformance with LZ-017's
-  abstract liveness-metric properties on the operational
-  data path — e.g., feed the watch loop a static-photo
-  attack sequence and verify both LZ-013's liveness fail
-  triggers AND LZ-017's metric-monotonicity holds end-to-
-  end. Lean-proved upgrade path parallel to LZ-023.
+- Evidence type: lean-proved
+- Status: :proved
+- Source: `src/lean4/LivenessJoint.lean` (3 composition
+  theorems) imported on top of `src/lean4/Liveness.lean`
+  (LZ-017); `face_sentinel.py` `_liveness_delta()` +
+  `liveness_check()` + `LIVENESS_DELTA_MIN` constant
+  (LZ-013 threshold semantics) + `check_once()` is_match
+  branch (LZ-007 watch-loop state-machine routing); TCE
+  companion in triadic-coordination-engine repo
+- Test/Proof: `src/lean4/LivenessJoint.lean` builds
+  hermetically via `cd src/lean4 && lake build` (~150ms).
+  Three theorems chain LZ-017 metric properties with
+  LZ-013 threshold semantics to justify LZ-007 watch-loop
+  routing:
+  - `liveness_static_photo_fails` — the forward
+    composition. If two captures are byte-identical
+    (LZ-013 attack scenario: printed photo, phone-screen
+    replay), the LZ-017 metric returns 0, strictly below
+    any positive threshold (LZ-013's
+    `LIVENESS_DELTA_MIN > 0` modelled as
+    `1 ≤ threshold`). Routes the LZ-007 watch-loop
+    mode-flip-to-shakespeare branch correctly.
+  - `liveness_pass_implies_motion` — the converse
+    composition. If the LZ-013 threshold check passes
+    (delta ≥ 1), the two captures are NOT byte-identical
+    — some pixel-level variation occurred. Justifies
+    LZ-007's routing through the face-match step on
+    "live = true."
+  - `liveness_equivalence` — the full LZ-017
+    `deltaCount_zero_iff_eq` characterisation lifted: for
+    equal-length captures, threshold-fails-iff-static-
+    photo holds with no slack. The cleanest statement of
+    the joint claim — LZ-013 decisions are fully
+    determined by capture equality at the metric level,
+    so LZ-007 routing on them is correct under LZ-017.
+- Notes: **Promoted from `:argued` to `:proved` at v0.1.23
+  (2026-05-11).** All three theorems chain LZ-017's
+  per-module lemmas (`deltaCount_self`,
+  `deltaCount_zero_iff_eq`) with LZ-013's threshold
+  semantics into joint statements. Honest framing: the
+  theorems formalise the *metric* side of the joint
+  claim. They do not model camera I/O, the `sips` BMP
+  downsample, or the equal-length precondition's failure
+  modes (which fail open at the LZ-013 wrapper level —
+  see LZ-013 entry). The LZ-007 watch-loop routing
+  decisions are justified *given* the LZ-013 verdict;
+  the verdict-mechanism's own honest-framing notes
+  carry forward.
 
 ### LZ-026 — categorical-triadic-closure-of-lean-proved-trio
 - Key: LZ-016 ∧ LZ-017 ∧ LZ-018 form the only directional
@@ -1422,16 +1493,131 @@ intended end-state.
 
 ---
 
-## Counts (post-v0.1.22)
+## v0.1.23 (2026-05-12) — LZ-028 no-oracle-triad-backbone (cross-Triad mirror entry)
 
-- Total: 27
-- `:proved`: 4 — LZ-016 (outlier-detection algorithm),
+First cross-deployment joint-closure entry in Lazarus. The TCE
+Discovery.Triadic cross-Triad pass at v0.2.12 (triadic-
+coordination-engine commit `a9ddfea`) surfaced
+`[LL-002, LZ-012, PH-004]` as the top-scoring triple across
+the unified 82-entry Triad corpus (score 26.00). LZ-028 is
+Lazarus's leg of that joint claim, with mirror entries at
+**LavaLamp LL-046** and **PharOS PH-014**. The three entries
+collectively establish the cross-deployment citation graph
+that was previously zero-edges from Lazarus.
+
+### LZ-028 — no-oracle-triad-backbone
+- Key: LZ-012 is one leg of the cross-Triad No-Oracle
+  Backbone — three deployments each enforce Bool-only /
+  no-distance / no-leak at their own surface
+- Logic tier: Boundary
+- Description: The TCE Discovery.Triadic cross-Triad pass at
+  v0.2.12 (triadic-coordination-engine commit `a9ddfea`)
+  surfaced `[LL-002, LZ-012, PH-004]` as the top-scoring
+  triple across the unified 82-entry Triad corpus, at
+  score 26.00. Three deployments, three layers, one
+  structural claim: **the Triad does not leak distance
+  information at any of its three layers.**
+
+  - **LavaLamp's leg (LL-002):** visual-security decoupling
+    — the user-facing UI receives no distance-to-threshold
+    information. `:tested` since LavaLamp v0.0.33 via
+    static lint on the visual layer.
+  - **Lazarus's leg (LZ-012, this deployment):** companion-
+    read-only-discipline — the `/lazarus` LLM companion
+    never WRITES, only READS and REPORTS. The LLM surface
+    returns bounded information. `:tested` via the six-
+    prohibition + counter-positive permissive-language
+    scan on `lazarus.md`. This is Lazarus's contribution
+    to the joint backbone: even when the LLM is reasoning
+    about a security event, its surface returns OBSERVE /
+    FLAG / WATCH — never substantive actions, never
+    distance-to-some-threshold answers, never anything
+    that could be interpreted as a distance oracle for
+    an adversary's queries.
+  - **PharOS's leg (PH-004):** LL-017-membrane-preservation
+    — the platform-native auth result is Bool-only,
+    formally proved at the Lean level via PharOS's
+    `src/lean4/Membrane.lean` at PharOS v0.0.12. The
+    membrane's output type has exactly two constructors
+    (allow / deny) and the membrane function takes
+    exactly one DaemonResult argument — no timing input,
+    no distance input, no residue input.
+
+  This entry records Lazarus's contribution to the joint
+  backbone. The joint claim is the conjunction — the Triad
+  is no-oracle at the visual layer (LavaLamp), at the LLM
+  layer (Lazarus, via this entry), and at the OS-membrane
+  layer (PharOS) simultaneously. Per the conjunctive-claim
+  discipline, this joint claim is NOT discharged by each
+  component's individual evidence; it needs a cross-Triad
+  integration test that exercises all three Bool-only
+  properties simultaneously.
+
+  Cross-deployment references (first cross-deployment
+  citations in any LZ-NNN entry):
+  - **LavaLamp LL-002** (visual-security decoupling).
+  - **PharOS PH-004** (membrane Bool-only Lean theorem).
+  - **Lazarus LZ-012** (companion-read-only-discipline,
+    this deployment's leg).
+
+  Mirror entries exist in the other two specs:
+  **LavaLamp LL-046** and **PharOS PH-014** — each
+  records the same joint claim from its own deployment's
+  perspective.
+
+- Evidence type: manual (TCE Discovery.Triadic pass +
+  cross-deployment structural argument; no joint
+  integration test yet)
+- Status: :argued
+- Source: TCE companion `docs/triad_discovery_companion.md`
+  in the triadic-coordination-engine repo (commit a9ddfea);
+  LAZARUS_SPEC.md LZ-012 entry; LAVALAMP_SPEC.md LL-002
+  entry; PHAROS_SPEC.md PH-004 entry.
+- Notes: **First cross-deployment joint-closure entry in
+  Lazarus.** Established at v0.1.23 (2026-05-12) as part of
+  the TCE-driven semantic-structure lift — converting the
+  cross-Triad V-tag overlap surfaced by the engine into
+  formal spec-level citations. The TCE pass empirically
+  documented that Lazarus has 122 V-tag edges to the other
+  two deployments (83 LavaLamp + 39 PharOS) but zero spec-
+  entry mention edges. LZ-028 + LL-046 + PH-014 collectively
+  add 6 new cross-deployment mention edges (each entry
+  mentions the other two), closing part of the gap.
+
+  Per conjunctive-claim discipline, the joint claim is
+  `:argued` initially. Promotion path to `:tested`
+  requires a cross-Triad integration test that exercises
+  all three Bool-only properties simultaneously — a new
+  test-discipline category for Lazarus (cross-deployment
+  integration tests).
+
+  Promotion path to `:proved` would require a shared
+  Lean build (e.g., a future `triad-lean/` umbrella
+  package) where `Lazarus.Composed.composed_correctness`
+  (already :proved at v0.1.21) can be linked with
+  `PharOS.Membrane.membrane_no_oracle` (already :proved
+  at PharOS v0.0.12) and a LavaLamp-side LL-002
+  formalisation (currently `:tested` via static lint,
+  not Lean-proved). Out of scope for LZ-028 itself;
+  promotion path documented honestly.
+
+---
+
+## Counts (post-v0.1.23)
+
+- Total: 28
+- `:proved`: 6 — LZ-016 (outlier-detection algorithm),
   LZ-017 (liveness metric properties), LZ-018 (priority
   dispatcher correctness), LZ-026 (composed_correctness
-  Lean theorem chaining the three Lean-proved modules
-  into a single end-to-end pipeline assertion; the FIRST
-  `:proved`-status spec entry derived from a TCE
-  Discovery.Triadic finding across the entire Triad).
+  3-cycle pipeline; FIRST `:proved` entry derived from a
+  TCE Discovery.Triadic finding across the entire Triad),
+  LZ-024 (face_reference_correctness via
+  FaceReferencePool.lean — outliers filter preserves both
+  abstract subset and bounded-pool size invariants),
+  LZ-025 (liveness_static_photo_fails +
+  liveness_pass_implies_motion + liveness_equivalence via
+  LivenessJoint.lean — full LZ-017-grounded
+  characterisation of the LZ-013 anti-spoof primitive).
   All lean-proved hermetically in `src/lean4/`.
 - `:tested`: 21 — LZ-001..LZ-015 + LZ-019 + LZ-020 + LZ-021
   + LZ-022 + LZ-023 + LZ-027. LZ-022 promoted at v0.1.22
@@ -1439,16 +1625,18 @@ intended end-state.
   integration test, after LZ-023 at v0.1.21).
 - `:verified`: 0
 - `:benchmarked`: 0
-- `:argued`: 2 — LZ-024, LZ-025 (the two remaining TCE
-  Discovery.Triadic joint-closure entries — both are
-  proof-scaffold-meets-implementation Lean-scaffold
-  clusters parallel to LZ-026's promoted form; LZ-026
-  promoted to `:proved` at v0.1.21 via Composed.lean).
-  Per conjunctive-claim discipline, sub-claim evidence
-  (each component's individual `:tested`/`:proved` status)
-  does not promote the joint claim; promotion to `:tested`
-  requires a joint integration test, and promotion to
-  `:proved` requires a new cross-module Lean theorem.
+- `:argued`: 1 — LZ-028 (no-oracle-triad-backbone, the
+  first cross-deployment joint-closure entry in Lazarus
+  with mirror entries at LL-046 + PH-014; added at
+  v0.1.23). All five TCE Discovery.Triadic intra-deployment
+  joint-closure entries (LZ-022..LZ-026) are now promoted
+  — three to `:tested` via integration tests
+  (LZ-022/LZ-023) and three to `:proved` via cross-module
+  Lean theorems (LZ-024/LZ-025/LZ-026). Per conjunctive-
+  claim discipline, sub-claim evidence does not promote
+  the joint claim; promotion to `:tested` requires a
+  joint integration test, and promotion to `:proved`
+  requires a new cross-module Lean theorem.
 - `:open`: 0
 
 Promotion queue (highest-leverage, ordered by ease):

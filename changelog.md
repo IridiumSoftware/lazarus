@@ -1,5 +1,98 @@
 # Changelog — Lazarus
 
+## v0.1.23 — 2026-05-12 — LZ-024 + LZ-025 :proved + LZ-028 no-oracle-triad-backbone (cross-Triad lift)
+
+Three pieces of work in this release. Parts 1 + 2 complete the
+intra-deployment TCE Discovery.Triadic joint-closure promotion
+arc started at v0.1.20 (all five LZ-022..LZ-026 now promoted).
+Part 3 begins lifting the cross-Triad semantic structure the
+TCE pass at v0.2.12 surfaced as zero-formal-citation but
+high-V-tag-overlap.
+
+### Part 1 — LZ-024 → `:proved` via FaceReferencePool.lean
+
+New `src/lean4/FaceReferencePool.lean` (3 theorems):
+- `filter_length_le_bound` — generic list-filter bound.
+- `outliers_preserves_bound` — `outliers m s` preserves
+  LZ-006's bounded-pool size invariant.
+- `face_reference_correctness` — joint claim: the outliers
+  filter (LZ-016) applied to LZ-014's pruning workflow
+  simultaneously preserves the LZ-016 subset property AND
+  the LZ-006 bounded-pool size invariant.
+
+### Part 2 — LZ-025 → `:proved` via LivenessJoint.lean
+
+New `src/lean4/LivenessJoint.lean` (3 theorems):
+- `liveness_static_photo_fails` — metric returns 0 on
+  identical frames (static-photo attack scenario).
+- `liveness_pass_implies_motion` — non-zero metric implies
+  frames differ.
+- `liveness_equivalence` — full forward + converse.
+
+After parts 1 + 2, all five TCE Discovery.Triadic intra-
+deployment joint-closure entries are promoted:
+- LZ-022 `:tested` (v0.1.22).
+- LZ-023 `:tested` (v0.1.21).
+- LZ-024 `:proved` (this release).
+- LZ-025 `:proved` (this release).
+- LZ-026 `:proved` (v0.1.21).
+
+### Part 3 — LZ-028 no-oracle-triad-backbone (cross-Triad mirror entry, `:argued`)
+
+First cross-deployment joint-closure entry in Lazarus's spec.
+The TCE cross-Triad pass at v0.2.12 (triadic-coordination-
+engine commit `a9ddfea`) surfaced `[LL-002, LZ-012, PH-004]`
+as the top-scoring triple across the unified 82-entry Triad
+corpus, at score 26.00 — the **No-Oracle Backbone of the
+Triad**. Three deployments, three layers, one claim: the
+Triad does not leak distance information at any of its
+three layers.
+
+- LavaLamp's leg: LL-002 visual-security decoupling.
+- Lazarus's leg: LZ-012 companion-read-only-discipline.
+- PharOS's leg: PH-004 LL-017-membrane-preservation
+  (Lean-proved at PharOS v0.0.12).
+
+LZ-028 records Lazarus's leg with explicit cross-deployment
+citations to LL-002 and PH-004. Mirror entries exist in the
+other two specs: **LavaLamp LL-046** and **PharOS PH-014**
+(both `:argued`).
+
+The TCE pass empirically documented that Lazarus had 122
+V-tag edges to the other two deployments but **zero spec-
+entry mention edges**. The three mirror entries
+LZ-028 + LL-046 + PH-014 collectively add 6 new cross-
+deployment mention edges, lifting semantic overlap into
+formal citation structure.
+
+Per conjunctive-claim discipline, LZ-028 is `:argued`
+initially. Promotion to `:tested` requires a cross-Triad
+integration test exercising all three Bool-only properties
+simultaneously (new test-discipline category for Lazarus).
+Promotion to `:proved` requires a shared Lean build across
+the three deployments — a future `triad-lean/` umbrella
+package, out of scope for v0.1.23.
+
+### Counts
+
+- After v0.1.22: 27 / 4 / 21 / 0 / 0 / 2 / 0
+- After v0.1.23: **28 / 6 / 21 / 0 / 0 / 1 / 0**
+  (`:proved` +2 LZ-024+LZ-025; Total +1 LZ-028;
+  `:argued` net −1)
+
+### Files
+
+- `src/lean4/FaceReferencePool.lean` (new, 3 theorems).
+- `src/lean4/LivenessJoint.lean` (new, 3 theorems).
+- `src/lean4/lakefile.lean` (5th + 6th `@[default_target]`).
+- `LAZARUS_SPEC.md` (LZ-024/LZ-025 promotions + LZ-028 new
+  entry + Counts).
+- `artifact_registry.md` (rows for LZ-024/LZ-025/LZ-028).
+- `dashboard.md` (last-updated stamp).
+- `changelog.md` (this entry).
+
+---
+
 ## v0.1.22 — 2026-05-11 — LZ-022 network-exfiltration joint closure → `:tested`
 
 Third TCE Discovery.Triadic joint-closure promotion in three

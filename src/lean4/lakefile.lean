@@ -40,3 +40,23 @@ lean_lib «Classify» where
 @[default_target]
 lean_lib «Composed» where
   srcDir := "."
+
+-- LZ-024 face-reference Lean-scaffold joint closure
+-- (LZ-006 ∧ LZ-014 ∧ LZ-016) — promotes :argued → :proved by
+-- formalising that the LZ-016 abstract outlier filter preserves
+-- both the LZ-016 subset property and the LZ-006 bounded-pool
+-- size invariant when applied to LZ-014's pruning workflow.
+-- Depends on Outliers.
+@[default_target]
+lean_lib «FaceReferencePool» where
+  srcDir := "."
+
+-- LZ-025 liveness Lean-scaffold joint closure
+-- (LZ-007 ∧ LZ-013 ∧ LZ-017) — promotes :argued → :proved by
+-- formalising that the LZ-017 metric's static-photo defense
+-- (forward + converse + full equivalence) correctly determines
+-- the LZ-007 watch-loop's mode-flip branch under LZ-013's
+-- threshold semantics. Depends on Liveness.
+@[default_target]
+lean_lib «LivenessJoint» where
+  srcDir := "."

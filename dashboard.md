@@ -1,24 +1,26 @@
 # Dashboard — Lazarus
 
-Last updated: 2026-05-11 (post-v0.1.22 — **LZ-022 network-exfiltration-joint-closure → `:tested`** via `test/test_network_exfil_joint_closure.py`. Second TCE-surfaced joint-closure to land an integration test (after LZ-023 at v0.1.21). The 7-section end-to-end harness exercises the V-NETWORK-EXFIL defense triangle [LZ-005 source-level prevention ∧ LZ-010 runtime detection ∧ LZ-019 runtime control] in a single Python process: independent grep of `face_compare.swift` + `face_sentinel.py` for networking symbols + size-guard; TEST-EXFIL honeypot listener on port 38082 receiving a simulated POST /upload exfil payload + JSONL log record assertion; `auth(strict_touchid=True)` driven with stubbed `_touchid_check → "nonzero"`, hard-exit verified, downstream IO stubbed as control-leg breach detectors. Two `:argued` joint-closure entries remain (LZ-024 face-reference Lean scaffold, LZ-025 liveness Lean scaffold). Counts shift: 27/4/20/0/0/3/0 → **27/4/21/0/0/2/0**.).
+Last updated: 2026-05-12 (post-v0.1.23 — **LZ-024 + LZ-025 → `:proved` + LZ-028 no-oracle-triad-backbone (`:argued`).** (1) LZ-024 face-reference-lean-scaffold-joint-closure promoted to `:proved` via new `src/lean4/FaceReferencePool.lean` (3 theorems including `face_reference_correctness`). (2) LZ-025 liveness-lean-scaffold-joint-closure promoted to `:proved` via new `src/lean4/LivenessJoint.lean` (3 theorems including `liveness_equivalence`). All five TCE Discovery.Triadic intra-deployment joint-closure entries (LZ-022..LZ-026) now promoted: three `:tested` + three `:proved`. The Lazarus per-deployment TCE pass arc closes at v0.1.23. (3) LZ-028 no-oracle-triad-backbone — first cross-deployment joint-closure entry in Lazarus. TCE cross-Triad pass at v0.2.12 (TCE commit `a9ddfea`) surfaced `[LL-002, LZ-012, PH-004]` as the top triple at score 26.00. LZ-028 records Lazarus's leg with explicit citations to LavaLamp LL-002 + PharOS PH-004; mirror entries at LavaLamp LL-046 + PharOS PH-014. Begins lifting cross-Triad semantic structure (122 V-tag edges to other deployments, 0 mention edges pre-v0.1.23) into formal citations (6 new mention edges across the three mirror entries). Counts shift: 27/4/21/0/0/2/0 → **28/6/21/0/0/1/0**.).
 
 ## Status summary
 
-- Spec: 27 LZ-NNN entries in `LAZARUS_SPEC.md`.
-- Counts: **27 / 4 / 21 / 0 / 0 / 2 / 0** (total / proved /
+- Spec: 28 LZ-NNN entries in `LAZARUS_SPEC.md`.
+- Counts: **28 / 6 / 21 / 0 / 0 / 1 / 0** (total / proved /
   tested / verified / benchmarked / argued / open).
-  Four `:proved` entries (LZ-016 outliers, LZ-017 liveness
-  metric, LZ-018 classification dispatcher, LZ-026
-  composed-correctness 3-cycle) via hermetic Lean4 proofs.
-  Two remaining `:argued` joint-closure entries (LZ-024
-  face-reference Lean scaffold, LZ-025 liveness Lean
-  scaffold) from the TCE Discovery.Triadic pass — both are
-  proof-scaffold-meets-implementation clusters parallel to
-  LZ-026's promoted form. LZ-022 (network-exfil triple)
-  promoted at v0.1.22 and LZ-023 (prompt-contract triple)
-  promoted at v0.1.21 — the two highest-score TCE triples
-  are both `:tested` via integration tests. LZ-027
-  break-glass recovery at `:tested`. `:open` at zero.
+  Six `:proved` entries (LZ-016 outliers, LZ-017 liveness
+  metric, LZ-018 classification dispatcher, LZ-024 face-
+  reference-lean-scaffold via `FaceReferencePool.lean`,
+  LZ-025 liveness-lean-scaffold via `LivenessJoint.lean`,
+  LZ-026 composed-correctness 3-cycle via `Composed.lean`)
+  all via hermetic Lean4 proofs. The full Lazarus per-
+  deployment TCE pass arc is closed at v0.1.23 — all five
+  TCE Discovery.Triadic intra-deployment joint-closure
+  entries (LZ-022..LZ-026) are now promoted (3 :tested +
+  3 :proved). One `:argued` joint-closure entry remains:
+  LZ-028 no-oracle-triad-backbone (first cross-deployment
+  joint-closure in Lazarus's spec; mirror entries at
+  LavaLamp LL-046 + PharOS PH-014). LZ-027 break-glass
+  recovery at `:tested`. `:open` at zero.
 - Tests: full suite passes locally and on `macos-latest`
   via CI on every push.
   - `test/test_visual_skin_decoupling.py` (LZ-001)
@@ -58,19 +60,15 @@ Reordered 2026-05-11 after Brian Crabtree's external Triad
 review surfaced break-glass / lockout-risk as the
 highest-impact gap in the current shipping surface.
 
-1. **Remaining TCE joint-closure promotions** — two
-   `:argued` entries from the TCE Discovery.Triadic pass
-   still need joint integration tests (LZ-022 promoted at
-   v0.1.22, LZ-023 at v0.1.21, LZ-026 at v0.1.21):
-   - **LZ-024 face-reference Lean scaffold** — reference-pool
-     integration test asserting LZ-016 outlier properties on
-     the operational pruning path (potential `:proved`
-     promotion path parallel to LZ-026 if a
-     `face_reference_correctness` theorem fits cleanly).
-   - **LZ-025 liveness Lean scaffold** — watch-loop
-     integration test asserting LZ-017 metric properties on
-     the operational data path (same potential `:proved`
-     promotion shape).
+1. **Cross-Triad mirror entries** — LZ-028
+   no-oracle-triad-backbone is the first cross-deployment
+   `:argued` entry. Promotion to `:tested` requires a
+   cross-Triad integration test exercising the
+   `[LL-002, LZ-012, PH-004]` triple jointly (likely lives
+   in TCE engine repo, not Lazarus — the test surface
+   spans three deployments). The intra-deployment TCE
+   joint-closure arc is now closed: LZ-022..LZ-026 all
+   promoted (three `:tested` + three `:proved`).
 
 2. **Lean expansion** on the existing `:tested` entries.
    Now that the cross-module `composed_correctness`
