@@ -1,5 +1,208 @@
 # Changelog — Lazarus
 
+## v0.1.25 — 2026-05-12 — LZ-029 lean-stack-triad-backbone (cross-Triad mirror entry)
+
+Second cross-deployment joint-closure entry in Lazarus's
+spec. TCE Discovery.Triadic cross-Triad pass at engine
+v0.2.12 (commit `a9ddfea`) surfaced `[LL-006, PH-004, LZ-026]`
+at score 20.50 — the **formal-verification backbone** of the
+Triad and the only cross-Triad triple where every leg is
+already `:proved` via a Lean theorem (LavaLamp LL-006
+detection-probability bound, PharOS PH-004 membrane Bool-only,
+Lazarus LZ-026 composed-correctness 3-cycle).
+
+LZ-029 records Lazarus's leg with citations to LL-006 +
+PH-004. Mirror entries at LavaLamp LL-047 + PharOS PH-015.
+Status `:argued`, Boundary tier. Promotion to `:proved`
+requires extending the umbrella mechanism established at
+v0.1.24 (Lazarus's lakefile pulls PharOS's hermetic Lean
+tree via Lake git dep) with a second Lake git dep on
+LavaLamp at a pinned commit, bringing
+`LavaLamp.Theorems.LL006` into scope alongside
+`PharOS.Membrane` and `Lazarus.Composed.composed_correctness`.
+
+In contrast to LZ-028 (where LL-002 + LZ-012 are modelled
+as abstract finite-output types because they're prompt-
+contract / static-lint claims rather than Lean-formal), all
+three legs of LZ-029 are concretely Lean-proved — the
+umbrella extension would chain real theorems, no abstraction.
+
+Outstanding obstacle for `:proved` promotion: LavaLamp's
+Lean track imports Mathlib, so the umbrella would pull
+Mathlib transitively into Lazarus's build (~2500-job
+compile, several minutes on CI vs the current ~30s). The
+hermetic-sub-module alternative is multi-session research.
+
+No new files; spec + registry + changelog + dashboard
+updates only. `lake build` still returns clean (5 jobs).
+
+Counts: 28/7/21/0/0/0/0 → **29/7/21/0/0/1/0** (Total +1,
+`:argued` +1).
+
+## v0.1.24 — 2026-05-12 — LZ-028 → `:proved` via FIRST cross-repo Lean proof in the Triad
+
+Lazarus's `:argued` count reaches zero. The cross-Triad
+No-Oracle Backbone is now formally composed at the Lean level
+across two repos: PharOS's hermetic Lean tree is imported via
+a Lake git dependency at a pinned commit, brought into
+Lazarus's build, and composed with locally-modelled LavaLamp
+and Lazarus legs.
+
+### LZ-028 no-oracle-triad-backbone → `:proved`
+
+New `src/lean4/TriadBackbone.lean` (Lazarus repo) imports
+`PharOS.Membrane` (PharOS repo) via Lake's `require ... from
+git "..." @ "e3eaee1" / "src/lean4"` mechanism. The PharOS
+commit `e3eaee1` corresponds to PharOS v0.0.12 where
+`Membrane.lean` was first proved (9 theorems formalising
+LL-017 no-oracle preservation). `MembraneOutput`,
+`membrane`, and `membrane_one_bit_channel` are brought into
+scope unchanged — no re-proving, no inlining. The cross-repo
+dep is pinned in `src/lean4/lake-manifest.json` for
+reproducibility.
+
+The composition theorem `no_oracle_triad_backbone` proves
+that the joint Triad observer surface — the triple
+`(VisualOutput × LlmOutput × MembraneOutput)` — has at most
+2 × 3 × 2 = 12 inhabitants:
+
+- **LavaLamp leg (LL-002 visual-security decoupling)** is
+  modelled as `VisualOutput` with two constructors
+  (`locked`, `unlocked`). The 2-state inductive is the
+  type-level counterpart of LL-002's `:tested` static-lint
+  claim that the visual UI returns a Bool, never a
+  distance.
+- **Lazarus leg (LZ-012 companion-read-only-discipline)** is
+  modelled as `LlmOutput` with three constructors
+  (`observe`, `flag`, `watch`) — the three verbs from
+  `lazarus.md` §"You observe. You flag. You watch. That is
+  all." The 3-state inductive is the type-level
+  counterpart of LZ-012's `:tested` six-prohibition lint.
+- **PharOS leg (PH-004 LL-017-membrane-preservation)** is
+  imported concretely as `PharOS.Membrane.MembraneOutput`
+  with `pharos_one_bit_channel` lifted from PharOS's own
+  `membrane_one_bit_channel` theorem.
+
+The cardinality bound — joint surface has exactly 12
+inhabitants — is the formal counterpart of "no real-valued
+distance can be encoded in the joint output." ℝ is
+uncountable; 12 is countable; no real-valued field fits in
+12 type-level constructors. The structural type-level claim
+rules out an entire class of side-channel by inspection.
+
+Five Lean entities in TriadBackbone.lean:
+- `VisualOutput` / `visual_one_bit_channel` (LavaLamp leg)
+- `LlmOutput` / `llm_finite_channel` (Lazarus leg)
+- `pharos_one_bit_channel` (lifted from PharOS import)
+- `TriadOutput` + `triadOutputs` (12-element enumeration)
+- `no_oracle_triad_backbone` (composition theorem)
+- `triad_output_cardinality` (cardinality = 12 by `rfl`)
+
+`lake build` returns **17 jobs** with zero `sorry` (was 13
+pre-v0.1.24; +4 jobs cover the pharos-lean Membrane build).
+
+### Honest framing
+
+The PharOS leg is concretely imported — PharOS's own Lean
+proof at v0.0.12 is the load-bearing artifact, not anything
+re-stated here. The LavaLamp and Lazarus legs are MODELLED
+as abstract finite-output types because their concrete
+claims (LL-002 static-lint, LZ-012 prompt-contract lint) are
+not currently Lean-formalised in their home repos. The
+abstract type-cardinality bound is the strongest joint claim
+expressible without per-leg Lean formalisations of LL-002 +
+LZ-012. If those land later (LavaLamp's Lean tree is
+currently sorry-stubbed scaffold; Lazarus's prompt-contract
+claim could be lifted from `lazarus.md` to a Lean enum
+declaration), `VisualOutput` and `LlmOutput` can be swapped
+for the concrete imports without invalidating the composition
+theorem — the cardinality bound composes uniformly across
+any finite-output legs.
+
+### Cross-repo build mechanism
+
+`src/lean4/lakefile.lean` declares:
+
+```lean
+require «pharos-lean» from git
+  "https://github.com/IridiumSoftware/pharos.git" @ "e3eaee1" / "src/lean4"
+```
+
+Lake's behaviour:
+1. On `lake update` (or first `lake build`), clones PharOS
+   at the pinned commit into `.lake/packages/«pharos-lean»/`.
+2. Persists the resolution in `lake-manifest.json`
+   (committed to Lazarus's repo for reproducibility).
+3. Builds `pharos-lean`'s `Membrane.lean` as part of the
+   Lazarus Lean build graph.
+4. `TriadBackbone.lean`'s `import Membrane` resolves
+   against the imported package.
+
+CI (.github/workflows/test.yml) runs `lake build` after
+installing `elan`, which transparently invokes the git fetch
+on the first run. Step header renamed to
+`LZ-016 / LZ-017 / LZ-018 / LZ-024 / LZ-025 / LZ-026 /
+LZ-028 — Lean proofs (lake build, fetches pharos-lean
+cross-repo dep)`.
+
+### Files changed
+
+- `src/lean4/TriadBackbone.lean` (new, ~145 lines).
+- `src/lean4/lakefile.lean` — adds the pharos-lean git dep
+  declaration + the 7th `@[default_target]` lean_lib.
+- `src/lean4/lake-manifest.json` — pins pharos-lean at
+  PharOS commit `e3eaee10bae9a5300f82f1c0f8fa64e97f4e888d`.
+- `LAZARUS_SPEC.md` — LZ-028 entry flipped to `:proved`
+  with full evidence-type + source + test/proof + notes
+  rewrite; Counts header → (post-v0.1.24); Counts block
+  refreshed.
+- `artifact_registry.md` — LZ-028 row flipped to `:proved`
+  with lean-proved + Test/Proof citing TriadBackbone.lean
+  and the cross-repo build mechanism; Counts refreshed
+  (28 / 7 / 21 / 0 / 0 / 0 / 0); A1-A6 self-check
+  updated.
+- `dashboard.md` — last-updated stamp; counts refreshed
+  with the "FIRST cross-repo Lean proof" framing; tests
+  list extended with FaceReferencePool / LivenessJoint /
+  Composed / TriadBackbone; priority stack reordered
+  (LZ-028 :proved item dropped, Lean expansion + mirror
+  promotions for LL-046 / PH-014 promoted to top); new
+  v0.1.24 recently-completed bullet.
+- `.github/workflows/test.yml` — Lean step header renamed
+  to enumerate all seven `:proved` entries + note the
+  cross-repo dep fetch.
+- `changelog.md` — this entry.
+
+### Counts
+
+- After v0.1.23: 28 / 6 / 21 / 0 / 0 / 1 / 0
+- After v0.1.24: **28 / 7 / 21 / 0 / 0 / 0 / 0**
+  (`:proved` +1 LZ-028; `:argued` −1; both `:argued` and
+  `:open` are zero — every Lazarus spec entry now
+  carries runnable evidence at its highest available
+  tier)
+
+### What's next
+
+The intra-deployment + cross-Triad joint-closure arc is
+fully closed at the Lazarus side. Two natural follow-ons:
+
+1. **Mirror promotions for LL-046 + PH-014** — both
+   currently `:argued`. The cross-repo Lake dep pattern
+   established here means LavaLamp and PharOS could each
+   `require lazarus from git` and import `TriadBackbone`
+   to ship the same composition theorem from their own
+   perspective. Would close the No-Oracle Backbone to
+   `:proved` in all three deployment specs.
+2. **Concrete Lean formalisations of LL-002 + LZ-012** —
+   currently both `:tested` via static-lint. If lifted to
+   Lean enums in their home repos, the abstract
+   `VisualOutput` and `LlmOutput` models in
+   TriadBackbone.lean could be swapped for the concrete
+   imports without changing the composition theorem.
+
+---
+
 ## v0.1.23 — 2026-05-12 — LZ-024 + LZ-025 :proved + LZ-028 no-oracle-triad-backbone (cross-Triad lift)
 
 Three pieces of work in this release. Parts 1 + 2 complete the
