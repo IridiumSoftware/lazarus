@@ -1,5 +1,54 @@
 # Changelog — Lazarus
 
+## v0.1.28 — 2026-05-12 — LZ-031 decoupling-triad-backbone (cross-Triad mirror entry)
+
+Fourth cross-deployment joint-closure entry in Lazarus's
+spec. TCE Discovery.Triadic cross-Triad pass at engine
+v0.2.12 (commit `a9ddfea`) surfaced `[LL-002, LZ-001, PH-004]`
+at score 23.00 — the **Decoupling axis** of the Triad.
+Three V-DECOUPLING flavors at three deployments: LavaLamp
+visual / security-primitive separation (LL-002) + Lazarus
+visual-skin / security-state producer-consumer split
+(LZ-001) + PharOS membrane Bool-only output type (PH-004).
+
+LZ-031 records Lazarus's leg with citations to LL-002 +
+PH-004. Mirror entries at LavaLamp LL-050 + PharOS PH-018.
+Status `:argued`, Boundary tier.
+
+**Structurally distinct from LZ-028 (No-Oracle Backbone)**
+despite both rides through LL-002 + PH-004. The shared
+legs serve dual invariants — LL-002 is both "no distance
+leak" AND "presentation swappable"; PH-004 is both
+"Bool-only output cardinality" AND "no presentation info
+returned." The distinguishing Lazarus leg is LZ-001
+(visual-skin decoupling, this entry) vs LZ-012 (companion-
+read-only, LZ-028's entry). The TCE pass surfaces both as
+separate triples at 23.00 and 26.00 respectively.
+
+**Two promotion paths available:**
+1. **Operational test path** — cross-Triad integration test
+   exercising visual-layer-refactor / skin-swap /
+   membrane-Bool-only invariance across three deployments.
+   Promotes LZ-031 / LL-050 / PH-018 to `:tested`.
+2. **Lean composition path** — a parallel `DecouplingBackbone.lean`
+   reusing the v0.1.26 Lake git deps on `lavalamp-hermetic` +
+   `pharos-lean`, plus a new local `VisualSkinDecoupling.lean`
+   modelling LZ-001's producer/consumer split. **No new
+   Mathlib dep required** (all three legs hermetic at the
+   Lean level once `lavalamp-hermetic` is in scope), so
+   lower incremental cost than LZ-029's Lean path. Promotes
+   LZ-031 / LL-050 / PH-018 to `:proved` directly.
+
+Path 2 is the lower-cost / higher-honesty option per
+established Lean discipline. Either path is acceptable.
+
+No new files; spec + registry + changelog + dashboard
+updates only. `lake build` unchanged at 21 jobs zero
+`sorry`.
+
+Counts: 30/7/21/0/0/2/0 → **31/7/21/0/0/3/0** (Total +1,
+`:argued` +1).
+
 ## v0.1.27 — 2026-05-12 — LZ-030 defense-in-depth-triad-backbone (cross-Triad mirror entry)
 
 Third cross-deployment joint-closure entry in Lazarus's

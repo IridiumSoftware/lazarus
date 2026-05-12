@@ -77,10 +77,11 @@ contain every Test/Proof and Source path listed.
 | LZ-028 | no-oracle-triad-backbone | Boundary | lean-proved | src/lean4/TriadBackbone.lean — cross-repo Lean composition. As of v0.1.26, ALL THREE legs are concretely imported (was: only PharOS pre-v0.1.26). LavaLamp leg: `import LL002Visual` from `lavalamp-hermetic` Lake git dep at LavaLamp commit `1a2534f`. Lazarus leg: `import CompanionDiscipline` from sibling module in this repo (concrete LZ-012 formalisation). PharOS leg: `import Membrane` from `pharos-lean` Lake git dep at PharOS commit `e3eaee1` (unchanged from v0.1.24). Composition theorem `no_oracle_triad_backbone` proves every joint Triad output is in the 12-element finite list (cardinality 2 × 3 × 2 — formal counterpart of "no real-valued distance can be encoded in the joint output"). `lake build` returns 21 jobs (was 17 pre-v0.1.26) with zero `sorry`. | src/lean4/TriadBackbone.lean (Lazarus repo) + lavalamp-hermetic/LL002Visual.lean (LavaLamp repo, fetched via Lake git dep pinning commit `1a2534f`) + pharos-lean/Membrane.lean (PharOS repo, fetched via Lake git dep pinning commit `e3eaee1`); LAZARUS_SPEC.md LZ-012 + LAVALAMP_SPEC.md LL-002 + PHAROS_SPEC.md PH-004 entries; TCE companion docs/triad_discovery_companion.md (triadic-coordination-engine commit a9ddfea) | :proved |
 | LZ-029 | lean-stack-triad-backbone | Boundary | manual | LAZARUS_SPEC.md LZ-029 entry (TCE Discovery.Triadic cross-Triad pass at engine v0.2.12 commit `a9ddfea` surfaced [LL-006, PH-004, LZ-026] at score 20.50 — the only cross-Triad triple where every leg is already Lean-proved; second cross-deployment joint-closure entry in Lazarus; mirror entries at LavaLamp LL-047 + PharOS PH-015) — no joint Lean composition yet; umbrella mechanism is the LZ-028 cross-repo Lake-dep pattern extended with a second git dep on LavaLamp at a pinned commit | LAZARUS_SPEC.md LZ-026 entry (this deployment's leg — composed-correctness 3-cycle via src/lean4/Composed.lean); LAVALAMP_SPEC.md LL-006 entry (detection-probability bound via src/lean4/LavaLamp/Theorems.lean); PHAROS_SPEC.md PH-004 entry (membrane Bool-only via src/lean4/Membrane.lean); TCE companion docs/triad_discovery_companion.md | :argued |
 | LZ-030 | defense-in-depth-triad-backbone | Operational | manual | LAZARUS_SPEC.md LZ-030 entry (TCE Discovery.Triadic cross-Triad pass at engine v0.2.12 commit `a9ddfea` surfaced [LL-030, PH-005, LZ-022] at score 20.00 — three V-DEFENSE-IN-DEPTH layers across substrate + OS-membrane + runtime; third cross-deployment joint-closure entry in Lazarus; mirror entries at LavaLamp LL-049 + PharOS PH-017) — no joint cross-Triad integration test yet; PH-005 is the bottleneck leg `:argued` while LL-030 + LZ-022 are `:tested`, and the same cross-Triad integration test that promotes LZ-030 / LL-049 / PH-017 also promotes PH-005 to `:tested` as a side effect | LAZARUS_SPEC.md LZ-022 entry (this deployment's leg — network-exfiltration-joint-closure prevent+detect+control triangle via test/test_network_exfil_joint_closure.py); LAVALAMP_SPEC.md LL-030 entry (sensor-defense-joint-closure substrate-tier); PHAROS_SPEC.md PH-005 entry (defense-in-depth-with-LavaLamp OS-membrane-tier); TCE companion docs/triad_discovery_companion.md | :argued |
+| LZ-031 | decoupling-triad-backbone | Boundary | manual | LAZARUS_SPEC.md LZ-031 entry (TCE Discovery.Triadic cross-Triad pass at engine v0.2.12 commit `a9ddfea` surfaced [LL-002, LZ-001, PH-004] at score 23.00 — the Decoupling axis: three V-DECOUPLING flavors across substrate (LavaLamp visual/security separation) + runtime (Lazarus visual-skin/security-state producer-consumer split) + OS-membrane (PharOS Bool-only output, no presentation info); fourth cross-deployment joint-closure entry in Lazarus; mirror entries at LavaLamp LL-050 + PharOS PH-018; STRUCTURALLY DISTINCT from LZ-028 No-Oracle Backbone despite sharing LL-002 + PH-004 legs, because Lazarus's leg shifts from LZ-012 companion-read-only to LZ-001 visual-skin decoupling) — two promotion paths: operational integration test (exercise visual-refactor/skin-swap/membrane-Bool-only invariance across three deployments) OR Lean composition (parallel DecouplingBackbone.lean reusing v0.1.26 Lake git deps with new local VisualSkinDecoupling.lean for LZ-001; no new Mathlib dep, lower cost than LZ-029 path) | LAZARUS_SPEC.md LZ-001 entry (this deployment's leg — visual-skin/security-primitive decoupling via test/test_visual_skin_decoupling.py); LAVALAMP_SPEC.md LL-002 entry (visual-security decoupling); PHAROS_SPEC.md PH-004 entry (membrane Bool-only via src/lean4/Membrane.lean); TCE companion docs/triad_discovery_companion.md | :argued |
 
 ## Counts
 
-- Total: 30
+- Total: 31
 - `:proved`: 7 (LZ-016 outliers + LZ-017 liveness metric +
   LZ-018 classification dispatcher + LZ-024 face-reference
   scaffold + LZ-025 liveness scaffold + LZ-026 composed-
@@ -93,18 +94,20 @@ contain every Test/Proof and Source path listed.
   LZ-021 + LZ-022 + LZ-023 + LZ-027
 - `:verified`: 0
 - `:benchmarked`: 0
-- `:argued`: 2 — LZ-029 lean-stack-triad-backbone added at
+- `:argued`: 3 — LZ-029 lean-stack-triad-backbone added at
   v0.1.25 (second cross-Triad joint-closure entry; mirror
-  entries at LavaLamp LL-047 + PharOS PH-015; promotion
-  path is the LZ-028 cross-repo Lake-dep umbrella mechanism
-  extended with a second git dep on LavaLamp). LZ-030
+  entries at LavaLamp LL-047 + PharOS PH-015). LZ-030
   defense-in-depth-triad-backbone added at v0.1.27 (third
   cross-Triad joint-closure entry via [LL-030, PH-005,
-  LZ-022] at score 20.00 — substrate + OS-membrane +
-  runtime V-DEFENSE-IN-DEPTH layers; mirror entries at
-  LavaLamp LL-049 + PharOS PH-017; promotion path is a
-  cross-Triad runtime integration test that also promotes
-  PH-005 from `:argued` to `:tested` as a side effect).
+  LZ-022] at score 20.00; mirror entries at LavaLamp LL-049
+  + PharOS PH-017; promotes PH-005 as side effect). LZ-031
+  decoupling-triad-backbone added at v0.1.28 (fourth cross-
+  Triad joint-closure entry via [LL-002, LZ-001, PH-004] at
+  score 23.00 — the Decoupling axis, structurally distinct
+  from LZ-028 No-Oracle Backbone despite sharing LL-002 +
+  PH-004 legs; mirror entries at LavaLamp LL-050 + PharOS
+  PH-018; two promotion paths — operational integration
+  test OR Lean composition with no new Mathlib dep).
 - `:open`: 0
 
 ## Cross-audit A1–A6 self-check (post-v0.1.26)

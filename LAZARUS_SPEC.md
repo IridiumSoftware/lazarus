@@ -1881,9 +1881,167 @@ at **LavaLamp LL-049** + **PharOS PH-017**.
 
 ---
 
-## Counts (post-v0.1.27)
+## v0.1.28 (2026-05-12) — LZ-031 decoupling-triad-backbone (cross-Triad mirror entry)
 
-- Total: 30
+Fourth cross-deployment joint-closure entry in Lazarus. TCE
+Discovery.Triadic cross-Triad pass at v0.2.12 (triadic-
+coordination-engine commit `a9ddfea`) surfaced
+`[LL-002, LZ-001, PH-004]` at score 23.00 — the
+**Decoupling axis** of the Triad. Three V-DECOUPLING flavors
+at three deployments: LavaLamp visual / security-primitive
+separation (LL-002) + Lazarus visual-skin / security-state
+producer-consumer split (LZ-001) + PharOS membrane Bool-only
+output type (PH-004, the formal counterpart at the OS
+layer). Mirror entries at **LavaLamp LL-050** + **PharOS
+PH-018**.
+
+### LZ-031 — decoupling-triad-backbone
+- Key: LZ-001 is one leg of the cross-Triad Decoupling axis
+  — three deployments each enforce visual / security
+  separation at their own surface
+- Logic tier: Boundary
+- Description: The TCE Discovery.Triadic cross-Triad pass at
+  v0.2.12 surfaced `[LL-002, LZ-001, PH-004]` at score 23.00
+  — three deployments, three decoupling flavors, one
+  structural claim: **the Triad keeps user-facing
+  presentation strictly separated from the security state
+  it represents.**
+
+  Note this is a STRUCTURALLY DISTINCT claim from the
+  No-Oracle Backbone `[LL-002, LZ-012, PH-004]` at 26.00.
+  The No-Oracle claim is "the security state surface gives
+  back at most 1 bit" — about output channel cardinality.
+  The Decoupling claim is "the presentation surface and the
+  security-state surface are independently swappable" —
+  about architectural separation. Both ride through LL-002
+  + PH-004 because those entries serve both invariants; the
+  legs differ at the Lazarus position.
+
+  - **Lazarus's leg (LZ-001, this deployment):** visual-
+    skin / security-primitive decoupling — `face_sentinel.py`
+    (producer) writes `mode` and `authenticated` fields to
+    `~/.face_sentinel/state.json`; `lazarus.md` (consumer)
+    reads `state.json.mode` and chooses presentation
+    (ASCII art / Shakespeare quotes / warm one-liners /
+    Klingon / silence / whatever). The mode-value
+    vocabulary (`"normal"`, `"shakespeare"`) is the
+    contract. Replacing the skin does NOT change the
+    security primitive. `:tested` via
+    `test/test_visual_skin_decoupling.py` (six layers
+    including forbidden-presentation-content-in-producer +
+    mode-vocab parity + README customization-anchor lock).
+    **The runtime-tier decoupling layer of the cross-Triad
+    claim.**
+  - **LavaLamp's leg (LL-002):** visual-security decoupling
+    — the user-facing visual layer (`visual/index.html`)
+    uses whatever RNG is convenient; the security primitive
+    (chaotic SDE + sensor coupling + Lyapunov-spectrum
+    residue audit) runs as an independent background
+    process. `:tested` since LavaLamp v0.0.33 via static
+    lint on the visual layer. **The substrate-tier
+    decoupling layer.**
+  - **PharOS's leg (PH-004):** LL-017-membrane-preservation
+    — the membrane returns Bool only (allow / deny),
+    formally proved at the Lean level via `Membrane.lean`
+    at PharOS v0.0.12. There is no "visual layer" on the
+    PharOS side; PH-004 stands in as the formal counterpart
+    that the OS-layer auth result carries no presentation
+    information back to the caller. **The OS-membrane-tier
+    decoupling layer.**
+
+  This entry records Lazarus's contribution. The joint
+  claim is the conjunction — visual / security decoupling
+  at the substrate tier (LavaLamp), runtime tier (Lazarus
+  via this entry), and OS-membrane tier (PharOS)
+  simultaneously. Per the conjunctive-claim discipline,
+  this joint claim is NOT discharged by each component's
+  individual evidence; it requires a cross-Triad
+  integration test that exercises all three decoupling
+  surfaces simultaneously (or a cross-repo Lean composition
+  along the LZ-028 pattern).
+
+  Cross-deployment references:
+  - **Lazarus LZ-001** (visual-skin/security-primitive
+    decoupling, this deployment's leg).
+  - **LavaLamp LL-002** (visual-security decoupling).
+  - **PharOS PH-004** (membrane Bool-only Lean theorem).
+
+  Mirror entries: **LavaLamp LL-050** + **PharOS PH-018**.
+
+- Evidence type: manual (TCE Discovery.Triadic pass +
+  cross-deployment structural argument; no joint integration
+  test yet — see Notes)
+- Status: :argued
+- Source: TCE companion `docs/triad_discovery_companion.md`
+  in the triadic-coordination-engine repo (commit `a9ddfea`);
+  LAZARUS_SPEC.md LZ-001 entry; LAVALAMP_SPEC.md LL-002
+  entry; PHAROS_SPEC.md PH-004 entry.
+- Notes: **Fourth cross-deployment joint-closure entry in
+  Lazarus** (after LZ-028 no-oracle → `:proved` at v0.1.24,
+  LZ-029 lean-stack `:argued` at v0.1.25, LZ-030 defense-in-
+  depth `:argued` at v0.1.27). Established at v0.1.28
+  (2026-05-12).
+
+  **Two promotion paths available**:
+
+  1. **Operational test path.** A cross-Triad integration
+     test exercising all three decoupling surfaces:
+     (a) refactor LavaLamp visual layer to silence; assert
+     security primitive's residue-audit output unchanged;
+     (b) refactor Lazarus `lazarus.md` to silence /
+     Klingon; assert `state.json.mode` reads unchanged
+     and security state transitions unchanged;
+     (c) assert PharOS membrane Bool-only by exercising
+     PAM/Authz with arbitrary client-supplied "presentation
+     state" and asserting the gate returns only allow/deny.
+     Cross-Triad test surface; natural home is a
+     `triad-integration/` bundle in the TCE engine repo.
+     Promotes LZ-031 / LL-050 / PH-018 to `:tested`.
+
+  2. **Lean composition path.** The v0.1.26 upgrade made
+     LZ-028's composition concrete by importing both
+     `lavalamp-hermetic.LL002Visual` and Lazarus's
+     `CompanionDiscipline` alongside `pharos-lean.Membrane`.
+     A parallel `DecouplingBackbone.lean` could reuse the
+     same Lake git deps and compose:
+     - `lavalamp-hermetic.LL002Visual` (visual finite output)
+     - a new local `VisualSkinDecoupling.lean` modelling
+       LZ-001's producer/consumer split as a state-projection
+       theorem (mode-value vocabulary is a finite type;
+       presentation is a separate functorial slot)
+     - `pharos-lean.Membrane.MembraneOutput` (Bool-only output)
+
+     If that compiles, the joint claim promotes to `:proved`
+     directly — same shape as LZ-028's promotion. Lower
+     incremental cost than LZ-029's Lean path because no
+     new Mathlib dep is required (LL-002, LZ-001, PH-004
+     are all hermetic at the Lean level once the LavaLamp
+     hermetic companion is in scope).
+
+  Path (2) is the lower-cost / higher-honesty option per
+  the established Lean discipline. Path (1) is the
+  operational analog and would also promote PH-005-style
+  cross-Triad integration testing for the broader Triad.
+  Either path is acceptable; both could land independently.
+
+  Honest framing: LZ-031 is structurally distinct from
+  LZ-028 (No-Oracle Backbone) even though both ride
+  through LL-002 + PH-004. The shared legs serve dual
+  invariants — LL-002 is both "no distance leak" (no-oracle)
+  AND "presentation swappable" (decoupling). PH-004 is both
+  "Bool-only output" (no-oracle cardinality bound) AND
+  "no presentation info returned" (decoupling). The
+  distinct leg is LZ-001 (visual-skin decoupling, this
+  entry) versus LZ-012 (companion-read-only, LZ-028's
+  entry) — Lazarus carries both invariants via two
+  independent claims, which is why the TCE pass surfaces
+  both as separate triples at separate scores.
+
+---
+
+## Counts (post-v0.1.28)
+
+- Total: 31
 - `:proved`: 7 — LZ-016 (outlier-detection algorithm),
   LZ-017 (liveness metric properties), LZ-018 (priority
   dispatcher correctness), LZ-024 (face_reference_correctness
@@ -1900,18 +2058,23 @@ at **LavaLamp LL-049** + **PharOS PH-017**.
   integration test, after LZ-023 at v0.1.21).
 - `:verified`: 0
 - `:benchmarked`: 0
-- `:argued`: 2 — LZ-029 lean-stack-triad-backbone added at
+- `:argued`: 3 — LZ-029 lean-stack-triad-backbone added at
   v0.1.25 (second cross-Triad joint-closure; mirror entries
   at LavaLamp LL-047 + PharOS PH-015; promotion path is the
   cross-repo Lake-dep umbrella mechanism extended with a
   second git dep on LavaLamp). LZ-030 defense-in-depth-triad-
   backbone added at v0.1.27 (third cross-Triad joint-closure
-  via the `[LL-030, PH-005, LZ-022]` triple at score 20.00 —
-  substrate + OS-membrane + runtime V-DEFENSE-IN-DEPTH
-  layers; mirror entries at LavaLamp LL-049 + PharOS PH-017;
-  promotion path is a cross-Triad runtime integration test
-  that also promotes the bottleneck PH-005 leg from
-  `:argued` to `:tested`).
+  via `[LL-030, PH-005, LZ-022]` at score 20.00; mirror
+  entries at LavaLamp LL-049 + PharOS PH-017; promotion path
+  is a cross-Triad runtime integration test that also
+  promotes PH-005 as a side effect). LZ-031 decoupling-triad-
+  backbone added at v0.1.28 (fourth cross-Triad joint-closure
+  via `[LL-002, LZ-001, PH-004]` at score 23.00 — Decoupling
+  axis, structurally distinct from LZ-028's No-Oracle Backbone
+  despite sharing LL-002 + PH-004 legs; mirror entries at
+  LavaLamp LL-050 + PharOS PH-018; two promotion paths —
+  operational integration test OR Lean composition via
+  the v0.1.26 pattern with no new Mathlib dep).
 - `:open`: 0
 
 Promotion queue (highest-leverage, ordered by ease):
