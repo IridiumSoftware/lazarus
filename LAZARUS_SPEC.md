@@ -2074,9 +2074,184 @@ PH-018**.
 
 ---
 
-## Counts (post-v0.1.29)
+## v0.1.30 (2026-05-13) — LZ-032 lavalamp-verify-cross-validation (architectural fill)
 
-- Total: 31
+Closes the largest cross-Triad mention-graph gap surfaced by
+the TCE v0.2.12 pass: LavaLamp ↔ Lazarus had 83 V-tag R-edges
+but ZERO mention-graph edges in either direction. LZ-032 adds
+the first formal Lazarus → LavaLamp citation by bringing
+LavaLamp's substrate-tier verify-state into Lazarus's auth
+path as a cross-validation gate.
+
+### LZ-032 — lavalamp-verify-cross-validation
+- Key: Lazarus's auth() consults LavaLamp's daemon
+  verify-state via the LL-040 socket / LL-043 v4 ECDSA P-256
+  protocol; substrate REJECT or signature ERROR is a hard
+  auth failure, STALE / NOSOCK are fail-open by default and
+  fail-closed under `--strict-lavalamp`
+- Logic tier: Operational
+- Description: LL-043 v4 protocol is already in production
+  between PharOS's PAM module and LavaLamp's daemon — the
+  C reference client at
+  `pharos/src/c/pam_lavalamp/pam_lavalamp.c try_ipc_query_v4`
+  reads `~/.lavalamp/verify.pub` (33-byte SEC1-compressed
+  ECDSA P-256 pubkey), generates a 16-byte nonce, sends a
+  17-byte request to `~/.lavalamp/verify.sock`, receives a
+  74-byte response (version + result byte + 8-byte LE
+  timestamp + 64-byte raw r‖s signature), validates the
+  timestamp (±30s skew), and verifies the ECDSA P-256
+  signature over `(nonce || result || ts)`. LZ-032 ports
+  the same client to Python (`_lavalamp_query()` in
+  `face_sentinel.py`, using the `cryptography` package
+  available on macOS via pip).
+
+  The cross-check fires between Touch ID (step 1) and face
+  capture (step 2). Verdict-code gate semantics:
+  - **ACCEPT** ('A' + valid sig) → log `lavalamp_accept`,
+    proceed to face capture.
+  - **REJECT** ('R' + valid sig) → hard auth failure
+    regardless of strict flag. The substrate's residue
+    audit (LL-006 P_reject) is signalling an active
+    anomaly; refuse auth even on a face match because
+    LavaLamp has independent visibility into substrate
+    state that face-match alone cannot have.
+  - **ERROR** (signature invalid / version downgrade / ts
+    skew / unknown verdict byte) → hard fail regardless
+    of strict flag. Active tamper signal at the protocol
+    surface.
+  - **STALE** ('S' + valid sig) → soft warn + proceed by
+    default; hard fail under `--strict-lavalamp`.
+  - **NOSOCK** (socket or pubkey file absent) → soft warn
+    + proceed by default; hard fail under
+    `--strict-lavalamp`.
+
+  Mirrors the LZ-015 / LZ-019 strict-touchid pattern:
+  default fail-open so Lazarus runs as a standalone tool
+  on machines without LavaLamp; opt-in strict mode for
+  deployments where both daemons are present and the user
+  wants full Triad defense-in-depth.
+
+  Cross-deployment references (FIRST formal Lazarus → LavaLamp
+  mention edges in any LZ-NNN entry):
+  - **LavaLamp LL-040** (daemon-verify-result-IPC, AF_UNIX
+    socket contract owned by LavaLamp).
+  - **LavaLamp LL-043** (daemon-verify-result-IPC-v4-ecdsa-p256,
+    wire format consumed by LZ-032).
+  - **LavaLamp LL-006** (detection-probability bound, the
+    substrate-tier evidence whose REJECT/ACCEPT verdict
+    LZ-032 brings into Lazarus's auth decision).
+  - **Lazarus LZ-015** (Touch ID opportunistic pre-face gate,
+    the gate that precedes LZ-032).
+  - **Lazarus LZ-019** (strict-touchid hard-gate, sibling
+    strict-mode design that LZ-032 mirrors).
+  - **PharOS PH-009** (ecdsa-p256-validation, the C reference
+    client whose protocol logic LZ-032 ports to Python).
+
+- Evidence type: example-tested
+- Status: :tested
+- Source: face_sentinel.py `_lavalamp_query()` + `auth()`
+  Step 1.5 + argparse `--strict-lavalamp` flag + CLI dispatch;
+  constants block (`LAVALAMP_SOCK`, `LAVALAMP_PUB`,
+  `LAVALAMP_PROTOCOL_VERSION = 0x04`, `LAVALAMP_TS_SKEW_S = 30`,
+  etc.) near `LIVENESS_DELTA_MIN`. Mirrors
+  `pharos/src/c/pam_lavalamp/pam_lavalamp.c try_ipc_query_v4`
+  byte-for-byte at the wire level.
+- Test/Proof: `test/test_lavalamp_verify.py` exercises the
+  cross-check in 17 layers:
+
+  **§1 protocol-client verdict-code scenarios (10 tests):**
+  1. ACCEPT path — 'A' + valid signature → LAVALAMP_ACCEPT.
+  2. REJECT path — 'R' + valid signature → LAVALAMP_REJECT.
+  3. STALE path — 'S' + valid signature → LAVALAMP_STALE.
+  4. Timestamp skew (60s, threshold 30s) → LAVALAMP_ERROR.
+  5. Wrong-key signature (signed by other_priv, pubkey file
+     unchanged) → LAVALAMP_ERROR.
+  6. Bad version byte (0x03 downgrade attempt) → LAVALAMP_ERROR.
+  7. Unknown result byte ('Q', valid signature) → LAVALAMP_ERROR.
+  8. Missing socket file → LAVALAMP_NOSOCK.
+  9. Missing pubkey file → LAVALAMP_NOSOCK.
+  10. Malformed pubkey (10 bytes instead of 33) → LAVALAMP_ERROR.
+
+  **§2 auth() integration scenarios (7 tests):**
+  11. ACCEPT + good face → auth completes,
+      `lavalamp_accept` + `auth_ok` events logged.
+  12. REJECT in default mode → hard exit 1 BEFORE camera,
+      `lavalamp_reject_hard_fail` event logged, no `auth_ok`.
+  13. ERROR in default mode → hard exit 1,
+      `lavalamp_error_hard_fail` event logged.
+  14. STALE in default mode → soft warn + proceed,
+      `lavalamp_stale` + `auth_ok` events logged.
+  15. STALE in strict mode → hard exit 1,
+      `lavalamp_strict_fail` event logged.
+  16. NOSOCK in default mode → soft warn + proceed,
+      `lavalamp_nosock` event logged.
+  17. `auth()` signature default-parameter lock —
+      `strict_touchid` AND `strict_lavalamp` both default to
+      `False` (fail-open per LZ-015 / LZ-032 design).
+
+  Uses a real ECDSA P-256 keypair generated via
+  `cryptography.hazmat.primitives.asymmetric.ec` so the
+  verify path runs end-to-end — signatures are computed +
+  validated, not stubbed at the verify boundary. Socket I/O
+  is stubbed via `MockSocket` (sendall/recv replay).
+
+  All 17 tests pass locally + on `macos-latest` CI on every
+  push. New CI step installs `cryptography` via pip.
+- Notes: **First architectural fill from the TCE v0.2.12
+  cross-Triad pass §4 spec-impact recommendations.** The pass
+  surfaced that LavaLamp ↔ Lazarus had 83 V-tag R-edges (the
+  largest cross-deployment pair in the Triad — even larger
+  than LavaLamp ↔ PharOS at 60) but ZERO mention-graph edges
+  in either direction. LZ-032 adds 3 LZ → LL mention edges
+  (LL-040, LL-043, LL-006) plus 1 LZ → PH mention edge
+  (PH-009, the C reference client). Closes the semantic-formal
+  gap from Lazarus's side; LavaLamp + PharOS continue to not
+  cite Lazarus in their specs.
+
+  **Threat-model framing.** LL-006 (LavaLamp's detection-
+  probability bound, `:proved` since LavaLamp v0.0.80) gives
+  the substrate independent visibility into whether the
+  environmental sensor manifold is in the accept or reject
+  regime. That signal is invisible to Lazarus's face
+  primitive — a face match means "this looks like the owner";
+  it does NOT mean "the substrate's chaos-guard residue is in
+  the accept regime." LZ-032 wires the two together: only
+  authenticate if BOTH the face AND the substrate concur.
+
+  **Honest scope.** LZ-032's evidence is `:tested` at the
+  protocol surface and the auth-gate surface. It does NOT
+  prove that bringing LL-006 into Lazarus's auth path
+  actually reduces the false-accept rate of the joint system
+  in deployment — that's an empirical claim requiring a real
+  LavaLamp daemon running against the developer's sensor
+  manifold during real attacks, which is research-grade work
+  (LL-006's own `:proved` status is conditional on LL-035's
+  sub-Gaussian-rate empirical claim, which has its own
+  honest-framing notes). The Lean-formal version of "the
+  substrate-augmented auth is strictly stronger than face-
+  match alone" is a future PH-NNN or LL-NNN claim, not
+  LZ-032's scope.
+
+  **Why this over the other architectural fills.** The TCE
+  pass §4 listed three candidate fills. (1) Lazarus gating
+  on PharOS daemon liveness — PharOS doesn't run a daemon
+  on macOS (its shims are auth-flow plugins that run
+  on-demand); blocked. (2) Lazarus reading LavaLamp's
+  verify-state — this entry; closes the LARGEST gap; reuses
+  existing infrastructure (LL-043 protocol already
+  productionized between LavaLamp daemon and PharOS PAM).
+  (3) PharOS reading Lazarus's lockout-state — requires the
+  macOS Authorization Plug-in to run, which is blocked by
+  the Apple Developer ID gate per
+  `project_pharos_macos_dev_id_gate`. So LZ-032 was the
+  highest-leverage, lowest-friction fill from the candidate
+  list.
+
+---
+
+## Counts (post-v0.1.30)
+
+- Total: 32
 - `:proved`: 8 — LZ-016 (outlier-detection algorithm),
   LZ-017 (liveness metric properties), LZ-018 (priority
   dispatcher correctness), LZ-024 (face_reference_correctness
@@ -2095,10 +2270,15 @@ PH-018**.
   the three concrete legs into an 8-element finite joint
   Triad Decoupling output type).** All eight lean-proved
   hermetically.
-- `:tested`: 21 — LZ-001..LZ-015 + LZ-019 + LZ-020 + LZ-021
-  + LZ-022 + LZ-023 + LZ-027. LZ-022 promoted at v0.1.22
-  (second TCE-surfaced joint-closure entry to land an
-  integration test, after LZ-023 at v0.1.21).
+- `:tested`: 22 — LZ-001..LZ-015 + LZ-019 + LZ-020 + LZ-021
+  + LZ-022 + LZ-023 + LZ-027 + LZ-032. LZ-022 promoted at
+  v0.1.22 (second TCE-surfaced joint-closure entry to land
+  an integration test, after LZ-023 at v0.1.21). LZ-032
+  added at v0.1.30 as the first architectural fill from the
+  TCE v0.2.12 cross-Triad pass §4 spec-impact recommendations
+  — closes the largest cross-Triad mention-graph gap by
+  bringing LavaLamp's LL-040/LL-043 verify-state into
+  Lazarus's auth path.
 - `:verified`: 0
 - `:benchmarked`: 0
 - `:argued`: 2 — LZ-029 lean-stack-triad-backbone added at

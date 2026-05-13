@@ -18,10 +18,15 @@
 #   LZ-013 (anti-spoof liveness probe)          → test_liveness_check.py
 #   LZ-014 (leave-one-out pool quality scoring) → test_prune_logic.py
 #   LZ-015 (Touch ID opportunistic pre-face)    → test_touchid_check.py
+#   LZ-032 (LavaLamp substrate cross-validation) → test_lavalamp_verify.py
 #
 # The face_compare Swift binary is built as a sanity check; the
 # tests stub it out via module-level patching or the
 # FACE_COMPARE_STUB env-var shim (added v0.1.5).
+#
+# LZ-032 requires the `cryptography` Python package (ECDSA P-256
+# signing in the mock daemon side of the v4 protocol test). It is
+# installed in the first CI step.
 
 name: CI
 
@@ -40,6 +45,9 @@ jobs:
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
+
+      - name: Install Python deps (cryptography for LZ-032 v4 client)
+        run: python3 -m pip install --user --break-system-packages cryptography
 
       - name: Build face_compare (sanity check)
         run: |
@@ -113,6 +121,9 @@ jobs:
 
       - name: LZ-022 — test_network_exfil_joint_closure.py
         run: python3 test/test_network_exfil_joint_closure.py
+
+      - name: LZ-032 — test_lavalamp_verify.py
+        run: python3 test/test_lavalamp_verify.py
 
       - name: LZ-016 / LZ-017 / LZ-018 / LZ-024 / LZ-025 / LZ-026 / LZ-028 — Lean proofs (lake build, fetches pharos-lean cross-repo dep)
         working-directory: src/lean4

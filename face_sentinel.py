@@ -60,6 +60,39 @@ LIVENESS_DELTA_MIN = 0.008   # Min byte-diff between two captures ~1s apart;
                              # deepfake streams (those are v2 territory).
 LIVENESS_GAP_SECONDS = 1.0   # Wait between first and second capture
 
+# ── LavaLamp substrate cross-validation (LZ-032) ───────────────────
+#
+# LL-040 ships a per-startup AF_UNIX verify socket at
+# ~/.lavalamp/verify.sock; LL-043 v4 protocol speaks 17-byte
+# request / 74-byte ECDSA-P256-signed response with the SEC1-
+# compressed daemon public key at ~/.lavalamp/verify.pub.
+#
+# Lazarus consumes that contract in auth() as a substrate-tier
+# cross-check before authenticating: if LavaLamp's residue audit
+# is REJECTing (LL-006 P_reject high), refuse auth even on a
+# face-match. Hard fail on REJECT or signature ERROR (active
+# threat signals); STALE / NOSOCK are fail-open by default
+# (LavaLamp may not be installed) and fail-closed under
+# --strict-lavalamp. Mirrors the LZ-015 / LZ-019 strict-touchid
+# pattern.
+
+LAVALAMP_SOCK = Path.home() / ".lavalamp" / "verify.sock"
+LAVALAMP_PUB = Path.home() / ".lavalamp" / "verify.pub"
+LAVALAMP_PROTOCOL_VERSION = 0x04
+LAVALAMP_NONCE_LEN = 16
+LAVALAMP_REQUEST_LEN = 17       # version + nonce
+LAVALAMP_RESPONSE_LEN = 74      # version + result + 8-byte LE ts + 64-byte raw r||s sig
+LAVALAMP_PUB_LEN = 33           # SEC1-compressed P-256 point
+LAVALAMP_TIMEOUT_S = 2.0
+LAVALAMP_TS_SKEW_S = 30
+
+# Verdict codes returned by _lavalamp_query.
+LAVALAMP_ACCEPT = "accept"      # daemon returned 'A' + valid signature
+LAVALAMP_REJECT = "reject"      # daemon returned 'R'
+LAVALAMP_STALE = "stale"        # daemon returned 'S' (cache > 120s)
+LAVALAMP_NOSOCK = "nosock"      # socket or pubkey missing — daemon not running
+LAVALAMP_ERROR = "error"        # protocol violation / bad signature / ts skew
+
 
 def ensure_dirs():
     REF_DIR.mkdir(parents=True, exist_ok=True)
@@ -284,9 +317,158 @@ def liveness_check(first_capture: str) -> dict:
                 os.remove(p)
 
 
+# ── LavaLamp substrate cross-check (LZ-032) ───────────────────────
+#
+# Speaks LL-043 v4 protocol against ~/.lavalamp/verify.sock to
+# bring substrate-tier residue-audit state (LL-006) into Lazarus's
+# auth decision. Port of pharos/src/c/pam_lavalamp/pam_lavalamp.c
+# `try_ipc_query_v4`, same wire format, same ECDSA P-256
+# verification.
+
+def _lavalamp_query(sock_path: Path = None,
+                    pub_path: Path = None,
+                    timeout_s: float = LAVALAMP_TIMEOUT_S,
+                    _socket_factory=None,
+                    _urandom=None,
+                    _now=None) -> str:
+    """LL-043 v4 client. Returns one of LAVALAMP_ACCEPT / REJECT /
+    STALE / NOSOCK / ERROR.
+
+    Wire format (matches PharOS PH-009 reference client):
+      Request  — 17 bytes: [version 0x04, nonce(16)]
+      Response — 74 bytes: [version 0x04, result_byte,
+                            ts_le_i64(8), sig_raw_r_s(64)]
+      Signed message — nonce(16) || result_byte(1) || ts(8 LE)
+      Verify       — ECDSA P-256, SHA-256, daemon pubkey from
+                     ~/.lavalamp/verify.pub (33-byte SEC1 compressed)
+
+    Test seams:
+      `_socket_factory` — callable returning a socket-like object
+        with sendall/recv/close. Default: socket.socket(AF_UNIX).
+      `_urandom`        — callable(n) → bytes. Default: os.urandom.
+      `_now`            — callable() → int seconds. Default: time.time.
+      `sock_path` / `pub_path` — override defaults for testing.
+    """
+    import socket as _socket_mod
+    from cryptography.hazmat.primitives import hashes, serialization
+    from cryptography.hazmat.primitives.asymmetric import ec
+    from cryptography.hazmat.primitives.asymmetric.utils import (
+        encode_dss_signature,
+    )
+    from cryptography.exceptions import InvalidSignature
+
+    sock_path = sock_path if sock_path is not None else LAVALAMP_SOCK
+    pub_path = pub_path if pub_path is not None else LAVALAMP_PUB
+    urandom = _urandom if _urandom is not None else os.urandom
+    now_fn = _now if _now is not None else time.time
+
+    # ─ Step 1: socket + pubkey must both be present ─
+    try:
+        if not Path(sock_path).exists():
+            return LAVALAMP_NOSOCK
+        if not Path(pub_path).exists():
+            return LAVALAMP_NOSOCK
+    except OSError:
+        return LAVALAMP_NOSOCK
+
+    # ─ Step 2: read pubkey, must be exactly 33 bytes SEC1-compressed ─
+    try:
+        pub_raw = Path(pub_path).read_bytes()
+    except OSError:
+        return LAVALAMP_NOSOCK
+    if len(pub_raw) != LAVALAMP_PUB_LEN:
+        return LAVALAMP_ERROR
+    if pub_raw[0] not in (0x02, 0x03):
+        # Not a SEC1-compressed P-256 point. Bad pubkey file.
+        return LAVALAMP_ERROR
+    try:
+        pubkey = ec.EllipticCurvePublicKey.from_encoded_point(
+            ec.SECP256R1(), pub_raw
+        )
+    except (ValueError, TypeError):
+        return LAVALAMP_ERROR
+
+    # ─ Step 3: build 17-byte request ─
+    nonce = urandom(LAVALAMP_NONCE_LEN)
+    if len(nonce) != LAVALAMP_NONCE_LEN:
+        return LAVALAMP_ERROR
+    request = bytes([LAVALAMP_PROTOCOL_VERSION]) + nonce
+
+    # ─ Step 4: connect, send, receive ─
+    if _socket_factory is not None:
+        sock = _socket_factory()
+    else:
+        sock = _socket_mod.socket(_socket_mod.AF_UNIX,
+                                   _socket_mod.SOCK_STREAM)
+        sock.settimeout(timeout_s)
+    try:
+        try:
+            sock.connect(str(sock_path))
+        except (FileNotFoundError, ConnectionRefusedError):
+            return LAVALAMP_NOSOCK
+        except OSError:
+            return LAVALAMP_ERROR
+        try:
+            sock.sendall(request)
+        except OSError:
+            return LAVALAMP_ERROR
+        # Read exactly LAVALAMP_RESPONSE_LEN bytes.
+        buf = bytearray()
+        while len(buf) < LAVALAMP_RESPONSE_LEN:
+            try:
+                chunk = sock.recv(LAVALAMP_RESPONSE_LEN - len(buf))
+            except OSError:
+                return LAVALAMP_ERROR
+            if not chunk:
+                return LAVALAMP_ERROR
+            buf.extend(chunk)
+        response = bytes(buf)
+    finally:
+        try:
+            sock.close()
+        except OSError:
+            pass
+
+    # ─ Step 5: parse response ─
+    if response[0] != LAVALAMP_PROTOCOL_VERSION:
+        return LAVALAMP_ERROR
+    result_byte = response[1]
+    daemon_ts = int.from_bytes(response[2:10], "little", signed=True)
+    sig_raw = response[10:74]
+    if len(sig_raw) != 64:
+        return LAVALAMP_ERROR
+
+    # ─ Step 6: timestamp freshness ─
+    now_ts = int(now_fn())
+    if abs(now_ts - daemon_ts) > LAVALAMP_TS_SKEW_S:
+        return LAVALAMP_ERROR
+
+    # ─ Step 7: build signed message + verify ECDSA P-256 ─
+    signed_msg = nonce + bytes([result_byte]) + response[2:10]
+    r = int.from_bytes(sig_raw[:32], "big")
+    s = int.from_bytes(sig_raw[32:], "big")
+    try:
+        der_sig = encode_dss_signature(r, s)
+    except ValueError:
+        return LAVALAMP_ERROR
+    try:
+        pubkey.verify(der_sig, signed_msg, ec.ECDSA(hashes.SHA256()))
+    except InvalidSignature:
+        return LAVALAMP_ERROR
+
+    # ─ Step 8: dispatch on result byte ─
+    if result_byte == ord("A"):
+        return LAVALAMP_ACCEPT
+    if result_byte == ord("R"):
+        return LAVALAMP_REJECT
+    if result_byte == ord("S"):
+        return LAVALAMP_STALE
+    return LAVALAMP_ERROR
+
+
 # ── Auth (session opener) ─────────────────────────────────────────
 
-def auth(strict_touchid: bool = False):
+def auth(strict_touchid: bool = False, strict_lavalamp: bool = False):
     """Session authentication: Touch ID + face match + background snapshot.
 
     When `strict_touchid` is True (set via the `--strict-touchid` CLI
@@ -326,6 +508,45 @@ def auth(strict_touchid: bool = False):
     else:  # "unavailable"
         print("Touch ID unavailable. Proceeding with face check only.")
         log_event({"event": "touchid_unavailable"})
+
+    # Step 1.5: LavaLamp substrate cross-check (LZ-032).
+    # Brings LL-006 P_reject signal into Lazarus's auth decision.
+    # REJECT (substrate audit caught something) and ERROR (signature
+    # tamper) are hard fails regardless of strict_lavalamp. STALE and
+    # NOSOCK fail-open by default (LavaLamp may not be installed) and
+    # fail-closed under --strict-lavalamp.
+    print("LavaLamp substrate cross-check...")
+    lava_result = _lavalamp_query()
+    if lava_result == LAVALAMP_ACCEPT:
+        log_event({"event": "lavalamp_accept"})
+    elif lava_result == LAVALAMP_REJECT:
+        # Active threat signal from substrate. Refuse auth even if
+        # face match would succeed.
+        print("LavaLamp substrate REJECT. Auth denied "
+              "(residue audit caught anomaly).")
+        log_event({"event": "lavalamp_reject_hard_fail"})
+        sys.exit(1)
+    elif lava_result == LAVALAMP_ERROR:
+        # Signature invalid or protocol tampered — active threat.
+        print("LavaLamp substrate signature ERROR. Auth denied "
+              "(possible tamper).")
+        log_event({"event": "lavalamp_error_hard_fail"})
+        sys.exit(1)
+    elif strict_lavalamp:
+        # Strict mode: STALE / NOSOCK are hard fails.
+        print(f"LavaLamp substrate strict-mode failure "
+              f"({lava_result}). Auth denied.")
+        log_event({"event": "lavalamp_strict_fail",
+                   "result": lava_result})
+        sys.exit(1)
+    elif lava_result == LAVALAMP_STALE:
+        print("LavaLamp substrate STALE. Proceeding "
+              "(daemon may be restarting).")
+        log_event({"event": "lavalamp_stale"})
+    else:  # LAVALAMP_NOSOCK
+        print("LavaLamp daemon not running. Proceeding with face "
+              "check only.")
+        log_event({"event": "lavalamp_nosock"})
 
     # Step 2: Face capture + match
     print("Capturing face...")
@@ -972,6 +1193,10 @@ if __name__ == "__main__":
     parser.add_argument("--strict-touchid", action="store_true",
                         help="Treat Touch ID nonzero/unavailable as hard auth "
                              "failure (default: opportunistic / fail-open)")
+    parser.add_argument("--strict-lavalamp", action="store_true",
+                        help="Treat LavaLamp daemon STALE/NOSOCK as hard auth "
+                             "failure (LZ-032; REJECT/ERROR are hard fails "
+                             "regardless; default: opportunistic / fail-open)")
     parser.add_argument("--token", type=str, default=None,
                         help="Recovery token (hex). Used with --recover when "
                              "Touch ID is unavailable or fails.")
@@ -984,7 +1209,8 @@ if __name__ == "__main__":
         sys.exit(1)
 
     if args.auth:
-        auth(strict_touchid=args.strict_touchid)
+        auth(strict_touchid=args.strict_touchid,
+             strict_lavalamp=args.strict_lavalamp)
     elif args.enroll:
         enroll()
     elif args.watch:

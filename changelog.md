@@ -1,5 +1,90 @@
 # Changelog — Lazarus
 
+## v0.1.30 — 2026-05-13 — LZ-032 lavalamp-verify-cross-validation (first architectural fill, closes the LL↔LZ mention-graph gap)
+
+Adds the first cross-deployment FUNCTIONAL citation from
+Lazarus — `face_sentinel.py auth()` now consults LavaLamp's
+daemon verify-state via the LL-040 socket / LL-043 v4
+ECDSA P-256 protocol as a substrate-tier cross-check
+before authenticating.
+
+**Closes the largest cross-Triad mention-graph gap** surfaced
+by the TCE v0.2.12 pass: LavaLamp ↔ Lazarus had 83 V-tag
+R-edges (the largest cross-deployment pair in the Triad) but
+ZERO mention-graph edges in either direction. LZ-032 adds the
+first formal Lazarus → LavaLamp citations (LL-040, LL-043,
+LL-006) plus a Lazarus → PharOS citation (PH-009, the C
+reference client). Closes the semantic-formal gap from
+Lazarus's side.
+
+New file inventory:
+- `face_sentinel.py`:
+  - LavaLamp constants block near `LIVENESS_DELTA_MIN`:
+    `LAVALAMP_SOCK`, `LAVALAMP_PUB`,
+    `LAVALAMP_PROTOCOL_VERSION = 0x04`,
+    `LAVALAMP_NONCE_LEN = 16`, `LAVALAMP_REQUEST_LEN = 17`,
+    `LAVALAMP_RESPONSE_LEN = 74`, `LAVALAMP_PUB_LEN = 33`,
+    `LAVALAMP_TIMEOUT_S = 2.0`, `LAVALAMP_TS_SKEW_S = 30`,
+    plus verdict-code constants (ACCEPT / REJECT / STALE /
+    NOSOCK / ERROR).
+  - `_lavalamp_query()` — Python port of pharos PAM module's
+    `try_ipc_query_v4`. Uses `cryptography` package for
+    ECDSA P-256 signature verification (SHA-256, raw r‖s →
+    DER conversion via `encode_dss_signature`). Test seams:
+    `_socket_factory`, `_urandom`, `_now`.
+  - `auth(strict_touchid=False, strict_lavalamp=False)` — adds
+    Step 1.5 LavaLamp cross-check between Touch ID and face
+    capture.
+  - argparse `--strict-lavalamp` flag + CLI dispatch.
+- `test/test_lavalamp_verify.py` — 17-layer integration test
+  (10 protocol-client verdict-code scenarios + 7 auth() gating
+  scenarios). Uses a real ECDSA P-256 keypair generated via
+  `cryptography` so the verify path runs end-to-end. All 17
+  pass locally.
+- `.github/workflows/test.yml` — adds `pip install cryptography`
+  step + new LZ-032 test entry.
+
+**Verdict-code semantics:**
+- ACCEPT ('A' + valid sig) → proceed
+- REJECT ('R' + valid sig) → **hard fail regardless of strict
+  flag** (active threat signal from substrate)
+- ERROR (bad sig / version downgrade / ts skew) → **hard fail
+  regardless of strict flag** (active tamper signal)
+- STALE ('S' + valid sig) → fail-open default, fail-closed
+  under `--strict-lavalamp`
+- NOSOCK (no socket or no pubkey file) → fail-open default,
+  fail-closed under `--strict-lavalamp`
+
+Mirrors the LZ-015 / LZ-019 strict-touchid pattern. Default
+opportunistic behavior keeps Lazarus runnable as a standalone
+tool on machines without LavaLamp; `--strict-lavalamp` is the
+opt-in for full-Triad deployments.
+
+**Honest scope.** `:tested` covers the protocol surface (10
+scenarios, including bad-sig + version-downgrade + ts-skew +
+unknown-verdict + missing-file cases) and the auth-gate
+surface (7 scenarios across both default and strict modes).
+It does NOT prove that bringing LL-006 into Lazarus's auth
+decision actually reduces the joint false-accept rate against
+real attacks — that's an empirical claim conditional on
+LL-006's own `:proved` status (which itself rides on LL-035's
+sub-Gaussian-rate empirical claim). Lean-formal "substrate-
+augmented auth is strictly stronger than face-match alone" is
+out of scope.
+
+**Why this fill first.** TCE pass §4 surfaced three candidates;
+LZ-032 was the highest-leverage, lowest-friction choice — closes
+the largest gap (83 V-tag edges), reuses existing infrastructure
+(LL-043 already productionized between LavaLamp daemon and
+PharOS PAM), runs on macOS today (no Apple Developer ID gate).
+The other two candidates are blocked: (a) Lazarus → PharOS
+daemon liveness — PharOS has no daemon on macOS; (b) PharOS →
+Lazarus lockout-state read — blocked by the Apple Developer ID
+gate per `project_pharos_macos_dev_id_gate`.
+
+Counts: 31/8/21/0/0/2/0 → **32/8/22/0/0/2/0** (Total +1,
+`:tested` +1).
+
 ## v0.1.29 — 2026-05-12 — LZ-031 :argued → :proved via DecouplingBackbone.lean (SECOND cross-repo Lean proof)
 
 Promotes LZ-031 decoupling-triad-backbone from `:argued`
