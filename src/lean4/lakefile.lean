@@ -105,3 +105,34 @@ lean_lib «CompanionDiscipline» where
 @[default_target]
 lean_lib «TriadBackbone» where
   srcDir := "."
+
+-- LZ-001 visual-skin / security-primitive decoupling —
+-- concrete Lean formalisation of the producer-side mode
+-- vocabulary (the `normal / shakespeare` enum face_sentinel.py
+-- writes to ~/.face_sentinel/state.json.mode). Layered
+-- companion to LZ-001's existing :tested static-text-search
+-- evidence in test/test_visual_skin_decoupling.py.
+-- Imported by DecouplingBackbone (LZ-031) as the Lazarus leg
+-- of the cross-Triad Decoupling axis composition.
+@[default_target]
+lean_lib «VisualSkinDecoupling» where
+  srcDir := "."
+
+-- LZ-031 / LL-050 / PH-018 decoupling-triad-backbone —
+-- cross-repo composition. TCE cross-Triad pass surfaced
+-- [LL-002, LZ-001, PH-004] at score 23.00 — the Decoupling
+-- axis. Promotes the three mirror entries from :argued to
+-- :proved by composing concrete imports from all three home
+-- repos (no abstract modelling):
+--   - LavaLamp.LL002Visual (via existing lavalamp-hermetic dep)
+--   - Lazarus.VisualSkinDecoupling (sibling module above)
+--   - PharOS.Membrane (via existing pharos-lean dep)
+-- The composition is structurally distinct from
+-- TriadBackbone (LZ-028) despite reusing LL-002 + PH-004 —
+-- the distinguishing leg shifts from LZ-012 (companion-read-
+-- only) to LZ-001 (visual-skin decoupling). Joint cardinality
+-- 2 × 2 × 2 = 8 (vs TriadBackbone's 2 × 3 × 2 = 12).
+-- No new Lake git deps required. No Mathlib pull.
+@[default_target]
+lean_lib «DecouplingBackbone» where
+  srcDir := "."

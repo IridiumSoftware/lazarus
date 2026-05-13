@@ -1968,19 +1968,54 @@ PH-018**.
 
   Mirror entries: **LavaLamp LL-050** + **PharOS PH-018**.
 
-- Evidence type: manual (TCE Discovery.Triadic pass +
-  cross-deployment structural argument; no joint integration
-  test yet — see Notes)
-- Status: :argued
-- Source: TCE companion `docs/triad_discovery_companion.md`
-  in the triadic-coordination-engine repo (commit `a9ddfea`);
-  LAZARUS_SPEC.md LZ-001 entry; LAVALAMP_SPEC.md LL-002
-  entry; PHAROS_SPEC.md PH-004 entry.
+- Evidence type: lean-proved
+- Status: :proved
+- Source: `src/lean4/DecouplingBackbone.lean` (Lazarus repo)
+  composes three concrete cross-repo legs:
+  `LavaLamp.LL002Visual.VisualOutput` (via Lake git dep on
+  lavalamp-hermetic@1a2534f, the existing dep from
+  TriadBackbone), `Lazarus.VisualSkinDecoupling.Mode`
+  (sibling module added in this version — concrete
+  formalisation of LZ-001's producer-side mode vocabulary),
+  and `PharOS.Membrane.MembraneOutput` (via Lake git dep on
+  pharos-lean@e3eaee1, the existing dep from TriadBackbone).
+  TCE companion `docs/triad_discovery_companion.md` in the
+  triadic-coordination-engine repo (commit `a9ddfea`).
+- Test/Proof: `src/lean4/DecouplingBackbone.lean` builds
+  hermetically via `cd src/lean4 && lake build` (25 jobs,
+  zero `sorry`). Two theorems + supporting enumeration:
+  - `decoupling_triad_backbone` — every joint
+    `DecouplingOutput` (visual × mode × membrane triple) lies
+    in the 8-element finite enumeration `decouplingOutputs`.
+    Proof: structural case analysis on each leg's inductive
+    (2 × 2 × 2 = 8 simp-closable goals).
+  - `decoupling_output_cardinality` — the canonical
+    enumeration has length 8 by `rfl`.
+
+  Plus `src/lean4/VisualSkinDecoupling.lean` (3 theorems on
+  the Mode inductive: `mode_finite_channel`,
+  `mode_cardinality = 2`, `mode_exhaustive`). No new Lake
+  git deps required; no Mathlib pull. Build cost grows
+  from 21 jobs (v0.1.28) to 25 jobs (v0.1.29).
+
+  Honest framing. The Lean track formalises the
+  type-cardinality slice of the joint Decoupling claim
+  (joint observer surface has finite cardinality 8 → no
+  real-valued presentation channel can be encoded). The
+  broader decoupling invariants — producer/consumer split
+  in `face_sentinel.py` ↔ `lazarus.md`, visual-layer
+  decoupling enforced by Julia static-lint, membrane Bool-
+  only enforced by `Membrane.lean`'s own 9 theorems — remain
+  covered by the home-repo source-of-truth tests for each
+  leg. The Lean composition is layered evidence for the
+  conjunction, not a replacement for the operational
+  evidence in each leg.
 - Notes: **Fourth cross-deployment joint-closure entry in
   Lazarus** (after LZ-028 no-oracle → `:proved` at v0.1.24,
   LZ-029 lean-stack `:argued` at v0.1.25, LZ-030 defense-in-
   depth `:argued` at v0.1.27). Established at v0.1.28
-  (2026-05-12).
+  (2026-05-12) `:argued`; **promoted to `:proved` at
+  v0.1.29 (2026-05-12)** via `DecouplingBackbone.lean`.
 
   **Two promotion paths available**:
 
@@ -2039,42 +2074,44 @@ PH-018**.
 
 ---
 
-## Counts (post-v0.1.28)
+## Counts (post-v0.1.29)
 
 - Total: 31
-- `:proved`: 7 — LZ-016 (outlier-detection algorithm),
+- `:proved`: 8 — LZ-016 (outlier-detection algorithm),
   LZ-017 (liveness metric properties), LZ-018 (priority
   dispatcher correctness), LZ-024 (face_reference_correctness
   via FaceReferencePool.lean), LZ-025 (liveness_equivalence
   via LivenessJoint.lean), LZ-026 (composed_correctness
-  3-cycle pipeline via Composed.lean), and **LZ-028
+  3-cycle pipeline via Composed.lean), **LZ-028
   (no_oracle_triad_backbone via TriadBackbone.lean — the
   FIRST cross-repo Lean proof in Lazarus, importing
   PharOS's `Membrane` module via Lake git dep at pinned
-  commit `e3eaee1`).** All seven lean-proved hermetically.
+  commit `e3eaee1`)**, and **LZ-031
+  (decoupling_triad_backbone via DecouplingBackbone.lean —
+  SECOND cross-repo Lean proof in Lazarus, importing both
+  PharOS.Membrane AND LavaLamp.LL002Visual via the existing
+  Lake git deps, plus a new sibling module
+  VisualSkinDecoupling.lean for the LZ-001 leg; composes
+  the three concrete legs into an 8-element finite joint
+  Triad Decoupling output type).** All eight lean-proved
+  hermetically.
 - `:tested`: 21 — LZ-001..LZ-015 + LZ-019 + LZ-020 + LZ-021
   + LZ-022 + LZ-023 + LZ-027. LZ-022 promoted at v0.1.22
   (second TCE-surfaced joint-closure entry to land an
   integration test, after LZ-023 at v0.1.21).
 - `:verified`: 0
 - `:benchmarked`: 0
-- `:argued`: 3 — LZ-029 lean-stack-triad-backbone added at
+- `:argued`: 2 — LZ-029 lean-stack-triad-backbone added at
   v0.1.25 (second cross-Triad joint-closure; mirror entries
   at LavaLamp LL-047 + PharOS PH-015; promotion path is the
   cross-repo Lake-dep umbrella mechanism extended with a
-  second git dep on LavaLamp). LZ-030 defense-in-depth-triad-
+  second git dep on LavaLamp; outstanding obstacle is the
+  Mathlib transitive dep). LZ-030 defense-in-depth-triad-
   backbone added at v0.1.27 (third cross-Triad joint-closure
   via `[LL-030, PH-005, LZ-022]` at score 20.00; mirror
   entries at LavaLamp LL-049 + PharOS PH-017; promotion path
   is a cross-Triad runtime integration test that also
-  promotes PH-005 as a side effect). LZ-031 decoupling-triad-
-  backbone added at v0.1.28 (fourth cross-Triad joint-closure
-  via `[LL-002, LZ-001, PH-004]` at score 23.00 — Decoupling
-  axis, structurally distinct from LZ-028's No-Oracle Backbone
-  despite sharing LL-002 + PH-004 legs; mirror entries at
-  LavaLamp LL-050 + PharOS PH-018; two promotion paths —
-  operational integration test OR Lean composition via
-  the v0.1.26 pattern with no new Mathlib dep).
+  promotes PH-005 as a side effect).
 - `:open`: 0
 
 Promotion queue (highest-leverage, ordered by ease):

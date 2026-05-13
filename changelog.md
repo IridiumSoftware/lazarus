@@ -1,5 +1,77 @@
 # Changelog — Lazarus
 
+## v0.1.29 — 2026-05-12 — LZ-031 :argued → :proved via DecouplingBackbone.lean (SECOND cross-repo Lean proof)
+
+Promotes LZ-031 decoupling-triad-backbone from `:argued`
+(added at v0.1.28) to `:proved` via a new cross-repo Lean
+composition at `src/lean4/DecouplingBackbone.lean`. Adds
+the LZ-001 concrete formalisation at
+`src/lean4/VisualSkinDecoupling.lean`.
+
+**SECOND cross-repo Lean proof in Lazarus** (after LZ-028's
+`TriadBackbone.lean` at v0.1.24/v0.1.26). Same cross-repo
+Lake-dep mechanism, no new git deps required — reuses the
+existing `lavalamp-hermetic@1a2534f` and `pharos-lean@e3eaee1`
+deps that were added for TriadBackbone. The new
+`DecouplingBackbone.lean` composes:
+- `LavaLamp.LL002Visual.VisualOutput` (2 states locked /
+  unlocked) — cross-repo import via lavalamp-hermetic
+- `Lazarus.VisualSkinDecoupling.Mode` (2 states normal /
+  shakespeare) — new sibling module formalising LZ-001's
+  producer-side mode vocabulary
+- `PharOS.Membrane.MembraneOutput` (2 states allow / deny) —
+  cross-repo import via pharos-lean
+
+Composition theorem `decoupling_triad_backbone` proves every
+joint Triad decoupling output is in an 8-element finite
+enumeration (2 × 2 × 2 = 8). Cardinality bound is the formal
+counterpart of "no real-valued presentation channel can be
+encoded in the joint observer surface": ℝ uncountable, 8
+countable.
+
+**Structurally distinct from LZ-028 TriadBackbone** despite
+reusing LL-002 + PH-004 legs. LZ-028's composition uses
+LZ-012 (LlmOutput, 3 states observe/flag/watch) → 12-element
+joint output. LZ-031's composition uses LZ-001 (Mode, 2 states
+normal/shakespeare) → 8-element joint output. LL-002 + PH-004
+serve dual invariants (no-oracle AND decoupling); the TCE
+pass surfaces the two triples at separate scores (26.00 vs
+23.00) because Lazarus's leg differs.
+
+New file inventory:
+- `src/lean4/VisualSkinDecoupling.lean` — 3 theorems on Mode
+  inductive (mode_finite_channel, mode_cardinality = 2,
+  mode_exhaustive). Layered companion to LZ-001's existing
+  Python static-text-search evidence in
+  `test/test_visual_skin_decoupling.py`. LZ-001 itself stays
+  `:tested` — the broader producer/consumer architectural
+  claim remains source-of-truth at the Python lint.
+- `src/lean4/DecouplingBackbone.lean` — composition theorem
+  + 8-element enumeration + cardinality witness.
+- `src/lean4/lakefile.lean` — two new `lean_lib` stanzas
+  (`VisualSkinDecoupling`, `DecouplingBackbone`).
+
+**Honest framing.** The Lean track formalises the type-
+cardinality slice of the joint Decoupling claim. The broader
+decoupling invariants — `face_sentinel.py` (producer)
+without presentation imports, `lazarus.md` (consumer) reading
+only `state.json.mode`, Membrane.lean's 9 theorems on
+DaemonResult → MembraneOutput — remain home-repo source-of-
+truth. The composition is layered evidence for the
+conjunction.
+
+`lake build` returns 25 jobs (was 21 at v0.1.28) with zero
+`sorry`. Counts: 31/7/21/0/0/3/0 → **31/8/21/0/0/2/0**
+(:proved +1, :argued -1).
+
+LZ-031 promotion enables the parallel mirror-pattern promotion
+of LavaLamp LL-050 + PharOS PH-018 once their respective
+mirror modules (`DecouplingBackboneMirror.lean` in
+`lavalamp/src/lean4-hermetic/` and `pharos/src/lean4/`) land
+with Lake git deps bumped to this commit. The mirror pattern
+follows v0.0.95 / v0.0.12-style promotion that established
+LL-046 + PH-014 to `:proved` after LZ-028 landed at v0.1.24.
+
 ## v0.1.28 — 2026-05-12 — LZ-031 decoupling-triad-backbone (cross-Triad mirror entry)
 
 Fourth cross-deployment joint-closure entry in Lazarus's
