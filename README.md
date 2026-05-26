@@ -352,6 +352,14 @@ Lazarus is the runtime-integrity layer in *The Triad Deployments — Digital Ide
 
 The three deployments share a defensive-postured, resolution-bounded identity stance: detection over prevention, structurally inherited from the C-conjugate adversary construction in *Possibilistic Security*. They compose at the deployment-policy level — no shared runtime processes, no architectural coupling beyond Bool-only consumer APIs. Each is independently deployable.
 
+## Foundational reference
+
+The "reliable identity from unreliable components" thesis underlying the entire Triad Deployments portfolio has a foundational precedent in:
+
+- **von Neumann, J. (1952/1956).** *Probabilistic Logics and the Synthesis of Reliable Organisms from Unreliable Components.* Lectures delivered at the California Institute of Technology, January 4–15, 1952; notes by R. S. Pierce. Published in C. E. Shannon and J. McCarthy (eds.), *Automata Studies*, Annals of Mathematics Studies No. 34, Princeton University Press, 1956, pp. 43–98.
+
+Von Neumann's multiplexing construction (§9–10) shows that any desired reliability δ can be obtained from per-component error ε < 1/6 by carrying every signal on a bundle of N parallel lines with periodic restoring organs that drive bundle excitation toward {0, 1}. The three-state output zone — *positive* (≥(1−Δ)N stimulated), *intermediate* (uncertain band, signals malfunction), *negative* (≤ΔN stimulated) — is the direct ancestor of Lazarus's three-state response posture (*all clear*, *something to notice*, *Shakespeare mode*). Each deployment in the Triad instantiates this pattern at a different layer of the identity stack: LavaLamp at the substrate, PharOS at the OS authentication membrane, Lazarus at the runtime watch.
+
 ## License
 
 MIT. Use it, fork it, make it yours.
